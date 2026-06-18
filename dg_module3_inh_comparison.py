@@ -70,9 +70,9 @@ R_TARGETS  = [0.50, 0.75, 0.90]
 SEEDS      = [42, 43, 44]
 BIN_SIZES  = [10, 25, 50, 100, 250]   # ms — timescales to analyse
 
-# Active GC: 40 fibres × 15 Hz = 600 Hz aggregate; inactive: background 40 Hz
-R_EFF_HIGH = 600.0
-R_EFF_LOW  =  40.0
+# Reżim wejścia z jedynego źródła prawdy (dg_params.py): 400/40 Hz aggregate
+# (= 40 włókien × 10/1 Hz). Wcześniej 600 Hz → output GC za wysoki (~16 Hz).
+from dg_params import R_EFF_HIGH, R_EFF_LOW
 P_ACTIVE   = 0.25   # fraction of GCs active per pattern
 
 # ── Izhikevich parameters ─────────────────────────────────────────────────────
