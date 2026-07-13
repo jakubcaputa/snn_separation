@@ -3,3 +3,7 @@ dataset/
 .claude/settings.local.json
 *.png
 *.pdf
+*.pptx
+*.npz
+prezentacja/demo_script.md
+prezentacja/doktorat_kierunki.md
