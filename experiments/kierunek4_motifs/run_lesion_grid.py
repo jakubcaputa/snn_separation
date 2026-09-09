@@ -68,6 +68,8 @@ from dg_core import (  # noqa: E402
     DGConfig, MOTIFS, config_from_motif_set, make_connectivity, simulate,
     make_patterns, make_input_spikes, mean_pairwise_r,
     population_sparseness, active_fraction,
+    activity_battery, BATTERY_KEYS, mean_pairwise_cosine, mean_pairwise_jaccard,
+    nan_mean,
 )
 
 RESULTS = Path(__file__).parent / "results"
@@ -138,16 +140,21 @@ def run_cell(r_in: float, p_active: float, drive: float, regime: str,
         'r_in': r_in_meas,
         'dec': {}, 'r_out': {}, 'fr_gc': {}, 'fr_gc_active': {},
         'sparseness': {}, 'active_frac': {}, 'fr_fs': {}, 'fr_hmc': {},
+        # bateria metryk aktywności/informacji (definicje: doktorat_plan.md §5)
+        # + alternatywne miary separacji (kontrola dla dekorelacji Pearsona)
+        **{k: {} for k in BATTERY_KEYS},
+        'r_out_cos': {}, 'overlap_jac': {},
     }
 
     for coal in ALL_COALITIONS:
         cfg = config_from_motif_set(base, coal)
-        gc_vecs, fs_fr, hmc_fr = [], [], []
-        for idx, t in inputs:
+        gc_vecs, fs_fr, hmc_fr, batteries = [], [], [], []
+        for k, (idx, t) in enumerate(inputs):
             res = simulate(cfg, idx, t, conn)
             gc_vecs.append(res['gc_rates'])
             fs_fr.append(res['fs_rates'].mean())
             hmc_fr.append(res['hmc_rates'].mean())
+            batteries.append(activity_battery(res, pats[k], T_ms))
 
         r_out = mean_pairwise_r(gc_vecs)
         gc0 = gc_vecs[0]
@@ -163,6 +170,10 @@ def run_cell(r_in: float, p_active: float, drive: float, regime: str,
         out['active_frac'][key] = act
         out['fr_fs'][key] = float(np.mean(fs_fr))
         out['fr_hmc'][key] = float(np.mean(hmc_fr))
+        for m in BATTERY_KEYS:
+            out[m][key] = nan_mean(b[m] for b in batteries)
+        out['r_out_cos'][key] = mean_pairwise_cosine(gc_vecs)
+        out['overlap_jac'][key] = mean_pairwise_jaccard(gc_vecs)
 
     return out
 
@@ -213,7 +224,8 @@ def main():
     # ── zapis: płaskie tablice + osie, żeby analiza nie musiała znać kolejności ──
     coal_names = [coalition_key(c) for c in ALL_COALITIONS]
     metrics = ['dec', 'r_out', 'fr_gc', 'fr_gc_active', 'sparseness',
-               'active_frac', 'fr_fs', 'fr_hmc']
+               'active_frac', 'fr_fs', 'fr_hmc',
+               *BATTERY_KEYS, 'r_out_cos', 'overlap_jac']
 
     payload = {
         'task_r_in':     np.array([t[0] for t in tasks_shard]),

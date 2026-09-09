@@ -22,6 +22,9 @@ from .patterns import (
 from .metrics import (
     mean_pairwise_r, decorrelation, population_sparseness, active_fraction,
     shapley_values, shapley_share, dominant_motif, interaction_2way,
+    isi_cv, fano_factor, synchrony_index, activity_entropy, binary_mi_io,
+    first_spike_latency, mean_pairwise_cosine, mean_pairwise_jaccard,
+    activity_battery, BATTERY_KEYS, nan_mean,
 )
 
 __all__ = [
@@ -31,4 +34,7 @@ __all__ = [
     'pp_rate_vector_empirical', 'pp_rate_vector_expected', 'mean_pairwise_r_binary',
     'mean_pairwise_r', 'decorrelation', 'population_sparseness', 'active_fraction',
     'shapley_values', 'shapley_share', 'dominant_motif', 'interaction_2way',
+    'isi_cv', 'fano_factor', 'synchrony_index', 'activity_entropy', 'binary_mi_io',
+    'first_spike_latency', 'mean_pairwise_cosine', 'mean_pairwise_jaccard',
+    'activity_battery', 'BATTERY_KEYS', 'nan_mean',
 ]
