@@ -53,6 +53,7 @@ COL_HMC = '#E65100'
 COL_PP  = '#2E7D32'
 COL_EX  = '#212121'
 COL_IN  = '#6A1B9A'
+COL_TON = '#00838F'   # hamowanie TONICZNE (K_tonic) — odrębne od fazowego FS→GC
 COL_DIM = '#C8C8C8'
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -615,7 +616,8 @@ with st.sidebar:
         W_FS_GC = st.slider("W FS→GC  (hamowanie)",   0.1,  5.0,  1.0, step=0.1)
         with st.expander("Wagi Mossy Cells (HMC)", expanded=True):
             st.caption("Domyślnie HMC są prawie ciche: rzadko strzelające GC dają zbyt "
-                       "mały napęd **W GC→HMC** względem progu (G_crit = 4 + K_HMC = 14 mV). "
+                       "mały napęd **W GC→HMC** względem progu (G_crit = 4 + K_HMC, "
+                       "czyli 14 mV przy domyślnym K_HMC = 10). "
                        "Aby je aktywować, zwiększ **W GC→HMC** (≈10–16) lub zmniejsz "
                        "**K_HMC**; wtedy w budżecie napięcia urośnie pomarańczowe pole "
                        "**W HMC→GC** (re-ekscytacja MC).")
@@ -957,22 +959,30 @@ else:
     if bud is None:
         st.caption("Brak danych budżetu napięcia (żaden GC nie był aktywny we wzorcu 1).")
     else:
-        G_crit = 4.0 + res['K_GC']
+        K_gc   = float(res['K_GC'])
+        G_crit = 4.0 + K_gc
         fig_b, (axb1, axb2) = plt.subplots(2, 1, figsize=(11, 4.6), sharex=True,
                                            gridspec_kw={'hspace':0.12})
         t    = bud['t']
         gpp  = bud['gpp_act']; ghmc = bud['ghmc_act']; gin = bud['gin_act']
-        net  = gpp + ghmc - gin
+        # Napęd netto liczony z OBOMA składnikami hamowania: fazowym (FS→GC) i
+        # tonicznym (K_tonic). Dzięki temu próg jest stałą 4 mV, niezależną od K —
+        # zmiana K_GC przesuwa czarną linię, a nie linię progu.
+        net  = gpp + ghmc - gin - K_gc
         # Pobudzenie ułożone warstwowo: PP (zielony) + HMC→GC (pomarańcz) ku górze
         axb1.fill_between(t, 0, gpp, color=COL_PP, alpha=0.40,
                           label='Pobudzenie PP→GC  (+g_ex)')
         axb1.fill_between(t, gpp, gpp + ghmc, color=COL_HMC, alpha=0.55,
                           label='Pobudzenie HMC→GC  (+g_ex2, re-ekscytacja MC)')
+        # Hamowanie ku dołowi, warstwowo: fazowe (FS→GC), pod nim toniczne (K).
         axb1.fill_between(t, 0, -gin, color=COL_IN, alpha=0.35,
-                          label='Hamowanie FS→GC  (−g_in)')
-        axb1.plot(t, net, color=COL_EX, lw=1.1, label='Napęd netto (PP+HMC−FS)')
-        axb1.axhline(G_crit, color='crimson', ls='--', lw=1.0,
-                     label=f'G_crit ≈ {G_crit:.0f} mV (próg, K_GC={res["K_GC"]:.0f})')
+                          label='Hamowanie FAZOWE FS→GC  (−g_in)')
+        axb1.fill_between(t, -gin, -gin - K_gc, color=COL_TON, alpha=0.30,
+                          label=f'Hamowanie TONICZNE  (−K_GC = −{K_gc:.0f} mV, stałe)')
+        axb1.plot(t, net, color=COL_EX, lw=1.1,
+                  label='Napęd netto (PP+HMC−FS−K)')
+        axb1.axhline(4.0, color='crimson', ls='--', lw=1.0,
+                     label='Próg = 4 mV (rheobaza własna, niezależna od K)')
         axb1.axhline(0, color='gray', lw=0.6)
         axb1.set_ylabel('Wkład do V [mV]', fontsize=8)
         axb1.set_title('Uśredniony wkład synaptyczny wg ŹRÓDŁA — aktywne GC (wzorzec 1)',
@@ -990,9 +1000,48 @@ else:
         fig_b.tight_layout(); st.pyplot(fig_b, use_container_width=True); plt.close(fig_b)
         st.caption("Zielone = pobudzenie PP→GC; pomarańczowe = re-ekscytacja HMC→GC "
                    "(jeśli pole jest cienkie, mossy cells prawie nie dokładają); "
-                   "fioletowe = hamowanie FS→GC. Czarna linia = napęd netto; im częściej "
-                   "przebija G_crit, tym częściej GC odpala. Wyłącz FF/FB lub HMC w panelu "
-                   "bocznym, by zobaczyć wkład każdego źródła z osobna.")
+                   "fioletowe = hamowanie FAZOWE FS→GC; turkusowe = hamowanie TONICZNE "
+                   "(K_tonic) — stałe, niezależne od wejścia presynaptycznego. "
+                   "Czarna linia = napęd netto po odjęciu OBU rodzajów hamowania; im "
+                   "częściej przebija próg 4 mV, tym częściej GC odpala. Wyłącz FF/FB "
+                   "lub HMC w panelu bocznym, by zobaczyć wkład każdego źródła z osobna.")
+
+        # ── Bilans hamowania: toniczne vs fazowe, per typ komórki ─────────────
+        # Powód: do tej pory K_tonic było w tym panelu NIEWIDOCZNE (schowane w
+        # podniesionej linii G_crit = 4 + K), więc dominacja składnika tonicznego
+        # nie rzucała się w oczy. To jest wielkość kalibracyjna — pytanie „jaki
+        # jest realny udział prądu tonicznego w hamowaniu GC" jest otwarte.
+        st.markdown("**Bilans hamowania — toniczne vs fazowe (wg typu komórki)**")
+        gin_mean = float(np.mean(bud['gin_act']))
+        rows = [
+            ("GC",  gin_mean, res['K_GC'],  "FS→GC (g_in, τ=8 ms)"),
+            ("FS",  0.0,      res['K_FS'],  "brak kanału hamującego w modelu"),
+            ("HMC", 0.0,      res['K_HMC'], "brak kanału hamującego w modelu"),
+        ]
+        st.dataframe(
+            {
+                "typ": [r[0] for r in rows],
+                "fazowe [mV/ms]": [f"{r[1]:.2f}" for r in rows],
+                "toniczne K [mV/ms]": [f"{r[2]:.1f}" for r in rows],
+                "udział tonicznego": [
+                    f"{r[2] / (r[2] + r[1]) * 100:.0f}%" if (r[2] + r[1]) > 0 else "—"
+                    for r in rows
+                ],
+                "źródło fazowego": [r[3] for r in rows],
+            },
+            hide_index=True, use_container_width=True,
+        )
+        share = res['K_GC'] / (res['K_GC'] + gin_mean) * 100 if (res['K_GC'] + gin_mean) > 0 else 0.0
+        st.caption(
+            f"Oba składniki są w tych samych jednostkach (wkład do dv/dt), więc "
+            f"porównują się wprost. Przy obecnych ustawieniach **{share:.0f}% całego "
+            f"hamowania GC pochodzi ze składnika tonicznego**, a nie z obwodu FS. "
+            f"FS i HMC nie mają w tym modelu kanału hamującego w ogóle — K_tonic jest "
+            f"ich jedynym hamowaniem. To jest uproszczenie do zaadresowania przy "
+            f"kalibracji (m.in. brak wzajemnego hamowania FS→FS). "
+            f"Zapis równoważny, używany we wcześniejszych analizach: sam napęd "
+            f"synaptyczny musi przekroczyć G_crit = 4 + K_GC = {G_crit:.0f} mV."
+        )
 
         # Diagnoza roli mossy cells (P4)
         ghmc_mean = float(np.mean(bud['ghmc_act']))
