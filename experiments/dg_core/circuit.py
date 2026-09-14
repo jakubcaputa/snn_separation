@@ -52,7 +52,15 @@ def make_connectivity(cfg: DGConfig, seed: int = 0) -> dict:
         'hmc_fs': pairs(cfg.N_HMC, cfg.N_FS,  cfg.P_HMC_FS),
         'hmc_gc': pairs(cfg.N_HMC, cfg.N_GC,  cfg.P_HMC_GC),
         'fs_hmc': pairs(cfg.N_FS,  cfg.N_HMC, cfg.P_FS_HMC),
+        'fs_fs':  _no_autapse(pairs(cfg.N_FS, cfg.N_FS, cfg.P_FS_FS)),
     }
+
+
+def _no_autapse(st):
+    """Usuwa połączenia neuronu z samym sobą — FS→FS musi być między komórkami."""
+    s, t = st
+    m = s != t
+    return s[m], t[m]
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -72,13 +80,18 @@ def _gc_eqs(K: float, b: float = B_GC) -> str:
 
 
 def _fs_eqs(K: float) -> str:
-    # g_ex = PP→FS (feedforward), g_ex2 = GC→FS (feedback), g_ex3 = HMC→FS
+    # g_ex = PP→FS (feedforward), g_ex2 = GC→FS (feedback), g_ex3 = HMC→FS,
+    # g_in = FS→FS (wzajemne hamowanie interneuronów).
+    # Przy W_FS_FS = 0 (domyślnie) synapsa nie powstaje, więc g_in zostaje na
+    # zerze przez cały przebieg i równanie jest numerycznie równoważne wersji
+    # sprzed dodania kanału — zweryfikowane regresyjnie (hash spajków bez zmian).
     return (
         f"dv/dt = (0.04/mV/ms*v**2 + 5/ms*v + 140*mV/ms - u/ms"
-        f" + g_ex/ms + g_ex2/ms + g_ex3/ms - {K}*mV/ms) : volt (unless refractory)\n"
+        f" + g_ex/ms + g_ex2/ms + g_ex3/ms - g_in/ms - {K}*mV/ms) : volt (unless refractory)\n"
         f"dg_ex/dt  = -g_ex /({TAU_EX_FS}*ms) : volt\n"
         f"dg_ex2/dt = -g_ex2/({TAU_EX_FS}*ms) : volt\n"
         f"dg_ex3/dt = -g_ex3/({TAU_EX_FS}*ms) : volt\n"
+        f"dg_in/dt  = -g_in /({TAU_IN_GC}*ms) : volt\n"
         f"du/dt = {A_FS}/ms*({B_FS}*v - u) : volt\n"
     )
 
@@ -208,6 +221,14 @@ def simulate(cfg: DGConfig, input_idx: np.ndarray, input_t_ms: np.ndarray,
                  pr['fs_gc'], jit)
         if s is not None:
             objs.append(s)
+
+        # FS → FS: wzajemne hamowanie interneuronów. Domyślnie W_FS_FS=0 → brak
+        # synapsy, czyli obwód dokładnie jak przed dodaniem tego kanału.
+        if cfg.W_FS_FS > 0:
+            s = _syn(fs, fs, *conn['fs_fs'], cfg.W_FS_FS, 'g_in', SYN_DELAY,
+                     pr['fs_fs'], jit)
+            if s is not None:
+                objs.append(s)
 
     # ── motyw MC: GC → HMC → {FS, GC} ────────────────────────────────────────
     if cfg.enable_hmc:

@@ -204,6 +204,7 @@ P_FS_GC  = 0.50
 P_GC_HMC = 0.25
 P_HMC_FS = 0.40
 P_HMC_GC = 0.40
+P_FS_FS  = 0.30
 
 
 @st.cache_data(show_spinner=False)
@@ -220,7 +221,15 @@ def make_connectivity(N_GC, N_FS, N_HMC):
         'gc_hmc': pairs(N_GC,  N_HMC, P_GC_HMC),
         'hmc_fs': pairs(N_HMC, N_FS,  P_HMC_FS),
         'hmc_gc': pairs(N_HMC, N_GC,  P_HMC_GC),
+        'fs_fs' : _drop_autapse(pairs(N_FS, N_FS, P_FS_FS)),
     }
+
+
+def _drop_autapse(st_pair):
+    """FS→FS musi łączyć różne komórki — usuwamy połączenia neuronu z sobą."""
+    a, b = st_pair
+    m = a != b
+    return a[m], b[m]
 
 
 @st.cache_data(show_spinner=False)
@@ -405,7 +414,7 @@ def simulate_brian(gc_input_idx, gc_input_t_ms, conn, N_GC, N_FS, N_HMC,
                    per_fiber=False, n_syn_pp=40,
                    budget_active_idx=None, budget_inact_idx=None,
                    p_rel_gc=1.0, p_rel_fs=1.0, p_rel_hmc=1.0,
-                   delay_jitter_ms=0.0):
+                   delay_jitter_ms=0.0, W_FS_FS=0.0):
     start_scope()
     defaultclock.dt = DT_MS * ms
     T_MS = T_MS_POP
@@ -415,12 +424,16 @@ def simulate_brian(gc_input_idx, gc_input_t_ms, conn, N_GC, N_FS, N_HMC,
                        second_ex_tau=TAU_EX_GC)
     # FS: TRZY osobne kanały pobudzające — g_ex (PP→FS), g_ex2 (GC→FS), g_ex3 (HMC→FS)
     # — by zmierzyć przepływ z każdej ścieżki osobno (do schematu).
+    # g_in = FS→FS (wzajemne hamowanie interneuronów). Przy W_FS_FS=0 synapsa
+    # nie powstaje, więc kanał zostaje na zerze i równanie jest numerycznie
+    # równoważne wersji sprzed jego dodania.
     fs_eqs  = (
         f"dv/dt = (0.04/mV/ms*v**2 + 5/ms*v + 140*mV/ms - u/ms"
-        f" + g_ex/ms + g_ex2/ms + g_ex3/ms - {K_FS}*mV/ms) : volt (unless refractory)\n"
+        f" + g_ex/ms + g_ex2/ms + g_ex3/ms - g_in/ms - {K_FS}*mV/ms) : volt (unless refractory)\n"
         f"dg_ex/dt  = -g_ex /({TAU_EX_FS}*ms) : volt\n"
         f"dg_ex2/dt = -g_ex2/({TAU_EX_FS}*ms) : volt\n"
         f"dg_ex3/dt = -g_ex3/({TAU_EX_FS}*ms) : volt\n"
+        f"dg_in/dt  = -g_in /({TAU_IN_GC}*ms) : volt\n"
         f"du/dt = {A_FS}/ms*({B_FS}*v - u) : volt\n"
     )
     hmc_eqs = _izh_eqs(A_HMC, B_HMC, TAU_EX_HMC, tau_in=None,       K_tonic=K_HMC)
@@ -492,6 +505,11 @@ def simulate_brian(gc_input_idx, gc_input_t_ms, conn, N_GC, N_FS, N_HMC,
         s = _syn(fs, gc, conn['fs_gc'][0], conn['fs_gc'][1], W_FS_GC, 'g_in', SYN_DELAY,
                  p_rel_gc, jit)
         if s is not None: net_objs.append(s)
+        # FS→FS: wzajemne hamowanie interneuronów (domyślnie wyłączone)
+        if W_FS_FS > 0:
+            s = _syn(fs, fs, conn['fs_fs'][0], conn['fs_fs'][1], W_FS_FS, 'g_in',
+                     SYN_DELAY, p_rel_fs, jit)
+            if s is not None: net_objs.append(s)
     if enable_hmc:
         s = _syn(gc,  hmc, conn['gc_hmc'][0], conn['gc_hmc'][1], W_GC_HMC, 'g_ex', SYN_DELAY,
                  p_rel_hmc, jit)
@@ -714,6 +732,11 @@ with st.sidebar:
         W_PP_FS = st.slider("W PP→FS  (siła FF)",     0.05, 2.0,  0.25, step=0.05)
         W_GC_FS = st.slider("W GC→FS  (siła FB)",     1.0, 30.0, 10.0, step=1.0)
         W_FS_GC = st.slider("W FS→GC  (hamowanie)",   0.1,  5.0,  1.0, step=0.1)
+        W_FS_FS = st.slider("W FS→FS  (wzajemne hamowanie FS)", 0.0, 5.0, 0.0, step=0.5,
+                            help="Domyślnie 0 = jak dotąd. FS nie miały w modelu ŻADNEGO "
+                                 "hamowania synaptycznego, przez co strzelają ~46 Hz. "
+                                 "W biologii koszykowe hamują się wzajemnie i ta pętla "
+                                 "ustala rytm gamma.")
         with st.expander("Wagi Mossy Cells (HMC)", expanded=True):
             st.caption("Domyślnie HMC są prawie ciche: rzadko strzelające GC dają zbyt "
                        "mały napęd **W GC→HMC** względem progu (G_crit = 4 + K_HMC, "
@@ -804,7 +827,7 @@ else:
                   round(r_fiber, 1) if per_fiber else 0,
                   round(r_fiber_bg, 2) if per_fiber else 0,
                   round(p_rel_gc, 2), round(p_rel_fs, 2), round(p_rel_hmc, 2),
-                  round(delay_jitter_ms, 2))
+                  round(delay_jitter_ms, 2), round(W_FS_FS, 2))
 
 if "results" not in st.session_state:
     st.session_state.results  = None
@@ -880,7 +903,7 @@ if run_btn or st.session_state.last_key != params_key:
                 per_fiber=per_fiber, n_syn_pp=n_syn_pp,
                 budget_active_idx=act, budget_inact_idx=inact,
                 p_rel_gc=p_rel_gc, p_rel_fs=p_rel_fs, p_rel_hmc=p_rel_hmc,
-                delay_jitter_ms=delay_jitter_ms)
+                delay_jitter_ms=delay_jitter_ms, W_FS_FS=W_FS_FS)
             if k == 0:
                 budget0 = budget
                 flow_meas0 = flow_meas

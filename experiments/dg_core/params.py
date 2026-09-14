@@ -76,6 +76,16 @@ class DGConfig:
     W_FS_HMC: float = 0.0
     P_FS_HMC: float = 0.40
 
+    # FS → FS — wzajemne hamowanie interneuronów. DOMYŚLNIE 0.0 = wyłączone.
+    # Istnieje, bo w modelu FS nie mają ŻADNEGO hamowania synaptycznego (kanał
+    # g_in po prostu nie był w ich równaniu), przez co K_tonic jest ich jedynym
+    # hamulcem i strzelają ~46 Hz przy domyślnych ustawieniach, a po kalibracji
+    # membranowej nawet ~180 Hz. W biologii koszykowe hamują się wzajemnie i to
+    # ta pętla ustala rytm gamma — brak tego kanału jest najprawdopodobniejszą
+    # strukturalną przyczyną zawyżonej częstotliwości FS.
+    W_FS_FS: float = 0.0
+    P_FS_FS: float = 0.30
+
     # pobudliwość (prąd toniczny hamujący; G_crit = 4 + K)
     K_GC: float = 10.0
     K_FS: float = 5.0
@@ -114,6 +124,7 @@ class DGConfig:
     P_REL_HMC_FS: float = 1.0
     P_REL_HMC_GC: float = 1.0
     P_REL_FS_HMC: float = 1.0
+    P_REL_FS_FS: float = 1.0
 
     # Rozrzut opóźnień synaptycznych [ms] (odchylenie standardowe). 0.0 = wyłączony.
     # UWAGA metodologiczna: Brian2 trzyma `delay` na SYNAPSIE, nie na spajku, więc
@@ -129,6 +140,7 @@ class DGConfig:
             'gc_fs': self.P_REL_GC_FS, 'fs_gc': self.P_REL_FS_GC,
             'gc_hmc': self.P_REL_GC_HMC, 'hmc_fs': self.P_REL_HMC_FS,
             'hmc_gc': self.P_REL_HMC_GC, 'fs_hmc': self.P_REL_FS_HMC,
+            'fs_fs': self.P_REL_FS_FS,
         }
 
     def with_reliability(self, gc: float = 1.0, fs: float = 1.0,
@@ -141,7 +153,7 @@ class DGConfig:
         return replace(
             self,
             P_REL_PP_GC=gc, P_REL_FS_GC=gc, P_REL_HMC_GC=gc,
-            P_REL_PP_FS=fs, P_REL_GC_FS=fs, P_REL_HMC_FS=fs,
+            P_REL_PP_FS=fs, P_REL_GC_FS=fs, P_REL_HMC_FS=fs, P_REL_FS_FS=fs,
             P_REL_GC_HMC=hmc, P_REL_FS_HMC=hmc,
         )
 
@@ -204,6 +216,7 @@ class DGConfig:
             P_HMC_FS=clip(self.P_HMC_FS),
             P_HMC_GC=clip(self.P_HMC_GC),
             P_FS_HMC=clip(self.P_FS_HMC),
+            P_FS_FS=clip(self.P_FS_FS),
         )
 
     def with_mc_strength(self, drive: float, gain: float) -> "DGConfig":
