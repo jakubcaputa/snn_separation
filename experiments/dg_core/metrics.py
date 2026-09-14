@@ -141,7 +141,7 @@ def interaction_2way(coalition_value: dict, a: str, b: str) -> float:
 # niewystarczającą; (b) wynik negatywny kierunku 1A — dekorelacja nie przełożyła
 # się na użyteczność liniową, więc trzeba mierzyć wprost dynamikę (FR, CV, Fano,
 # synchronia), rozkład aktywności (entropia) i informację (MI wejście→wyjście).
-# Definicje i interpretacje wszystkich metryk: doktorat_plan.md, §5.
+# Definicje i interpretacje wszystkich metryk: PLAN_BADAWCZY.md §5.1.
 #
 # Konwencja: gdy metryka jest nieokreślona (za mało spajków, pusta populacja),
 # zwracamy NaN — a NIE 0.0, żeby „brak danych" nie udawał wyniku. Agregować

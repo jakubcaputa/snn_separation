@@ -140,7 +140,7 @@ def run_cell(r_in: float, p_active: float, drive: float, regime: str,
         'r_in': r_in_meas,
         'dec': {}, 'r_out': {}, 'fr_gc': {}, 'fr_gc_active': {},
         'sparseness': {}, 'active_frac': {}, 'fr_fs': {}, 'fr_hmc': {},
-        # bateria metryk aktywności/informacji (definicje: doktorat_plan.md §5)
+        # bateria metryk aktywności/informacji (definicje: PLAN_BADAWCZY.md §5.1)
         # + alternatywne miary separacji (kontrola dla dekorelacji Pearsona)
         **{k: {} for k in BATTERY_KEYS},
         'r_out_cos': {}, 'overlap_jac': {},

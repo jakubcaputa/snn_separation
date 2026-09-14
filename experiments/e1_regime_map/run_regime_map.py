@@ -15,7 +15,7 @@ w obu jego postaciach:
     K_GC     — hamowanie TONICZNE  (oś pionowa)
     W_FS_GC  — hamowanie FAZOWE, synaptyczne (oś pozioma)
 
-To jest test hipotezy H1 (`doktorat_plan.md` §5):
+To jest test hipotezy H1 (`PLAN_BADAWCZY.md` §1.3):
 
 > separacja NIE rośnie monotonicznie z hamowaniem, tylko ma optimum przy
 > pośredniej frakcji aktywnych GC, a poza nim się załamuje — z jednej strony
@@ -25,14 +25,14 @@ Główna figura to separacja w funkcji **ZMIERZONEJ** frakcji aktywnych GC, a ni
 w funkcji parametrów. Parametry są tylko sposobem, żeby przesunąć się po osi
 aktywności; twierdzenie dotyczy aktywności.
 
-⚠️ Pułapka nr 3 z `doktorat_plan.md` obowiązuje tu podwójnie
+⚠️ Pułapka nr 3 z `PLAN_BADAWCZY.md` §3.5 obowiązuje tu podwójnie
 ------------------------------------------------------------
 Dekorelacja przy FR→0 jest artefaktem: korelacja niemal pustego wektora dąży do
 zera, więc „separacja" rośnie dokładnie wtedy, gdy sieć przestaje liczyć.
 Dlatego każdy punkt dostaje MASKĘ WAŻNOŚCI (`valid`) i analiza bez niej jest
 bezwartościowa. Maska wymaga minimum aktywnych GC i minimum częstotliwości.
 
-⚠️ Pułapka nr 4 (nowa, `doktorat_plan.md` §4.4)
+⚠️ Pułapka nr 4 (`PLAN_BADAWCZY.md` §3.5 pkt 4)
 -----------------------------------------------
 `K_GC` ustala JEDNOCZEŚNIE próg efektywny, potencjał spoczynkowy i budżet
 hamowania tonicznego. Przesuwanie się po osi K to więc nie tylko „więcej

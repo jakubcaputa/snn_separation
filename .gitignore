@@ -7,7 +7,6 @@ dataset/
 *.npz
 prezentacja/demo_script.md
 prezentacja/doktorat_kierunki.md
-doktorat_plan.md
 __pycache__/
 snn_sep_venv/
 .pytest_cache/
