@@ -31,7 +31,8 @@ import time
 
 from brian2 import (
     start_scope, NeuronGroup, Synapses, SpikeMonitor, StateMonitor,
-    SpikeGeneratorGroup, Network, defaultclock, ms, mV, prefs,
+    SpikeGeneratorGroup, PoissonGroup, Network, BrianLogger,
+    defaultclock, ms, mV, Hz, prefs,
 )
 prefs.codegen.target = 'numpy'
 
@@ -308,13 +309,92 @@ def _izh_eqs(a, b, tau_ex, tau_in=None, K_tonic=0.0, second_ex_tau=None):
     )
 
 
-def _syn(src, tgt, si, ti, w_mV, var, delay_ms):
+def _on_pre(var, w_mV, p_rel):
+    """
+    Wyrażenie on_pre synapsy. Przy p_rel >= 1.0 zwracamy wersję DETERMINISTYCZNĄ —
+    nie dla elegancji, tylko żeby nie zużyć ani jednej liczby losowej. Dzięki temu
+    domyślne ustawienia dają wynik bit-w-bit taki, jak przed wprowadzeniem
+    zawodności synaptycznej.
+    """
+    if p_rel >= 1.0:
+        return f'{var}_post += {w_mV}*mV'
+    return f'{var}_post += {w_mV}*mV*int(rand() < {p_rel})'
+
+
+def _set_delay(syn, delay_ms, jitter_ms):
+    """Opóźnienie stałe albo rozrzucone wokół `delay_ms` (obcięte do ≥ 0)."""
+    if jitter_ms and jitter_ms > 0:
+        hi = delay_ms + 5.0 * jitter_ms
+        syn.delay = f'clip({delay_ms} + {jitter_ms}*randn(), 0, {hi})*ms'
+    else:
+        syn.delay = delay_ms * ms
+
+
+def _syn(src, tgt, si, ti, w_mV, var, delay_ms, p_rel=1.0, jitter_ms=0.0):
     if len(si) == 0:
         return None
-    syn = Synapses(src, tgt, on_pre=f'{var}_post += {w_mV}*mV',
-                   delay=delay_ms * ms)
+    syn = Synapses(src, tgt, on_pre=_on_pre(var, w_mV, p_rel))
     syn.connect(i=si, j=ti)
+    _set_delay(syn, delay_ms, jitter_ms)
     return syn
+
+
+@st.cache_data(show_spinner=False)
+def measure_p_spike(W_pulse, K, p_rel, bg_rate_hz, W_bg, tau_ex, a, b, c, d,
+                    n_pulses=60, isi_ms=80.0, win_ms=15.0, n_cells=60):
+    """
+    P(AP | puls stymulacyjny) dla POJEDYNCZEJ komórki — protokół jak u Madara:
+    „intensywność stymulacji dobrana tak, by dawała ~50% prawdopodobieństwa AP".
+
+    Dlaczego osobna symulacja, a nie odczyt z sieci: Madar podaje dyskretne pulsy
+    i liczy odsetek tych, po których pojawił się AP. W obwodzie sieciowym wejście
+    jest ciągłym strumieniem Poissona, więc „prawdopodobieństwo AP po pulsie" nie
+    jest tam w ogóle zdefiniowane. To jest pomiar kalibracyjny, nie wynik sieci.
+
+    `bg_rate_hz` = tło synaptyczne odwzorowujące bieżący napęd sieci. BEZ tła
+    (lub bez p_rel < 1) wynik jest zero-jedynkowy — deterministyczny neuron albo
+    zawsze odpala, albo nigdy. Zakres 20–80% wymaga źródła zmienności.
+    """
+    start_scope()
+    defaultclock.dt = DT_MS * ms
+    if p_rel < 1.0 or bg_rate_hz > 0:
+        BrianLogger.suppress_name('base')
+
+    T = n_pulses * isi_ms + 4 * win_ms
+    eqs = (
+        f"dv/dt = (0.04/mV/ms*v**2 + 5/ms*v + 140*mV/ms - u/ms"
+        f" + g_ex/ms + g_bg/ms - {K}*mV/ms) : volt (unless refractory)\n"
+        f"dg_ex/dt = -g_ex/({tau_ex}*ms) : volt\n"
+        f"dg_bg/dt = -g_bg/({tau_ex}*ms) : volt\n"
+        f"du/dt = {a}/ms*({b}*v - u) : volt\n"
+    )
+    cell = NeuronGroup(n_cells, eqs, threshold='v >= 30*mV',
+                       reset=f'v = {c}*mV; u = u + {d}*mV',
+                       refractory=2 * ms, method='euler')
+    cell.v = -70 * mV; cell.u = b * (-70 * mV)
+
+    pulse_t = np.arange(1, n_pulses + 1) * isi_ms
+    stim = SpikeGeneratorGroup(1, np.zeros(n_pulses, dtype=int), pulse_t * ms)
+    s = Synapses(stim, cell, on_pre=_on_pre('g_ex', W_pulse, p_rel))
+    s.connect()
+    objs = [cell, stim, s]
+
+    if bg_rate_hz > 0:
+        bg = PoissonGroup(n_cells, bg_rate_hz * Hz)
+        sb = Synapses(bg, cell, on_pre=_on_pre('g_bg', W_bg, p_rel))
+        sb.connect(j='i')
+        objs += [bg, sb]
+
+    sm = SpikeMonitor(cell)
+    objs.append(sm)
+    Network(*objs).run(T * ms)
+
+    ti = np.array(sm.t / ms); ii = np.array(sm.i)
+    hits = 0
+    for p in pulse_t:
+        m = (ti > p) & (ti <= p + win_ms)
+        hits += len(np.unique(ii[m]))
+    return hits / (n_pulses * n_cells)
 
 
 def simulate_brian(gc_input_idx, gc_input_t_ms, conn, N_GC, N_FS, N_HMC,
@@ -323,7 +403,9 @@ def simulate_brian(gc_input_idx, gc_input_t_ms, conn, N_GC, N_FS, N_HMC,
                    W_GC_HMC, W_HMC_FS, W_HMC_GC,
                    K_GC, K_FS, K_HMC,
                    per_fiber=False, n_syn_pp=40,
-                   budget_active_idx=None, budget_inact_idx=None):
+                   budget_active_idx=None, budget_inact_idx=None,
+                   p_rel_gc=1.0, p_rel_fs=1.0, p_rel_hmc=1.0,
+                   delay_jitter_ms=0.0):
     start_scope()
     defaultclock.dt = DT_MS * ms
     T_MS = T_MS_POP
@@ -365,44 +447,62 @@ def simulate_brian(gc_input_idx, gc_input_t_ms, conn, N_GC, N_FS, N_HMC,
 
     net_objs = [pp, gc, fs, hmc]
 
+    # Zawodność synaptyczna wg TYPU KOMÓRKI DOCELOWEJ — tak, jak formułuje to
+    # biologia („GC i HMC odpowiadają mniej niezawodnie niż FS"), a nie per synapsa.
+    jit = delay_jitter_ms
+    if min(p_rel_gc, p_rel_fs, p_rel_hmc) < 1.0:
+        # Brian2 ostrzega, że `g += w*int(rand()<p)` „may depend on the order of
+        # execution". Tutaj nieszkodliwe: wkłady się sumują (dodawanie jest
+        # przemienne), a losowania są niezależne — od kolejności zależy tylko to,
+        # która synapsa dostanie którą liczbę z generatora. Wyciszamy wyłącznie
+        # gdy zawodność jest faktycznie włączona.
+        BrianLogger.suppress_name('base')
+
     if per_fiber:
         # n_syn_pp niezależnych włókien PP na GC: włókno f GC i → index i*n_syn_pp + f
         pp_gc_src = np.repeat(np.arange(N_GC, dtype=np.int32) * n_syn_pp, n_syn_pp) + \
                     np.tile(np.arange(n_syn_pp, dtype=np.int32), N_GC)
         pp_gc_tgt = np.repeat(np.arange(N_GC, dtype=np.int32), n_syn_pp)
-        syn_pp_gc = Synapses(pp, gc, on_pre=f'g_ex_post += {W_PP_GC}*mV',
-                             delay=PP_DELAY * ms)
+        syn_pp_gc = Synapses(pp, gc, on_pre=_on_pre('g_ex', W_PP_GC, p_rel_gc))
         syn_pp_gc.connect(i=pp_gc_src, j=pp_gc_tgt)
+        _set_delay(syn_pp_gc, PP_DELAY, jit)
         net_objs.append(syn_pp_gc)
         if enable_ff:
             # PP→FS: użyj włókna 0 każdego GC z istniejącej macierzy połączeń
             pp_fs_src = conn['pp_fs'][0] * n_syn_pp
-            s = _syn(pp, fs, pp_fs_src, conn['pp_fs'][1], W_PP_FS, 'g_ex', PP_DELAY)
+            s = _syn(pp, fs, pp_fs_src, conn['pp_fs'][1], W_PP_FS, 'g_ex', PP_DELAY,
+                     p_rel_fs, jit)
             if s is not None: net_objs.append(s)
     else:
-        syn_pp_gc = Synapses(pp, gc, on_pre=f'g_ex_post += {W_PP_GC}*mV',
-                             delay=PP_DELAY * ms)
+        syn_pp_gc = Synapses(pp, gc, on_pre=_on_pre('g_ex', W_PP_GC, p_rel_gc))
         syn_pp_gc.connect(i=np.arange(N_GC), j=np.arange(N_GC))
+        _set_delay(syn_pp_gc, PP_DELAY, jit)
         net_objs.append(syn_pp_gc)
         if enable_ff:
-            s = _syn(pp, fs, conn['pp_fs'][0], conn['pp_fs'][1], W_PP_FS, 'g_ex', PP_DELAY)
+            s = _syn(pp, fs, conn['pp_fs'][0], conn['pp_fs'][1], W_PP_FS, 'g_ex', PP_DELAY,
+                     p_rel_fs, jit)
             if s is not None: net_objs.append(s)
 
     if enable_fb:
         # GC→FS do osobnego kanału g_ex2 (feedback), by zmierzyć go niezależnie od PP→FS
-        s = _syn(gc, fs, conn['gc_fs'][0], conn['gc_fs'][1], W_GC_FS, 'g_ex2', SYN_DELAY)
+        s = _syn(gc, fs, conn['gc_fs'][0], conn['gc_fs'][1], W_GC_FS, 'g_ex2', SYN_DELAY,
+                 p_rel_fs, jit)
         if s is not None: net_objs.append(s)
     if enable_ff or enable_fb:
-        s = _syn(fs, gc, conn['fs_gc'][0], conn['fs_gc'][1], W_FS_GC, 'g_in', SYN_DELAY)
+        s = _syn(fs, gc, conn['fs_gc'][0], conn['fs_gc'][1], W_FS_GC, 'g_in', SYN_DELAY,
+                 p_rel_gc, jit)
         if s is not None: net_objs.append(s)
     if enable_hmc:
-        s = _syn(gc,  hmc, conn['gc_hmc'][0], conn['gc_hmc'][1], W_GC_HMC, 'g_ex', SYN_DELAY)
+        s = _syn(gc,  hmc, conn['gc_hmc'][0], conn['gc_hmc'][1], W_GC_HMC, 'g_ex', SYN_DELAY,
+                 p_rel_hmc, jit)
         if s is not None: net_objs.append(s)
         # HMC→FS do osobnego kanału g_ex3
-        s = _syn(hmc, fs,  conn['hmc_fs'][0], conn['hmc_fs'][1], W_HMC_FS, 'g_ex3', SYN_DELAY)
+        s = _syn(hmc, fs,  conn['hmc_fs'][0], conn['hmc_fs'][1], W_HMC_FS, 'g_ex3', SYN_DELAY,
+                 p_rel_fs, jit)
         if s is not None: net_objs.append(s)
         # HMC→GC trafia do osobnego kanału g_ex2 (re-ekscytacja MC widoczna w budżecie)
-        s = _syn(hmc, gc,  conn['hmc_gc'][0], conn['hmc_gc'][1], W_HMC_GC, 'g_ex2', SYN_DELAY)
+        s = _syn(hmc, gc,  conn['hmc_gc'][0], conn['hmc_gc'][1], W_HMC_GC, 'g_ex2', SYN_DELAY,
+                 p_rel_gc, jit)
         if s is not None: net_objs.append(s)
 
     sm_gc  = SpikeMonitor(gc)
@@ -658,8 +758,36 @@ with st.sidebar:
         K_FS  = st.slider("K_tonic FS",  0.0, 15.0,  5.0, step=1.0)
         K_HMC = st.slider("K_tonic HMC", 0.0, 20.0, 10.0, step=1.0)
 
+        st.markdown("---")
+        st.header("Zawodność synaptyczna")
+        st.caption(
+            "„Spike-wise noise” (Madar): prawdopodobieństwo, że pojedynczy spajk "
+            "presynaptyczny faktycznie przekaże ładunek. **1.0 = model deterministyczny**, "
+            "czyli zachowanie sprzed wprowadzenia tego parametru. Ustawiane wg typu "
+            "komórki DOCELOWEJ, bo tak formułuje to biologia: FS odpowiadają "
+            "niezawodniej niż GC i HMC."
+        )
+        p_rel_gc  = st.slider("p_rel → GC",  0.05, 1.0, 1.0, step=0.05)
+        p_rel_fs  = st.slider("p_rel → FS",  0.05, 1.0, 1.0, step=0.05)
+        p_rel_hmc = st.slider("p_rel → HMC", 0.05, 1.0, 1.0, step=0.05)
+        delay_jitter_ms = st.slider("Rozrzut opóźnień (SD, ms)", 0.0, 5.0, 0.0, step=0.5)
+        if min(p_rel_gc, p_rel_fs, p_rel_hmc) < 1.0:
+            st.warning(
+                f"Efektywny napęd = rate × W × p_rel × τ, więc obniżenie p_rel **obniża "
+                f"też napęd**. Aby zachować ten sam średni napęd na GC, podnieś "
+                f"**W PP→GC** do ok. **{W_PP_GC / max(p_rel_gc, 1e-6):.1f} mV**. "
+                f"Wariancja rośnie wtedy jak 1/p — i to właśnie ona wytwarza "
+                f"stopniowane P(AP).", icon="⚠️"
+            )
+        if delay_jitter_ms > 0:
+            st.caption(
+                "⚠️ Brian2 trzyma opóźnienie na SYNAPSIE, nie na spajku, więc jest to "
+                "heterogeniczność opóźnień losowana raz przy budowie sieci — nie jitter "
+                "próba-próba w sensie Madara. Tak też trzeba to opisać w metodach."
+            )
+
     st.markdown("---")
-    run_btn = st.button("▶ Uruchom symulację", type="primary", use_container_width=True)
+    run_btn = st.button("▶ Uruchom symulację", type="primary", width='stretch')
 
 # ── Klucz parametrów ──────────────────────────────────────────────────────────
 if mode == "🧠 Pojedynczy neuron (LIF)":
@@ -674,7 +802,9 @@ else:
                   round(K_GC,1), round(K_FS,1), round(K_HMC,1),
                   per_fiber, n_syn_pp if per_fiber else 0,
                   round(r_fiber, 1) if per_fiber else 0,
-                  round(r_fiber_bg, 2) if per_fiber else 0)
+                  round(r_fiber_bg, 2) if per_fiber else 0,
+                  round(p_rel_gc, 2), round(p_rel_fs, 2), round(p_rel_hmc, 2),
+                  round(delay_jitter_ms, 2))
 
 if "results" not in st.session_state:
     st.session_state.results  = None
@@ -748,7 +878,9 @@ if run_btn or st.session_state.last_key != params_key:
                 W_PP_GC, W_PP_FS, W_GC_FS, W_FS_GC,
                 W_GC_HMC, W_HMC_FS, W_HMC_GC, K_GC, K_FS, K_HMC,
                 per_fiber=per_fiber, n_syn_pp=n_syn_pp,
-                budget_active_idx=act, budget_inact_idx=inact)
+                budget_active_idx=act, budget_inact_idx=inact,
+                p_rel_gc=p_rel_gc, p_rel_fs=p_rel_fs, p_rel_hmc=p_rel_hmc,
+                delay_jitter_ms=delay_jitter_ms)
             if k == 0:
                 budget0 = budget
                 flow_meas0 = flow_meas
@@ -773,6 +905,9 @@ if run_btn or st.session_state.last_key != params_key:
             r_fiber=r_fiber, r_fiber_bg=r_fiber_bg,
             budget=budget0, flow_meas=flow_meas0,
             K_GC=K_GC, K_FS=K_FS, K_HMC=K_HMC,
+            W_PP_GC=W_PP_GC, W_FS_GC=W_FS_GC,
+            p_rel_gc=p_rel_gc, p_rel_fs=p_rel_fs, p_rel_hmc=p_rel_hmc,
+            delay_jitter_ms=delay_jitter_ms,
         )
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -810,7 +945,7 @@ if res['mode'] == 'lif':
                xlabel='Czas (ms)', ylabel='Wzorzec #',
                title=f'Wejście PP — zagregowany spike train\n(R_in = {res["r_in"]:.3f})')
         ax.spines[['top','right']].set_visible(False)
-        fig.tight_layout(); st.pyplot(fig, use_container_width=True); plt.close(fig)
+        fig.tight_layout(); st.pyplot(fig, width='stretch'); plt.close(fig)
 
     # Output raster
     with col_r:
@@ -822,7 +957,7 @@ if res['mode'] == 'lif':
                xlabel='Czas (ms)', ylabel='Wzorzec #',
                title=f'Wyjście GC (LIF) — spike train\n(R_out = {res["r_out"]:.3f}  |  dec = {res["dec"]:+.3f})')
         ax.spines[['top','right']].set_visible(False)
-        fig.tight_layout(); st.pyplot(fig, use_container_width=True); plt.close(fig)
+        fig.tight_layout(); st.pyplot(fig, width='stretch'); plt.close(fig)
 
     # Voltage traces (wzorce 1 i 2)
     st.subheader("Potencjał błonowy (wzorce 1 i 2)")
@@ -838,7 +973,7 @@ if res['mode'] == 'lif':
            title='Pomimo podobnych wejść (R_in > 0), wzorce generują różne czasy spajków')
     ax.legend(fontsize=8, loc='upper right', ncol=4)
     ax.spines[['top','right']].set_visible(False)
-    fig.tight_layout(); st.pyplot(fig, use_container_width=True); plt.close(fig)
+    fig.tight_layout(); st.pyplot(fig, width='stretch'); plt.close(fig)
 
     # Macierze korelacji
     st.subheader("Macierze korelacji (input vs output)")
@@ -853,7 +988,7 @@ if res['mode'] == 'lif':
         im = ax.imshow(R_mat, vmin=-0.2, vmax=1.0, cmap='RdYlGn', aspect='auto')
         plt.colorbar(im, ax=ax, label='Pearson R', shrink=0.8)
         ax.set(xlabel='Wzorzec #', ylabel='Wzorzec #', title=title)
-        fig.tight_layout(); col.pyplot(fig, use_container_width=True); plt.close(fig)
+        fig.tight_layout(); col.pyplot(fig, width='stretch'); plt.close(fig)
 
 # ════════════════════ TRYB POPULACJA ══════════════════════════════════════════
 else:
@@ -872,7 +1007,7 @@ else:
             mpatches.Patch(color=COL_IN, label='Hamujące (GABA-A)'),
             mpatches.Patch(color=COL_DIM, label='Nieaktywne'),
         ], fontsize=5.5, loc='lower left', framealpha=0.9)
-        fig_c.tight_layout(); st.pyplot(fig_c, use_container_width=True); plt.close(fig_c)
+        fig_c.tight_layout(); st.pyplot(fig_c, width='stretch'); plt.close(fig_c)
         st.caption("Każda strzałka = jeden kierunek (→ pobudza, ⊣ hamuje); połączenia "
                    "dwukierunkowe (GC↔FS, GC↔HMC) to dwie osobne strzałki. Grubość oraz "
                    "liczba [mV] = przepływ ZMIERZONY z symulacji (średnia przewodności w "
@@ -951,7 +1086,7 @@ else:
             axes[2].text(0.5, 0.5, 'HMC nieaktywne (0 Hz) — patrz panel „Rola Mossy Cells”',
                          transform=axes[2].transAxes, ha='center', va='center',
                          fontsize=8, color='gray', style='italic')
-        fig_r.tight_layout(); st.pyplot(fig_r, use_container_width=True); plt.close(fig_r)
+        fig_r.tight_layout(); st.pyplot(fig_r, width='stretch'); plt.close(fig_r)
 
     # ── Budżet napięcia GC: kto pobudza, a kto hamuje ─────────────────────────
     st.subheader("Co pobudza, a co hamuje GC?  (budżet napięcia)")
@@ -997,7 +1132,7 @@ else:
         axb2.set_xlim(0, T_MS_POP)
         axb2.legend(fontsize=6.5, loc='upper right')
         axb2.spines[['top','right']].set_visible(False)
-        fig_b.tight_layout(); st.pyplot(fig_b, use_container_width=True); plt.close(fig_b)
+        fig_b.tight_layout(); st.pyplot(fig_b, width='stretch'); plt.close(fig_b)
         st.caption("Zielone = pobudzenie PP→GC; pomarańczowe = re-ekscytacja HMC→GC "
                    "(jeśli pole jest cienkie, mossy cells prawie nie dokładają); "
                    "fioletowe = hamowanie FAZOWE FS→GC; turkusowe = hamowanie TONICZNE "
@@ -1029,7 +1164,7 @@ else:
                 ],
                 "źródło fazowego": [r[3] for r in rows],
             },
-            hide_index=True, use_container_width=True,
+            hide_index=True, width='stretch',
         )
         share = res['K_GC'] / (res['K_GC'] + gin_mean) * 100 if (res['K_GC'] + gin_mean) > 0 else 0.0
         st.caption(
@@ -1057,6 +1192,81 @@ else:
                       f"hamowanie. Netto efekt MC widać porównując R_out z/bez HMC.")
         st.info("**Rola Mossy Cells:** " + mc_msg)
 
+    # ── Kalibracja P(AP | puls) — protokół jak u Madara ───────────────────────
+    # Madar: „intensywność stymulacji dobrana tak, by dawała ~50% prawdopodobieństwa
+    # AP (zakres 20–80%)". W obwodzie sieciowym wejście PP jest ciągłym strumieniem
+    # Poissona, więc ta wielkość NIE JEST tam zdefiniowana — stąd osobny pomiar.
+    st.subheader("Kalibracja P(AP | puls) — protokół stymulacyjny Madara")
+    with st.expander("Zmierz prawdopodobieństwo AP po pojedynczym pulsie", expanded=False):
+        st.caption(
+            "Podajemy dyskretne pulsy i liczymy odsetek tych, po których pojawił się "
+            "AP w oknie 15 ms. **Bez źródła zmienności wynik jest zero-jedynkowy** — "
+            "deterministyczny neuron albo zawsze odpala, albo nigdy, więc zakresu "
+            "20–80% nie da się trafić samą wagą. Zmienność wnosi zawodność "
+            "synaptyczna (suwaki w panelu bocznym) i/lub tło synaptyczne poniżej."
+        )
+        c1, c2, c3 = st.columns(3)
+        cell_type = c1.selectbox("Typ komórki", ["GC", "FS", "HMC"], index=0)
+        bg_rate = c2.slider("Tło synaptyczne (Hz)", 0.0, 200.0, 40.0, step=10.0,
+                            help="Odwzorowuje bieżący napęd sieci. 0 = komórka izolowana.")
+        W_bg = c3.slider("Waga tła (mV)", 0.5, 10.0, 4.0, step=0.5)
+
+        CELL = {
+            'GC':  (res['K_GC'],  TAU_EX_GC,  A_GC,  B_GC,  C_GC,  D_GC,  res['p_rel_gc']),
+            'FS':  (res['K_FS'],  TAU_EX_FS,  A_FS,  B_FS,  C_FS,  D_FS,  res['p_rel_fs']),
+            'HMC': (res['K_HMC'], TAU_EX_HMC, A_HMC, B_HMC, C_HMC, D_HMC, res['p_rel_hmc']),
+        }
+        K_c, tau_c, a_c, b_c, c_c, d_c, prel_c = CELL[cell_type]
+
+        if st.button("▶ Zmierz krzywą P(AP)", key="pap_run"):
+            w_grid = np.arange(2.0, 26.1, 2.0)
+            with st.spinner(f"Protokół pulsowy dla {cell_type}…"):
+                p_vals = [measure_p_spike(float(w), float(K_c), float(prel_c),
+                                          float(bg_rate), float(W_bg), tau_c,
+                                          a_c, b_c, c_c, d_c) for w in w_grid]
+            p_vals = np.array(p_vals)
+
+            fig_p2, axp = plt.subplots(figsize=(7.5, 3.2))
+            axp.axhspan(0.2, 0.8, color=COL_PP, alpha=0.10,
+                        label='zakres Madara (20–80%)')
+            axp.axhline(0.5, color='crimson', ls='--', lw=1.0, label='cel ≈ 50%')
+            axp.plot(w_grid, p_vals, 'o-', color=COL_GC, lw=1.4, ms=4)
+            axp.axvline(res['W_PP_GC'], color=COL_EX, ls=':', lw=1.2,
+                        label=f"obecne W PP→GC = {res['W_PP_GC']:.1f} mV")
+            axp.set_xlabel('Waga pulsu stymulacyjnego [mV]', fontsize=8)
+            axp.set_ylabel('P(AP | puls)', fontsize=8)
+            axp.set_ylim(-0.03, 1.03)
+            axp.set_title(f'{cell_type}:  K_tonic={K_c:.0f},  p_rel={prel_c:.2f},  '
+                          f'tło={bg_rate:.0f} Hz', fontsize=9, fontweight='bold')
+            axp.legend(fontsize=6.5, loc='lower right')
+            axp.spines[['top', 'right']].set_visible(False)
+            fig_p2.tight_layout(); st.pyplot(fig_p2, width='stretch'); plt.close(fig_p2)
+
+            in_band = w_grid[(p_vals >= 0.2) & (p_vals <= 0.8)]
+            if len(in_band) == 0:
+                st.error(
+                    f"**Żadna waga z siatki nie trafia w 20–80%** — przy tych "
+                    f"ustawieniach krzywa jest praktycznie skokowa. To jest dokładnie "
+                    f"problem opisany wyżej: brakuje źródła zmienności. Obniż "
+                    f"**p_rel → {cell_type}** poniżej 1.0 albo podnieś tło synaptyczne.",
+                    icon="🚫"
+                )
+            else:
+                j = int(np.argmin(np.abs(p_vals - 0.5)))
+                st.success(
+                    f"Zakres 20–80% osiągany dla wag **{in_band.min():.0f}–"
+                    f"{in_band.max():.0f} mV**; najbliżej celu 50% jest "
+                    f"**{w_grid[j]:.0f} mV** (P = {p_vals[j]:.2f}). "
+                    f"Dla porównania obecne W PP→GC = {res['W_PP_GC']:.1f} mV.",
+                    icon="✅"
+                )
+            st.caption(
+                "⚠️ To jest pomiar na komórce izolowanej z tłem zastępczym, a nie "
+                "odczyt z obwodu — służy do USTAWIENIA punktu pracy, nie jest wynikiem "
+                "sieci. Zmiana wagi pod zadane P(AP) zmienia też napęd, więc "
+                "częstotliwości w sieci trzeba sprawdzić ponownie po kalibracji."
+            )
+
     # Aktywność populacyjna
     st.subheader("Aktywność populacyjna w czasie")
     BIN_POP = 20.0; n_bins = int(T_MS_POP/BIN_POP)
@@ -1079,7 +1289,7 @@ else:
     axes_p[1].set_title("FR populacyjna — FS", fontsize=9, fontweight='bold')
     axes_p[1].set_xlabel("Czas (ms)"); axes_p[1].set_ylabel("FR (Hz)")
     axes_p[1].legend(fontsize=7); axes_p[1].spines[['top','right']].set_visible(False)
-    fig_p.tight_layout(); st.pyplot(fig_p, use_container_width=True); plt.close(fig_p)
+    fig_p.tight_layout(); st.pyplot(fig_p, width='stretch'); plt.close(fig_p)
 
     # Dekorelajcja
     st.subheader("Separacja wzorców")
@@ -1099,7 +1309,7 @@ else:
         ax_dec.set_ylabel("Pearson R")
         ax_dec.set_title("Dekorelajcja", fontsize=9, fontweight='bold')
         ax_dec.spines[['top','right']].set_visible(False)
-        fig_dec.tight_layout(); st.pyplot(fig_dec, use_container_width=True); plt.close(fig_dec)
+        fig_dec.tight_layout(); st.pyplot(fig_dec, width='stretch'); plt.close(fig_dec)
 
     with col_b:
         bin_sizes = [10,25,50,100,250]
@@ -1115,4 +1325,4 @@ else:
         ax_ts.set_xlabel("Bin size (ms)"); ax_ts.set_ylabel("Dekorelajcja")
         ax_ts.set_title("Dekorelajcja vs skala czasowa", fontsize=9, fontweight='bold')
         ax_ts.spines[['top','right']].set_visible(False)
-        fig_ts.tight_layout(); st.pyplot(fig_ts, use_container_width=True); plt.close(fig_ts)
+        fig_ts.tight_layout(); st.pyplot(fig_ts, width='stretch'); plt.close(fig_ts)

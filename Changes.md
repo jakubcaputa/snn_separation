@@ -3,6 +3,11 @@
 Dziennik zmian po spotkaniu z promotor (2026-06-09). Plan podzielony na 4 priorytety:
 **1) częstotliwości → 2) parametry K → 3) obwód/obserwowalność → 4) mossy cells.**
 
+> ⚠️ **Jest nowsza runda.** Wszystko poniżej dotyczy rundy 1 (czerwiec 2026).
+> Runda 2 (wrzesień 2026, kalibracja pod dane Madara) — **patrz sekcja
+> „RUNDA 2" na końcu pliku**. Koryguje ona m.in. wniosek o doborze K
+> i ujawnia, że 74% hamowania GC jest toniczne, a nie synaptyczne.
+
 Plik docelowy wszystkich usprawnień: **`interactive_dg.py`** (Streamlit).
 Skrypty pomocnicze (`freq_audit.py`, `dg_module3_inh_comparison.py`, …) to
 poligon doświadczalny — ich wnioski wędrują do narzędzia interaktywnego.
@@ -194,14 +199,189 @@ Powód: HMC napędzane tylko przez GC→HMC; przy tak rzadkich GC
 `g_ex_HMC ≈ 0.5–0.7 mV` ≪ próg `G_crit = 4+K_HMC = 14 mV` (ok. 20× za mało).
 Aktywacja: ↑`W GC→HMC` (≈14–16), ↓`K_HMC`, lub (fizjologicznie) dodać PP→HMC.
 
+---
+
+# RUNDA 2 (2026-09) — kalibracja pod dane Madara
+
+Kontekst: wymiana maili z prof. Błasiak po rundzie 1. Cztery pytania z jej strony
+(V_reset i parametry błony, spiking probability, czym dokładnie jest K_tonic,
+czy K_tonic + FS→GC to podwójne hamowanie) wymusiły przejście od „ustaw suwaki
+i zobacz" do **jawnej specyfikacji punktu pracy**.
+
+## Co zmierzono (odpowiedzi na pytania z maila)
+
+### Bilans hamowania wg typu komórki — to był ślepy punkt narzędzia
+
+Wkłady do `dv/dt` w tych samych jednostkach, konfiguracja domyślna:
+
+| komórka | pobudzenie | hamowanie FAZOWE | hamowanie TONICZNE (K) | udział tonicznego |
+|---|---|---|---|---|
+| **GC** | PP 2.43 + HMC 0.00 | FS→GC **3.59** | **10.0** | **74%** |
+| **FS** | PP 7.32 + GC 1.85 | **0.0 — kanał nie istnieje** | 5.0 | 100% |
+| **HMC** | GC 0.20 | 0.0 (`W_FS_HMC=0`) | 10.0 | 100% |
+
+Dwa wnioski, które trzeba mieć z tyłu głowy przy każdej analizie hamowania:
+1. **Trzy czwarte hamowania GC jest toniczne**, nie synaptyczne. Wcześniejsze
+   wnioski o „hamowaniu tworzącym separację" mogą w dużej części dotyczyć
+   składnika tonicznego, a nie obwodu FS. Ile powinno być — pytanie otwarte.
+2. **FS i HMC nie mają w modelu żadnego hamowania synaptycznego.** To nie jest
+   kwestia doboru wag: kanał `g_in` nie istnieje w ich równaniach. Brakuje
+   w szczególności wzajemnego hamowania FS→FS.
+
+### P(AP | puls) — nie da się ustawić samą wagą
+
+Protokół pulsowy jak u Madara (dyskretne pulsy, okno 15 ms):
+
+- **Bez źródła zmienności krzywa jest SKOKOWA** (0.00 → 0.99). Deterministyczny
+  neuron albo zawsze odpala, albo nigdy — zakresu Madara 20–80% nie da się trafić.
+- Z tłem 40 Hz i `K_GC=10`: P(AP) ≈ 0 aż do wagi 16 mV, przy 20 mV dopiero 0.24.
+  **Obecny punkt pracy modelu nie odpowiada protokołowi Madara** — nie o korektę
+  chodzi, tylko o czynnik pięciu (`W PP→GC` = 4 mV vs potrzebne ~22 mV).
+
+### b ustawia SUMĘ napięć, K ich ODSTĘP
+
+Punkty stałe to pierwiastki `0.04v² + (5−b)v + (140−K) = 0`, więc:
+
+> `V_rest + V_th_eff = −(5−b)/0.04` — **zależy wyłącznie od b, nie od K**
+
+Przy domyślnym `b = 0.2` suma jest zablokowana na **−120 mV**:
+
+| cel (V_rest, V_th) | wymagane b | wymagane K | uwaga |
+|---|---|---|---|
+| (−70, −50) | 0.2 | **0** | osiągalne bez zmiany modelu |
+| (−70, −47.5) | 0.3 | 7 | wymaga zmiany b |
+| (−70, −45) | 0.4 | **14** | K **rośnie** powyżej obecnych 10 |
+
+To koryguje wcześniejszą intuicję „obniżyć K". Kierunek zależy od tego, który
+koniec zakresu podanego przez prof. Błasiak weźmiemy — przy −45 jest odwrotny.
+
+### K_GC pełni TRZY role naraz
+
+Jeden parametr ustala jednocześnie próg efektywny, potencjał spoczynkowy **i**
+cały budżet hamowania tonicznego. Nie da się ich wybrać niezależnie: podanie
+docelowej proporcji toniczne:fazowe wymusza K, a więc wymusza też próg i spoczynek.
+Przy punkcie spełniającym właściwości błony (`K_GC = 0`) hamowanie toniczne znika
+zupełnie — odwrotność obecnych 74%.
+
+*To jest argument za rozdzieleniem w modelu prądu tonicznego od offsetu
+pobudliwości, ale to zmiana modelu neuronu, nie kalibracja — decyzja do podjęcia.*
+
+## Co dodano do kodu
+
+### Zawodność synaptyczna („spike-wise noise" Madara)
+`DGConfig`: osiem pól `P_REL_*` (per ścieżka) + `delay_jitter_ms`, metoda
+`with_reliability(gc=, fs=, hmc=)` ustawiająca zawodność **wg typu komórki
+docelowej** — tak, jak formułuje to biologia.
+
+Mechanizm nie jest przebraniem wagi: przerzedzenie Poissona z prawdopodobieństwem
+`p` przy kompensacji wagą `W/p` daje wariancję `g_ex ∝ 1/p`, czyli **większe
+fluktuacje przy tym samym średnim napędzie**. Zmierzone: FR aktywnych GC rośnie
+**3.12 → 5.46 → 9.22 Hz** dla `p_rel` = 1.0 → 0.5 → 0.25. To właśnie ta wariancja
+wytwarza stopniowane P(AP).
+
+⚠️ Efektywny napęd = `rate × W × p_rel × τ` — `p_rel` i wagę trzeba kalibrować RAZEM.
+
+### Harness kalibracyjny (`experiments/dg_core/calibrate.py`, NOWY)
+Odwraca kierunek: podajesz `OperatingPoint` (specyfikację), kod dobiera parametry
+i **raportuje, czego nie da się spełnić**. Nie jest to ślepy optymalizator:
+
+| krok | metoda |
+|---|---|
+| (b, K) ← właściwości błony | wzór zamknięty |
+| `W PP→GC` ← docelowe P(AP\|puls) | bisekcja 1D |
+| `W FS→GC` ← docelowy bilans toniczne:fazowe | bisekcja 1D |
+| częstotliwości w pełnym obwodzie | pomiar, nie strojenie |
+
+Nierozstrzygnięte pola (`tonic_share=None`) to jawne znaki zapytania — metoda
+`open_questions()` wypisuje je przy każdym przebiegu.
+
+```bash
+cd experiments
+python -m dg_core.calibrate --preset madar     # (−70, −50), osiągalne przy b=0.2
+python -m dg_core.calibrate --preset strict    # (−70, −45), wymaga zmiany b
+python -m dg_core.calibrate --tonic-share 0.5  # gdy proporcja będzie znana
+```
+
+### Panel budżetu napięcia — K_tonic wreszcie widoczne
+Do rundy 1 panel rysował PP, HMC→GC i FS→GC, ale **K_tonic nie występowało tam
+jako hamowanie** — siedziało schowane w podniesionej linii `G_crit = 4 + K`.
+Dlatego dominacja składnika tonicznego była niewidoczna aż do pomiaru.
+
+Teraz: czwarte, turkusowe pasmo (−K) układane pod fazowym, napęd netto liczony
+jako `PP + HMC − FS − K`, a linia progu stoi na **stałych 4 mV**. Gdy kręcisz
+`K_GC`, rośnie pasmo tonicznego i opada czarna linia — zamiast przesuwać się próg.
+Pod spodem tabela „Bilans hamowania" z udziałem procentowym per typ komórki.
+
+### Panel kalibracji P(AP)
+Protokół pulsowy w narzędziu: wykres P(AP) względem wagi pulsu, z pasmem 20–80%
+i pozycją obecnego `W PP→GC`. Gdy żadna waga nie trafia w pasmo, panel mówi wprost,
+że brakuje źródła zmienności, i wskazuje, który suwak ruszyć.
+
+## GŁÓWNY WYNIK: specyfikacja jest wewnętrznie sprzeczna
+
+```
+V_rest GC          -70.0 mV    →  -70.0 mV    OK
+V_th_eff GC        -50.0 mV    →  -50.0 mV    OK
+P(AP | puls)       0.45        →   0.46       OK
+W PP→GC            (wynikowe)  →   7.13 mV
+FR GC (we wzorcu)  2–6 Hz      →  21.74 Hz    NIE
+FR FS              10–40 Hz    →  181.92 Hz   NIE
+napęd ustalony     < 4.0 mV    →  14.3 mV     NIE
+```
+
+Właściwości błony i P(AP) trafiają idealnie, częstotliwości rozjeżdżają się
+o rząd wielkości. Przyczyna jest policzalna: **wagę dobiera się protokołem
+pulsowym przy tle 40 Hz, a używa w sieci przy napędzie 400 Hz.** Dziesięciokrotna
+różnica reżimu wejścia — jedna waga nie obsłuży obu.
+
+To nie jest usterka, tylko **pytanie „in vitro czy in vivo" przeliczone na liczby**:
+rzadka stymulacja u Madara i gęsty napęd PP to dwa różne punkty pracy i trzeba
+wybrać, który jest warunkiem kontrolnym.
+
+## Regresja — stare wyniki są nietknięte
+
+| sprawdzenie | wynik |
+|---|---|
+| hash spajków `dg_core` vs baza sprzed rundy 2 | **identyczne bit w bit** |
+| `pytest tests/` (17 testów) | 17/17 |
+| kierunek 4, preset quick (576 symulacji) | FF 49.9% / FB 50.1% / MC 0.0%, dekorelacja +0.067 → +0.143 — zgodne z dokumentacją |
+
+Wszystkie nowe parametry mają wartości domyślne neutralne (`p_rel = 1.0`,
+`delay_jitter_ms = 0.0`, `b_gc = B_GC`), a `_on_pre` przy `p_rel >= 1.0` bierze
+osobną gałąź, która **nie zużywa ani jednej liczby losowej**. Dlatego domyślna
+konfiguracja jest odtwarzalna co do spajka.
+
+## Pytania otwarte (blokują domknięcie kalibracji)
+
+1. **Jaki jest realny udział prądu tonicznego w całkowitym hamowaniu GC?**
+   (model daje 74%, ale to wartość odziedziczona, nie wybrana)
+2. **Czy ~46 Hz to fizjologiczna częstotliwość bazowa FS?** (w modelu FS nie mają
+   żadnego hamowania synaptycznego, więc wartość jest prawdopodobnie zawyżona)
+3. **Do którego reżimu wejścia kalibrujemy** — rzadka stymulacja in vitro (Madar)
+   czy gęsty napęd PP? Bez tego każda kalibracja trafi w jedno kryterium kosztem drugiego.
+4. Czy rozdzielić w modelu prąd toniczny od offsetu pobudliwości (dziś to jeden
+   parametr pełniący trzy role)?
+
+---
+
 ## Do zrobienia (kolejne kroki)
 
-- **P3 (domknięcie):** twardy test pasma gamma FS (rozkład ISI/rate), nie tylko flaga.
-- **P4 (pogłębienie):** rozważyć fizjologiczny napęd MC (bezpośrednie PP→HMC),
-  bo mossy cells in vivo dostają też perforant path; auto-kalibracja FR HMC do celu.
-- **Opcjonalnie:** wpleść analizę bifurkacji (P2) jako wykres w `interactive_dg.py`,
-  żeby suwak K pokazywał na żywo G_crit = 4 + K.
-- **Backlog:** TM na PP→GC, disinhibicja FS, Hodgkin-Huxley, multi-trial R_out.
+**Zablokowane do odpowiedzi prof. Błasiak** (pytania 1–3 powyżej):
+- domknięcie punktu pracy: `K` per typ komórki, `tonic_share`, wybór reżimu wejścia.
+
+**Odblokowane, można robić teraz:**
+- **Dopasowanie do CCIV** (`fit_neurons.py`, do napisania) — rampy prądowe
+  z `dataset/`, per typ komórki. Dostępne: HMC 26 nagrań, GC+CA3 66.
+  ⚠️ **FS nie mają CCIV w ogóle** (folder `GCandFS_yo_P10Hz_1`: 64 nagrania, zero ramp),
+  więc parametry FS trzeba wziąć z literatury albo estymować ze spike trainów.
+- **Kanał FS→FS** jako parametr z domyślnym zerem (wzorzec `W_FS_HMC`).
+- **Oś hamowania w siatce** (`K_GC` × `W_FS_GC`) — obecna siatka ma tylko osie
+  statystyki wejścia, więc odpowiada na pytanie o ATRYBUCJĘ, ale **nie o okno
+  funkcjonalne** (H1). To dwa różne eksperymenty, dziś zlepione w jeden.
+
+**Backlog (bez zmian):** TM na PP→GC, Hodgkin-Huxley, multi-trial R_out,
+twardy test pasma gamma FS, fizjologiczny napęd MC (bezpośrednie PP→HMC),
+wykres bifurkacji K w `interactive_dg.py`.
 
 ---
 

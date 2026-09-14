@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import numpy as np
 from brian2 import (
-    Network, NeuronGroup, SpikeGeneratorGroup, SpikeMonitor, StateMonitor,
-    Synapses, defaultclock, ms, mV, prefs, start_scope,
+    BrianLogger, Network, NeuronGroup, SpikeGeneratorGroup, SpikeMonitor,
+    StateMonitor, Synapses, defaultclock, ms, mV, prefs, start_scope,
 )
 
 from .params import (
@@ -59,7 +59,7 @@ def make_connectivity(cfg: DGConfig, seed: int = 0) -> dict:
 # Równania
 # ══════════════════════════════════════════════════════════════════════════════
 
-def _gc_eqs(K: float) -> str:
+def _gc_eqs(K: float, b: float = B_GC) -> str:
     # g_ex = PP→GC, g_ex2 = HMC→GC (re-ekscytacja), g_in = FS→GC
     return (
         f"dv/dt = (0.04/mV/ms*v**2 + 5/ms*v + 140*mV/ms - u/ms"
@@ -67,7 +67,7 @@ def _gc_eqs(K: float) -> str:
         f"dg_ex/dt  = -g_ex /({TAU_EX_GC}*ms) : volt\n"
         f"dg_ex2/dt = -g_ex2/({TAU_EX_GC}*ms) : volt\n"
         f"dg_in/dt  = -g_in /({TAU_IN_GC}*ms) : volt\n"
-        f"du/dt = {A_GC}/ms*({B_GC}*v - u) : volt\n"
+        f"du/dt = {A_GC}/ms*({b}*v - u) : volt\n"
     )
 
 
@@ -95,11 +95,33 @@ def _hmc_eqs(K: float) -> str:
     )
 
 
-def _syn(src, tgt, si, ti, w_mv, var, delay_ms):
+def _on_pre(var, w_mv, p_rel):
+    """
+    Wyrażenie on_pre. Przy p_rel >= 1.0 zwracamy wersję DETERMINISTYCZNĄ — nie
+    dlatego, że tak ładniej, tylko żeby nie zużyć ani jednej liczby losowej:
+    dzięki temu domyślna konfiguracja jest bit-w-bit identyczna z wersją sprzed
+    wprowadzenia zawodności (regresja w tests/test_reliability_regression.py).
+    """
+    if p_rel >= 1.0:
+        return f'{var}_post += {w_mv}*mV'
+    return f'{var}_post += {w_mv}*mV*int(rand() < {p_rel})'
+
+
+def _set_delay(s, delay_ms, jitter_ms):
+    """Opóźnienie stałe albo rozrzucone wokół `delay_ms` (obcięte do ≥ 0)."""
+    if jitter_ms and jitter_ms > 0:
+        hi = delay_ms + 5.0 * jitter_ms          # skończona górna granica dla clip()
+        s.delay = f'clip({delay_ms} + {jitter_ms}*randn(), 0, {hi})*ms'
+    else:
+        s.delay = delay_ms * ms
+
+
+def _syn(src, tgt, si, ti, w_mv, var, delay_ms, p_rel=1.0, jitter_ms=0.0):
     if len(si) == 0:
         return None
-    s = Synapses(src, tgt, on_pre=f'{var}_post += {w_mv}*mV', delay=delay_ms * ms)
+    s = Synapses(src, tgt, on_pre=_on_pre(var, w_mv, p_rel))
     s.connect(i=si, j=ti)
+    _set_delay(s, delay_ms, jitter_ms)
     return s
 
 
@@ -124,7 +146,7 @@ def simulate(cfg: DGConfig, input_idx: np.ndarray, input_t_ms: np.ndarray,
     n_pp = cfg.N_GC * cfg.n_syn_pp if cfg.per_fiber else cfg.N_GC
     pp = SpikeGeneratorGroup(n_pp, input_idx, input_t_ms * ms)
 
-    gc = NeuronGroup(cfg.N_GC, _gc_eqs(cfg.K_GC), threshold='v >= 30*mV',
+    gc = NeuronGroup(cfg.N_GC, _gc_eqs(cfg.K_GC, cfg.b_gc), threshold='v >= 30*mV',
                      reset=f'v = {C_GC}*mV; u = u + {D_GC}*mV',
                      refractory=2 * ms, method='euler')
     fs = NeuronGroup(cfg.N_FS, _fs_eqs(cfg.K_FS), threshold='v >= 30*mV',
@@ -134,7 +156,7 @@ def simulate(cfg: DGConfig, input_idx: np.ndarray, input_t_ms: np.ndarray,
                       reset=f'v = {C_HMC}*mV; u = u + {D_HMC}*mV',
                       refractory=2 * ms, method='euler')
 
-    gc.v = -70 * mV;  gc.u = B_GC * (-70 * mV)
+    gc.v = -70 * mV;  gc.u = cfg.b_gc * (-70 * mV)
     fs.v = -70 * mV;  fs.u = B_FS * (-70 * mV)
     hmc.v = -70 * mV; hmc.u = B_HMC * (-70 * mV)
 
@@ -148,35 +170,51 @@ def simulate(cfg: DGConfig, input_idx: np.ndarray, input_t_ms: np.ndarray,
     else:
         src = np.arange(cfg.N_GC, dtype=np.int32)
         tgt = np.arange(cfg.N_GC, dtype=np.int32)
-    s = Synapses(pp, gc, on_pre=f'g_ex_post += {cfg.W_PP_GC}*mV', delay=PP_DELAY * ms)
+    pr = cfg.p_rel_map()
+    jit = cfg.delay_jitter_ms
+
+    if any(p < 1.0 for p in pr.values()):
+        # Brian2 ostrzega, że `g += w*int(rand()<p)` „may depend on the order of
+        # execution". Tutaj jest to nieszkodliwe: wkłady synaps sumują się
+        # (dodawanie jest przemienne), a losowania są niezależne — od kolejności
+        # zależy tylko to, który synapsie przypadnie która liczba z generatora,
+        # co jest statystycznie nierozróżnialne. Wyciszamy WYŁĄCZNIE gdy
+        # zawodność jest faktycznie włączona, żeby domyślne przebiegi zostały
+        # w pełni gadatliwe, a sweep na 35 tys. symulacji nie tonął w logu.
+        BrianLogger.suppress_name('base')
+    s = Synapses(pp, gc, on_pre=_on_pre('g_ex', cfg.W_PP_GC, pr['pp_gc']))
     s.connect(i=src, j=tgt)
+    _set_delay(s, PP_DELAY, jit)
     objs.append(s)
 
     # ── motyw FF: PP → FS ────────────────────────────────────────────────────
     if cfg.enable_ff:
         pp_fs_src = conn['pp_fs'][0] * cfg.n_syn_pp if cfg.per_fiber else conn['pp_fs'][0]
-        s = _syn(pp, fs, pp_fs_src, conn['pp_fs'][1], cfg.W_PP_FS, 'g_ex', PP_DELAY)
+        s = _syn(pp, fs, pp_fs_src, conn['pp_fs'][1], cfg.W_PP_FS, 'g_ex', PP_DELAY,
+                 pr['pp_fs'], jit)
         if s is not None:
             objs.append(s)
 
     # ── motyw FB: GC → FS ────────────────────────────────────────────────────
     if cfg.enable_fb:
-        s = _syn(gc, fs, *conn['gc_fs'], cfg.W_GC_FS, 'g_ex2', SYN_DELAY)
+        s = _syn(gc, fs, *conn['gc_fs'], cfg.W_GC_FS, 'g_ex2', SYN_DELAY,
+                 pr['gc_fs'], jit)
         if s is not None:
             objs.append(s)
 
     # ── FS → GC: wspólna droga wyjściowa FF i FB (istnieje, gdy któryś działa) ─
     if cfg.enable_ff or cfg.enable_fb:
-        s = _syn(fs, gc, *conn['fs_gc'], cfg.W_FS_GC, 'g_in', SYN_DELAY)
+        s = _syn(fs, gc, *conn['fs_gc'], cfg.W_FS_GC, 'g_in', SYN_DELAY,
+                 pr['fs_gc'], jit)
         if s is not None:
             objs.append(s)
 
     # ── motyw MC: GC → HMC → {FS, GC} ────────────────────────────────────────
     if cfg.enable_hmc:
         for args in [
-            (gc, hmc, *conn['gc_hmc'], cfg.W_GC_HMC, 'g_ex', SYN_DELAY),
-            (hmc, fs, *conn['hmc_fs'], cfg.W_HMC_FS, 'g_ex3', SYN_DELAY),
-            (hmc, gc, *conn['hmc_gc'], cfg.W_HMC_GC, 'g_ex2', SYN_DELAY),
+            (gc, hmc, *conn['gc_hmc'], cfg.W_GC_HMC, 'g_ex', SYN_DELAY, pr['gc_hmc'], jit),
+            (hmc, fs, *conn['hmc_fs'], cfg.W_HMC_FS, 'g_ex3', SYN_DELAY, pr['hmc_fs'], jit),
+            (hmc, gc, *conn['hmc_gc'], cfg.W_HMC_GC, 'g_ex2', SYN_DELAY, pr['hmc_gc'], jit),
         ]:
             s = _syn(*args)
             if s is not None:
@@ -185,7 +223,8 @@ def simulate(cfg: DGConfig, input_idx: np.ndarray, input_t_ms: np.ndarray,
         # FS → HMC: hamulec pętli GC→HMC→GC. Domyślnie W_FS_HMC=0 → brak synapsy,
         # czyli obwód dokładnie jak w interactive_dg.py.
         if cfg.W_FS_HMC > 0 and (cfg.enable_ff or cfg.enable_fb):
-            s = _syn(fs, hmc, *conn['fs_hmc'], cfg.W_FS_HMC, 'g_in', SYN_DELAY)
+            s = _syn(fs, hmc, *conn['fs_hmc'], cfg.W_FS_HMC, 'g_in', SYN_DELAY,
+                     pr['fs_hmc'], jit)
             if s is not None:
                 objs.append(s)
 

@@ -81,6 +81,70 @@ class DGConfig:
     K_FS: float = 5.0
     K_HMC: float = 10.0
 
+    # Parametr `b` neuronu GC (sprzężenie u↔v w modelu Izhikevicza).
+    # Jest w konfiguracji, a nie tylko stałą modułu, bo steruje SUMĄ napięć
+    # spoczynku i progu: V_rest + V_th_eff = −(5−b)/0.04. Przy b = 0.2 ta suma
+    # jest zablokowana na −120 mV, więc np. pary (−70, −45) nie da się uzyskać
+    # żadnym K. Kalibracja (`calibrate.py`) musi móc go zmienić, inaczej
+    # raportowałaby częstotliwości policzone dla innego neuronu niż ten,
+    # dla którego wyliczyła próg.
+    b_gc: float = B_GC
+
+    # ── Zawodność synaptyczna („spike-wise noise" Madara) ─────────────────────
+    # Prawdopodobieństwo, że pojedynczy spajk presynaptyczny faktycznie przekaże
+    # ładunek. 1.0 = synapsa deterministyczna → obwód numerycznie IDENTYCZNY
+    # z wersją sprzed wprowadzenia tego parametru (zweryfikowane regresyjnie:
+    # przy 1.0 kod nie zużywa ani jednej liczby losowej, bo bierze inną gałąź).
+    #
+    # Po co to jest: bez źródła zmienności prawdopodobieństwo AP po pulsie jest
+    # zero-jedynkowe (zmierzone: 0.00 → 0.99), więc zakresu 20–80% podawanego
+    # przez Madara NIE DA SIĘ trafić samą wagą. Przerzedzenie procesu Poissona
+    # z prawdopodobieństwem p przy zachowanej średniej (waga W/p) daje wariancję
+    # g_ex ∝ 1/p — rzadsze, ale większe zdarzenia, czyli większe fluktuacje V
+    # przy TYM SAMYM średnim napędzie. To jest mechanizm, który wytwarza
+    # stopniowane P(AP), a nie przebranie wagi pod inną nazwą.
+    #
+    # ⚠️ Efektywny napęd = rate × W × p_rel × τ, więc p_rel i wagę trzeba
+    # kalibrować RAZEM — samo obniżenie p_rel cicho zjeżdża z częstotliwości.
+    P_REL_PP_GC: float = 1.0
+    P_REL_PP_FS: float = 1.0
+    P_REL_GC_FS: float = 1.0
+    P_REL_FS_GC: float = 1.0
+    P_REL_GC_HMC: float = 1.0
+    P_REL_HMC_FS: float = 1.0
+    P_REL_HMC_GC: float = 1.0
+    P_REL_FS_HMC: float = 1.0
+
+    # Rozrzut opóźnień synaptycznych [ms] (odchylenie standardowe). 0.0 = wyłączony.
+    # UWAGA metodologiczna: Brian2 trzyma `delay` na SYNAPSIE, nie na spajku, więc
+    # losujemy je raz przy budowie sieci. To NIE jest jitter per spajk w sensie
+    # Madara — na poziomie populacji rozmywa odpowiedź podobnie, ale w metodach
+    # trzeba to opisać jako heterogeniczność opóźnień, a nie zmienność próba-próba.
+    delay_jitter_ms: float = 0.0
+
+    def p_rel_map(self) -> dict:
+        """Prawdopodobieństwa uwolnienia wg nazwy ścieżki (klucze jak w `make_connectivity`)."""
+        return {
+            'pp_gc': self.P_REL_PP_GC, 'pp_fs': self.P_REL_PP_FS,
+            'gc_fs': self.P_REL_GC_FS, 'fs_gc': self.P_REL_FS_GC,
+            'gc_hmc': self.P_REL_GC_HMC, 'hmc_fs': self.P_REL_HMC_FS,
+            'hmc_gc': self.P_REL_HMC_GC, 'fs_hmc': self.P_REL_FS_HMC,
+        }
+
+    def with_reliability(self, gc: float = 1.0, fs: float = 1.0,
+                         hmc: float = 1.0) -> "DGConfig":
+        """
+        Kopia z zawodnością ustawioną wg TYPU KOMÓRKI DOCELOWEJ — czyli tak, jak
+        formułuje to biologia: „GC i HMC odpowiadają mniej niezawodnie niż FS".
+        Ustawia wszystkie ścieżki wchodzące do danego typu na to samo p_rel.
+        """
+        return replace(
+            self,
+            P_REL_PP_GC=gc, P_REL_FS_GC=gc, P_REL_HMC_GC=gc,
+            P_REL_PP_FS=fs, P_REL_GC_FS=fs, P_REL_HMC_FS=fs,
+            P_REL_GC_HMC=hmc, P_REL_FS_HMC=hmc,
+        )
+
     # prawdopodobieństwa połączeń
     P_PP_FS: float = 0.40
     P_GC_FS: float = 0.40
