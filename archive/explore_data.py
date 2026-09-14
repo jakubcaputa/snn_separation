@@ -22,7 +22,9 @@ try:
 except ImportError:
     sys.exit("neo not found. Run:  pip install neo quantities")
 
-DATASET = Path(r"C:\Users\jjaku\PhD\Neuro\PatchPatSep2s_Public\PatchPatSep2s_Public")
+# Dane leza w repo (dataset/ jest w .gitignore - pobierane osobno, BioStudies S-BSST219).
+DATASET = (Path(__file__).resolve().parents[1]
+           / "dataset" / "PatchPatSep2s_Public" / "PatchPatSep2s_Public")
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 

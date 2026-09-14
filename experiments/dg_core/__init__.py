@@ -7,8 +7,9 @@ GC/FS/HMC, te same równania Izhikevicza, ten sam kanon częstotliwości PP
 interaktywnym, a nie pochodziły z „innego modelu".
 
 Używany przez:
-  • kierunek4_motifs — który motyw hamowania dominuje separację (lezje + Shapley)
-  • kierunek1_readout — czy DG poprawia odbiorcę downstream (klasyfikator, pamięć)
+  • e1_regime_map — czy istnieje okno funkcjonalne separacji (hipotezy H1, H2)
+  • e2_motif_attribution — który motyw hamowania dominuje (lezje + Shapley)
+  • readout_deferred — czy DG poprawia odbiorcę downstream (1A zamknięte, 1B odłożone)
 """
 
 from .params import (

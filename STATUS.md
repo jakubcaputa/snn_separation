@@ -1,7 +1,15 @@
 # Stan projektu — model DG i separacja wzorców
 
-*Aktualizacja: 2026-09-14. Ten plik odpowiada na pytanie „gdzie jestem i co dalej".
-Kierunki badawcze i rama publikacyjna: `doktorat_plan.md`.*
+*Aktualizacja: 2026-09-14. Ten plik odpowiada na jedno pytanie: **gdzie jestem
+i co dalej**. Jest źródłem prawdy dla STANU prac — nie dla hipotez ani planów.*
+
+> **Cztery dokumenty, cztery role** — jeśli szukasz czegoś innego, to jest gdzie indziej:
+> | dokument | odpowiada na pytanie | czego tu NIE ma |
+> |---|---|---|
+> | `README.md` | gdzie co leży, jak uruchomić | stanu prac i planów |
+> | `STATUS.md` | **gdzie jestem, co blokuje, co dalej** | uzasadnień naukowych |
+> | `doktorat_plan.md` | dokąd to zmierza na poziomie doktoratu | szczegółów artykułu |
+> | `PLAN_PUBLIKACJI.md` | plan artykułu do PLOS Comp Biol | bieżącego stanu prac |
 
 ---
 
@@ -16,12 +24,13 @@ gotowa i czeka na te trzy liczby.
 |---|---|
 | Narzędzie `interactive_dg.py` | działa, rozbudowane o bilans hamowania i panel P(AP) |
 | Rdzeń `dg_core` | działa, regresja bit-w-bit vs stan sprzed zmian |
-| Kierunek 4 — atrybucja motywów (Shapley) | **maszyneria gotowa**, wynik wstępny stabilny |
-| Kierunek 4B — mapa reżimów (H1) | **nowe, uruchamialne**, wynik wstępny ostrzegawczy (§5) |
+| **E2** — atrybucja motywów (Shapley) | maszyneria gotowa, wynik wstępny stabilny |
+| **E1** — mapa reżimów → testuje **H1, H2** | uruchamialne, wynik wstępny **ostrzegawczy** (§5) |
+| **E4/E5** — kontroler → testują **H3, H4** | **niezbudowane** ← niosą ciężar publikacji |
 | Kalibracja punktu pracy | maszyneria gotowa, **specyfikacja niedomknięta** (§3) |
 | Właściwości błony z danych Madara | **wyciągnięte**, 91 komórek (§4) |
-| Kierunek 1A — odczyt liniowy | zamknięte, wynik negatywny |
-| Kierunek 1B — pojemność pamięci | wstrzymane, wymaga N_GC ≥ 2000 na HPC |
+| Odczyt downstream 1A | zamknięte, wynik negatywny |
+| Odczyt downstream 1B | odłożone, wymaga N_GC ≥ 2000 na HPC |
 
 ---
 
@@ -131,7 +140,7 @@ z oczekiwaniem:
 | FR_FS [Hz] | 46.0 | 41.8 | 37.8 | 33.4 | 27.6 |
 | FR_GC [Hz] | 3.12 | 3.09 | 3.37 | 3.65 | 4.08 |
 
-**Mapa reżimów** (`kierunek4_motifs/run_regime_map.py`) — brakujący eksperyment.
+**Mapa reżimów = eksperyment E1** (`experiments/e1_regime_map/`, testuje H1 i H2) — brakujący eksperyment.
 Dotychczasowa siatka zmienia statystykę wejścia i odpowiada na pytanie o
 ATRYBUCJĘ; nie ma w niej ani jednej osi hamowania, więc **nie mogła odpowiedzieć
 na H1** (czy istnieje okno funkcjonalne). Nowy skrypt zamraża wejście i zmienia
@@ -217,9 +226,9 @@ python -m dg_core.calibrate --tonic-share 0.5   # gdy B1 będzie znane
 python -m dg_core.madar_intrinsics
 
 # eksperymenty
-cd kierunek4_motifs
-python run_lesion_grid.py --preset quick    # atrybucja motywów (Shapley)
-python run_regime_map.py  --preset quick    # mapa reżimów (H1)
+cd e1_regime_map && python run_regime_map.py --preset quick     # E1 → H1, H2
+cd ../e2_motif_attribution
+python run_lesion_grid.py --preset quick                       # E2 → atrybucja
 python analyze_motifs.py --in results/lesion_grid_quick.npz
 
 # testy regresji
@@ -236,28 +245,32 @@ wcześniejszy wynik nie wymaga przeliczenia.**
 
 ## 8. Mapa plików
 
+Pełna mapa i zasady repo: **`README.md`** (nowy, 2026-09-14).
+
 ```
-interactive_dg.py              narzędzie Streamlit — docelowy produkt
-dg_params.py                   jedyne źródło prawdy dla częstotliwości wejścia
-doktorat_plan.md               kierunki badawcze i rama publikacyjna
-experiments/
-  dg_core/
-    params.py                  DGConfig — pełna konfiguracja obwodu
-    circuit.py                 simulate() — obwód GC/FS/HMC
-    calibrate.py               kalibracja do punktu pracy          [NOWE 09-2026]
-    madar_intrinsics.py        właściwości błony z danych          [NOWE 09-2026]
-    patterns.py metrics.py viz.py
-  kierunek4_motifs/
-    run_lesion_grid.py         atrybucja motywów (Shapley)
-    run_regime_map.py          mapa reżimów / H1                   [NOWE 09-2026]
-    analyze_motifs.py
-  kierunek1_readout/           1A zamknięte, 1B wstrzymane
-  hpc/                         skrypty SLURM (Ares/PLGrid)
-tests/                         regresja i kalibracja (17 testów)   [NOWE 09-2026]
-dataset/                       dane Madara (patch-clamp + protokoły)
+README.md                  od czego zacząć — mapa kodu i pułapki
+STATUS.md                 TEN plik — stan projektu i co blokuje
+doktorat_plan.md           kierunki badawcze, hipotezy, plan publikacji
+interactive_dg.py          narzędzie Streamlit — docelowy produkt
+dg_params.py               jedyne źródło prawdy dla częstotliwości wejścia
+experiments/README.md      ← mapa eksperyment→hipoteza→folder
+experiments/dg_core/       rdzeń modelu (+ calibrate.py, madar_intrinsics.py)
+experiments/e1_regime_map/        E1 → hipotezy H1, H2 (okno funkcjonalne)
+experiments/e2_motif_attribution/ E2 → który motyw tworzy okno (Shapley)
+experiments/readout_deferred/     1A zamknięte, 1B odłożone
+experiments/hpc/           SLURM (Ares/PLGrid)
+separation_parameters_sweep/    linia LIF + parameters.md (opis τ_m, V_th, V_reset)
+tests/                     17 testów regresji i kalibracji
+archive/                   skrypty, które zrobiły swoje — patrz archive/README.md
+prezentacja/               materiały na spotkania
+dataset/                   dane Madara (poza gitem)
 ```
 
-**Archiwum:** skrypty w korzeniu repo (`freq_audit.py`, `bifurcation_K.py`,
-`dg_module3_inh_comparison.py`, `single_neuron_patsep*.py`, `debug_*.py`) to
-poligon z wcześniejszych rund. Ich wnioski są już w §2; nie są częścią
-bieżącego łańcucha eksperymentów.
+**Sprzątanie 2026-09-14.** Usunięto 16 plików z korzenia: `debug_*.py` (7 roboczych),
+`visualize_dg*.py` (4 generatory figur), jednorazowe eksploratory
+(`dataset_overview.py`, `explore_gc1_r090.py`) oraz warianty zastąpione przez
+`dg_core` (`dg_microcircuit_brian2.py`, `single_neuron_patsep_{brian2,nest}.py`).
+Wszystko zostaje w historii gita. Do `archive/` przeniesiono cztery skrypty, które
+wyprodukowały wnioski nadal obowiązujące (`bifurcation_K.py`, `freq_audit.py`,
+`dg_module3_inh_comparison.py`, `explore_data.py`) — mają naprawione ścieżki
+i uruchamiają się. Korzeń repo: z 25 plików do 5.

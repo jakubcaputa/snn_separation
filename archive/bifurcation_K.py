@@ -52,6 +52,9 @@ from brian2 import (
 )
 prefs.codegen.target = 'numpy'
 
+import sys as _sys, os as _os  # archive/: dopnij korzeń repo do ścieżki,
+# bo skrypt mieszka teraz poziom niżej niż dg_params.py
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 from dg_params import R_EFF_HIGH, W_PP_GC_IZH
 
 # ── Parametry Izhikevicza (te same co w interactive_dg / module3) ─────────────

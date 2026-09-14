@@ -1,9 +1,27 @@
 # Paper ideas — wersja druga: adaptacyjna regulacja aktywności a separacja wzorców
 
-*Dokument roboczy, stan 2026-08-24. Cel: plan projektu publikacyjnego pod
+*Stan 2026-08-24 — POWSTAŁ PRZED rundą kalibracyjną (wrzesień 2026), więc
+bieżący stan prac czytaj w `STATUS.md`, nie tutaj.*
+
+*Dokument roboczy. Cel: plan projektu publikacyjnego pod
 **PLOS Computational Biology**, osadzony w faktycznym stanie tego repo
 (`doktorat_plan.md`, `experiments/`, `dataset/`). Nacisk na METODOLOGIĘ
 i EKSPERYMENTY, nie na tekst manuskryptu.*
+
+---
+
+
+> **Cztery dokumenty, cztery role** — jeśli szukasz czegoś innego, to jest gdzie indziej:
+> | dokument | odpowiada na pytanie | czego tu NIE ma |
+> |---|---|---|
+> | `README.md` | gdzie co leży, jak uruchomić | stanu prac i planów |
+> | `STATUS.md` | **gdzie jestem, co blokuje, co dalej** | uzasadnień naukowych |
+> | `doktorat_plan.md` | dokąd to zmierza na poziomie doktoratu | szczegółów artykułu |
+> | `PLAN_PUBLIKACJI.md` | plan artykułu do PLOS Comp Biol | bieżącego stanu prac |
+
+> **Kanoniczne w TYM pliku:** §1 tytuł i Author Summary · §2.3 hipotezy H1–H5 ·
+> §3.4 eksperymenty E1–E7 · §3.6 knockouty K1–K7 · §6 oś czasu · §7 plan figur ·
+> §8 ryzyka i pozycjonowanie.
 
 ---
 
@@ -125,6 +143,15 @@ utrzymywany przez sprzężenie zwrotne**". Konkretnie dostarcza:
 **Ważne:** H1 i H2 są w dużej mierze przetestowane wstępnie (§2 `doktorat_plan.md`);
 H3–H5 są nowe i to one niosą ciężar publikacji.
 
+**Gdzie która hipoteza jest testowana:**
+
+| hipoteza | eksperyment | kod |
+|---|---|---|
+| H1, H2 | E1 — mapa reżimów | `experiments/e1_regime_map/` ✅ |
+| „który motyw tworzy okno" | E2 — atrybucja | `experiments/e2_motif_attribution/` ✅ |
+| **H3, H4** | E4 — kontroler, E5 — uogólnienie | **niezbudowane** |
+| H5 | wymaga metryk NDP/SF (§3.3) | niezbudowane |
+
 ---
 
 ## 3. Metodologia i eksperymenty obliczeniowe
@@ -183,7 +210,7 @@ i zamyka jednocześnie postulat „poziom 1" z ramy współpracy.
 - wejście PP z **rzeczywistych protokołów Madara** (nowy tryb `pp_source='madar'`
   obok `per_fiber`/aggregate);
 - opcjonalna depresja krótkoterminowa Tsodyks–Markram na `PP→GC` (backlog
-  z `Changes.md`) — jako parametr, nie jako domyślna zmiana modelu.
+  z `STATUS.md`) — jako parametr, nie jako domyślna zmiana modelu.
 
 **L2 — kontroler adaptacyjny (rdzeń nowości).** Trzy mechanizmy, każdy włączalny
 osobno, wszystkie wolne względem dynamiki obwodu (τ ≈ 1–10 s):
@@ -211,6 +238,11 @@ znaczenie.
 
 ### 3.3 Bateria metryk (`dg_core/metrics.py` — rozbudowa)
 
+> **Definicje i interpretacja metryk już zaimplementowanych: `doktorat_plan.md` §5a.**
+> Poniżej to, czym trzeba je ROZBUDOWAĆ na potrzeby artykułu (zwłaszcza NDP i SF
+> Madara, bez których nie ma porównania 1:1 z jego danymi).
+
+
 | grupa | metryki | po co |
 |---|---|---|
 | separacja | `R`, **`NDP`**, **`SF`** przy 7 szerokościach binów; SPIKE-distance; dekorelacja `R_in − R_out` | zgodność 1:1 z Madarem; **rozdzielenie kodu wzorcowego od częstotliwościowego** (H5) |
@@ -228,15 +260,21 @@ trzymanej części). Jeśli oba mówią co innego — wynik nie idzie do artyku�
 
 ### 3.4 Eksperymenty obliczeniowe (E1–E7)
 
-| # | eksperyment | plan | rozmiar | testuje |
-|---|---|---|---|---|
-| **E1** | **Mapa reżimów** — separacja vs poziom aktywności | osie: napęd PP (×0.25…×4), `W_FS_GC`, `K_GC`, `R_in` ∈ {0.5…0.975}, `W_FS_HMC` ∈ {0, 1, 2, 5}, reżim MC (`mc_inert`/`mc_active`); 10 seedów sieci × 10 zestawów wzorców | ~30–50 tys. symulacji | H1, H2 |
-| **E2** | **Atrybucja motywów** — 2³ lezje FF/FB/MC + Shapley, z pełną baterią metryk | istniejący `run_lesion_grid.py`, ta sama sieć i te same wzorce we wszystkich lezjach | 8 × podsiatka E1 ≈ 20 tys. | który motyw tworzy okno |
-| **E3** | **Sobol/LHS dla surrogatu ML** — quasi-losowe próbkowanie 10-wym. przestrzeni | sekwencja Sobola, NIE gęsta siatka (§3.5, leakage) | 20 tys. + 5 tys. testowych spoza hipersześcianu | L3, indeksy Sobola, sloppiness |
-| **E4** | **Kontroler** — 3 mechanizmy × 3 wielkości kontrolowane × ON/OFF | protokół: 60 s adaptacji → perturbacja → 60 s odzysku | ~3 tys. długich przebiegów | H3, H4 |
-| **E5** | **Uogólnienie kontrolera** — strojony w jednym reżimie, testowany w innych | strojenie przy 10 Hz / R=0.75; test na 30 Hz, na wariantach burstiness, na innych `R_in` | ~2 tys. | H3 (kluczowy test) |
-| **E6** | **Skalowanie** — `DGConfig.scaled(N)` dla N_GC ∈ {200, 400, 800, 2000, 5000} | test kodowania ekspansyjnego, stały in-degree | ~1 tys. (drogie) | czy okno przesuwa się z rozmiarem |
-| **E7** | **Walidacja na bodźcach Madara** — wejście = rzeczywiste protokoły | patrz §4 | ~5 tys. | ground truth |
+| # | eksperyment | plan | rozmiar | testuje | **gdzie w repo** |
+|---|---|---|---|---|---|
+| **E1** | **Mapa reżimów** — separacja vs poziom aktywności | osie: napęd PP (×0.25…×4), `W_FS_GC`, `K_GC`, `R_in` ∈ {0.5…0.975}, `W_FS_HMC` ∈ {0, 1, 2, 5}, reżim MC (`mc_inert`/`mc_active`); 10 seedów sieci × 10 zestawów wzorców | ~30–50 tys. symulacji | H1, H2 | `experiments/e1_regime_map/` ✅ |
+| **E2** | **Atrybucja motywów** — 2³ lezje FF/FB/MC + Shapley, z pełną baterią metryk | istniejący `run_lesion_grid.py`, ta sama sieć i te same wzorce we wszystkich lezjach | 8 × podsiatka E1 ≈ 20 tys. | który motyw tworzy okno | `experiments/e2_motif_attribution/` ✅ |
+| **E3** | **Sobol/LHS dla surrogatu ML** — quasi-losowe próbkowanie 10-wym. przestrzeni | sekwencja Sobola, NIE gęsta siatka (§3.5, leakage) | 20 tys. + 5 tys. testowych spoza hipersześcianu | L3, indeksy Sobola, sloppiness | niezbudowane |
+| **E4** | **Kontroler** — 3 mechanizmy × 3 wielkości kontrolowane × ON/OFF | protokół: 60 s adaptacji → perturbacja → 60 s odzysku | ~3 tys. długich przebiegów | H3, H4 | niezbudowane ← **nośne dla publikacji** |
+| **E5** | **Uogólnienie kontrolera** — strojony w jednym reżimie, testowany w innych | strojenie przy 10 Hz / R=0.75; test na 30 Hz, na wariantach burstiness, na innych `R_in` | ~2 tys. | H3 (kluczowy test) | niezbudowane |
+| **E6** | **Skalowanie** — `DGConfig.scaled(N)` dla N_GC ∈ {200, 400, 800, 2000, 5000} | test kodowania ekspansyjnego, stały in-degree | ~1 tys. (drogie) | czy okno przesuwa się z rozmiarem | niezbudowane |
+| **E7** | **Walidacja na bodźcach Madara** — wejście = rzeczywiste protokoły | patrz §4 | ~5 tys. | ground truth | niezbudowane |
+
+> **Stan na 2026-09:** istnieją E1 i E2. E1 ma wynik wstępny, który **nie
+> potwierdza H1** (separacja rośnie monotonicznie ku ciszy — patrz `STATUS.md` §5),
+> więc zanim ruszy reszta, trzeba rozstrzygnąć, czy to artefakt maski, za wąska
+> siatka, czy realny problem z hipotezą nośną. **E4 i E5 — te, które testują H3
+> i H4, czyli niosą ciężar publikacji — nie istnieją.**
 
 Koszt: ~80–100 tys. symulacji × ~1.3 s dla najkrótszych; z E4 (długie przebiegi
 adaptacji) i E6 (duże sieci) realistycznie **kilka tysięcy rdzenio-godzin** — na
@@ -509,34 +547,38 @@ czyli sharding i kontener muszą działać do końca Q1.
 - **Kierunek 2** (forgetting) — poza zakresem tego artykułu.
 - **NEST** — nie ruszać (drugie źródło prawdy modelu).
 
-### 9.3 Zbudować (kolejność wykonania, pierwsze 3 miesiące)
+### 9.3 Co zbudować — lista przeniesiona
 
-```
-experiments/dg_core/io_madar.py      # NOWY  — Axograph→Neo→NWB; bodźce z Protocols/
-experiments/dg_core/metrics.py       # ROZBUDOWA — NDP, SF, SPIKE, MI+korekcja, gamma, koszt
-experiments/dg_core/fit_neurons.py   # NOWY  — Izhikevich ← CCIV, per typ, rozkłady
-experiments/dg_core/control.py       # NOWY  — IP / iSTDP / synaptic scaling
-experiments/dg_core/circuit.py       # ZMIANA — pp_source='madar'; K_GC per-neuron; gaba_block
-experiments/analysis_plan.md         # NOWY  — preregistracja H1–H5
-tests/                               # NOWY  — regresja modelu + linter pułapek
-interactive_dg.py                    # ZMIANA — suwak W FS→HMC + panel obserwowalności
-```
+**Aktualna lista „zrobione / do zrobienia" jest w `STATUS.md` §4.** Ta sekcja
+powstała w sierpniu 2026 i zdążyła się zdezaktualizować (`tests/`, rozbudowa
+`metrics.py`, kalibracja i `madar_intrinsics.py` już istnieją).
 
-**Pierwszy krok, który zrobiłbym jutro:** `io_madar.py` + odczyt jednego pliku
-`dataset/PatchPatSep2s_Public/PatchPatSep2s_Public/Protocols/10Hz/10Hz_R0.750_CorrelatedPoisson.prt.axgx`
-i podanie go jako wejścia PP do `dg_core.circuit.simulate()`. To jeden dzień pracy,
-a zmienia status projektu z „model z syntetycznymi wzorcami" na „model napędzany
-tymi samymi bodźcami, co eksperyment" — czyli odblokowuje V2, V3 i V4 naraz.
+Jedyna rzecz stąd, która nie ma odpowiednika gdzie indziej i nadal jest aktualna:
 
-### 9.4 Trzy pułapki modelu — nadal obowiązują
-`DGConfig.scaled(N)` zamiast gołego `N_GC=`; dwa reżimy MC (`mc_inert`/`mc_active`);
-maska „separacja czy wyciszenie" na każdym panelu. Przy generowaniu datasetu dla
+> **`io_madar.py`** — odczyt bodźców z `dataset/…/Protocols/` (np.
+> `10Hz/10Hz_R0.750_CorrelatedPoisson.prt.axgx`) i podanie ich jako wejścia PP do
+> `dg_core.circuit.simulate()`. Jeden dzień pracy, a zmienia status projektu
+> z „model z syntetycznymi wzorcami" na „model napędzany tymi samymi bodźcami,
+> co eksperyment" — odblokowuje walidacje V2, V3 i V4 naraz.
+
+### 9.4 Pułapki modelu — nadal obowiązują
+
+**Lista kanoniczna jest w `doktorat_plan.md` §4** (od 09-2026 są CZTERY, nie trzy —
+doszło „K_GC pełni trzy role naraz"). Nie powtarzam jej tutaj, żeby nie rozjechała
+się drugi raz.
+
+Dlaczego to jest krytyczne akurat dla tego artykułu: przy generowaniu datasetu dla
 surrogatu ML (E3) złamanie którejkolwiek z nich oznacza, że model ML nauczy się
 artefaktu — a potem inverse design zoptymalizuje pod ten artefakt.
 
 ---
 
 ## 10. Otwarte pytania do rozstrzygnięcia przed startem Q1
+
+> **Lista ŻYWA — ta, która realnie blokuje pracę — jest w `doktorat_plan.md` §9**
+> (w tym trzy pytania wysłane do prof. Błasiak 2026-09-11). Poniżej pytania
+> specyficzne dla artykułu, zadane w sierpniu 2026.
+
 
 1. **Metryka pierwszorzędowa**: NDP przy 100 ms czy MI(klasa; kod)? Propozycja:
    NDP (porównywalna z Madarem), MI jako współrzędna druga. Do preregistracji.

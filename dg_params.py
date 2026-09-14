@@ -13,7 +13,7 @@ output GC ~6 Hz — reżim rzadkiego kodowania DG, aktywne GC ~1–10 Hz):
   • nieaktywny GC:  1 Hz / włókno   →  40 Hz aggregate
 
 Dlaczego 400, nie 600 Hz?  Przy 600 Hz output GC ≈ 16.6 Hz — za wysoko jak na
-DG.  Patrz freq_audit.py oraz Changes.md (Priorytet 1).
+DG.  Patrz freq_audit.py oraz STATUS.md (Priorytet 1).
 """
 
 # ── Geometria wejścia ─────────────────────────────────────────────────────────

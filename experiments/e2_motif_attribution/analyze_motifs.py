@@ -1,5 +1,5 @@
 """
-kierunek4_motifs/analyze_motifs.py
+e2_motif_attribution/analyze_motifs.py
 
 Analiza wyników `run_lesion_grid.py`: wartości Shapleya, mapa dominującego motywu,
 interakcje FF×FB, panel kontrolny (czy to na pewno separacja, a nie wyciszenie).

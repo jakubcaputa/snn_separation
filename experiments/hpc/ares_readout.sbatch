@@ -2,8 +2,8 @@
 ## Kierunek 1 — klasyfikator downstream + pojemność pamięci (Ares / Cyfronet)
 ##
 ## Wysłanie (dwa eksperymenty, ten sam skrypt):
-##   sbatch --array=0-39 ares_kierunek1.sbatch classification
-##   sbatch --array=0-19 ares_kierunek1.sbatch capacity
+##   sbatch --array=0-39 ares_readout.sbatch classification
+##   sbatch --array=0-19 ares_readout.sbatch capacity
 ## Po zakończeniu:
 ##   python analyze_readout.py --in "classification_full_shard*.npz" \
 ##                             --capacity "capacity_full_shard*.npz"
@@ -25,7 +25,7 @@ mkdir -p logs
 EXPERIMENT="${1:-classification}"       # classification | capacity
 
 module load python/3.11
-cd "${SLURM_SUBMIT_DIR}/../kierunek1_readout"
+cd "${SLURM_SUBMIT_DIR}/../readout_deferred"
 source "${SCRATCH}/dgvenv/bin/activate"
 
 export BRIAN2_CACHE_DIR="${SCRATCH}/brian_cache/${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}"

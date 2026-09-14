@@ -1,5 +1,5 @@
 """
-kierunek4_motifs/run_regime_map.py
+e1_regime_map/run_regime_map.py
 
 EKSPERYMENT 4B — MAPA REŻIMÓW: czy istnieje okno funkcjonalne separacji.
 

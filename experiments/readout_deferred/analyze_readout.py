@@ -1,5 +1,5 @@
 """
-kierunek1_readout/analyze_readout.py
+readout_deferred/analyze_readout.py
 
 Analiza kierunku 1: czy DG realnie pomaga odbiorcy downstream.
 

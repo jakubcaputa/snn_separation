@@ -1,5 +1,5 @@
 """
-kierunek1_readout/run_capacity.py
+readout_deferred/run_capacity.py
 
 EKSPERYMENT 1B — pojemność pamięci skojarzeniowej (DG → CA3).
 

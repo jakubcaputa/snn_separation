@@ -1,11 +1,11 @@
 #!/bin/bash -l
 ## Kierunek 4 — sweep lezji + Shapley (Ares / Cyfronet, PLGrid)
-## Job array: każdy task liczy swój shard siatki, wyniki scala analyze_motifs.py.
+## Job array: każdy task liczy swój shard siatki, wyniki scala analyze_regime_map.py  # TODO: skrypt jeszcze nie istnieje.
 ##
 ## Wysłanie:
-##   sbatch --array=0-49 ares_kierunek4.sbatch
+##   sbatch --array=0-19 ares_e1_regime_map.sbatch
 ## Po zakończeniu:
-##   python analyze_motifs.py --in "lesion_grid_full_shard*.npz"
+##   python analyze_regime_map.py  # TODO: skrypt jeszcze nie istnieje --in "regime_map_full_shard*.npz"
 
 #SBATCH --job-name=dg-k4
 #SBATCH --account=CHANGEME-cpu          # <-- wpisz swój grant PLGrid
@@ -24,7 +24,7 @@ mkdir -p logs
 module load python/3.11
 
 REPO="${SLURM_SUBMIT_DIR}/../.."
-cd "${SLURM_SUBMIT_DIR}/../kierunek4_motifs"
+cd "${SLURM_SUBMIT_DIR}/../e1_regime_map"
 
 # venv przygotuj RAZ przed wysłaniem joba:
 #   python -m venv $SCRATCH/dgvenv
@@ -38,7 +38,7 @@ mkdir -p "${BRIAN2_CACHE_DIR}"
 export PYTHONIOENCODING=utf-8
 export OMP_NUM_THREADS=1                # joblib zarządza równoległością, nie BLAS
 
-python run_lesion_grid.py \
+python run_regime_map.py \
     --preset full \
     --n-jobs "${SLURM_CPUS_PER_TASK}" \
     --shard "${SLURM_ARRAY_TASK_ID}" \

@@ -1,5 +1,5 @@
 """
-kierunek4_motifs/run_lesion_grid.py
+e2_motif_attribution/run_lesion_grid.py
 
 EKSPERYMENT 4A — który motyw hamowania odpowiada za separację i KIEDY.
 

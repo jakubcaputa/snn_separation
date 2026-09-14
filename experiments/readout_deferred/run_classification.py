@@ -1,5 +1,5 @@
 """
-kierunek1_readout/run_classification.py
+readout_deferred/run_classification.py
 
 EKSPERYMENT 1A — czy warstwa DG realnie pomaga odbiorcy downstream?
 

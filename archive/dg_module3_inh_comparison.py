@@ -72,6 +72,9 @@ BIN_SIZES  = [10, 25, 50, 100, 250]   # ms — timescales to analyse
 
 # Reżim wejścia z jedynego źródła prawdy (dg_params.py): 400/40 Hz aggregate
 # (= 40 włókien × 10/1 Hz). Wcześniej 600 Hz → output GC za wysoki (~16 Hz).
+import sys as _sys, os as _os  # archive/: dopnij korzeń repo do ścieżki,
+# bo skrypt mieszka teraz poziom niżej niż dg_params.py
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 from dg_params import R_EFF_HIGH, R_EFF_LOW
 P_ACTIVE   = 0.25   # fraction of GCs active per pattern
 
