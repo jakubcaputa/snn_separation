@@ -1,11 +1,11 @@
 #!/bin/bash -l
 ## Kierunek 4 — sweep lezji + Shapley (Ares / Cyfronet, PLGrid)
-## Job array: każdy task liczy swój shard siatki, wyniki scala analyze_regime_map.py  # TODO: skrypt jeszcze nie istnieje.
+## Job array: każdy task liczy swój shard siatki, wyniki scala analyze_regime_map.py.
 ##
 ## Wysłanie:
 ##   sbatch --array=0-19 ares_e1_regime_map.sbatch
 ## Po zakończeniu:
-##   python analyze_regime_map.py  # TODO: skrypt jeszcze nie istnieje --in "regime_map_full_shard*.npz"
+##   python analyze_regime_map.py  --in "regime_map_full_shard*.npz"
 
 #SBATCH --job-name=dg-k4
 #SBATCH --account=CHANGEME-cpu          # <-- wpisz swój grant PLGrid

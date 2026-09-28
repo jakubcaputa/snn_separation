@@ -66,9 +66,9 @@ except Exception:
 from joblib import Parallel, delayed  # noqa: E402
 
 from dg_core import (  # noqa: E402
-    DGConfig, active_fraction, make_connectivity, make_input_spikes,
+    DGConfig, active_fraction, binary_mi_io, make_connectivity, make_input_spikes,
     make_patterns, mean_pairwise_cosine, mean_pairwise_jaccard, mean_pairwise_r,
-    population_sparseness, simulate,
+    nan_mean, population_sparseness, simulate,
 )
 from dg_core.calibrate import izh_fixed_points  # noqa: E402
 
@@ -104,13 +104,17 @@ def run_cell(k_gc: float, w_fs_gc: float, seed: int, grid: dict,
     pats, r_in_meas = make_patterns(N_GC, grid['n_patterns'], grid['R_in'],
                                     grid['P_active'], seed=100 + seed)
 
-    gc_vecs, fs_fr, hmc_fr = [], [], []
+    gc_vecs, fs_fr, hmc_fr, ret = [], [], [], []
     for k in range(grid['n_patterns']):
         idx, t = make_input_spikes(pats[k], cfg, seed=1000 * (seed + 1) + k)
         res = simulate(cfg, idx, t, conn)
         gc_vecs.append(res['gc_rates'])
         fs_fr.append(res['fs_rates'].mean())
         hmc_fr.append(res['hmc_rates'].mean())
+        # Ile tożsamości wzorca przeżywa transformację. To jest metryka, która
+        # NIE daje się nabrać na wyciszenie: przy FR→0 dekorelacja rośnie, a
+        # retention spada do zera, bo pusty wektor nie niesie informacji.
+        ret.append(binary_mi_io(pats[k], res['gc_rates'])['retention'])
 
     gc0 = gc_vecs[0]
     act = active_fraction(gc0)
@@ -129,6 +133,7 @@ def run_cell(k_gc: float, w_fs_gc: float, seed: int, grid: dict,
         'sparseness': population_sparseness(gc0),
         'fr_fs': float(np.mean(fs_fr)),
         'fr_hmc': float(np.mean(hmc_fr)),
+        'retention': nan_mean(ret),
         # pułapka §4.4 — K zmienia też błonę, więc zapisujemy co się z nią stało
         'v_rest': v_rest, 'v_th_eff': v_th,
         # maska ważności — bez niej „separacja" przy wyciszeniu jest artefaktem
@@ -181,24 +186,74 @@ def main():
         print(f"  {len(rows) - n_valid} punktów ODRZUCONYCH jako wyciszone — "
               f"ich 'separacja' byłaby artefaktem pustego wektora.")
 
-    # Szybka diagnoza: czy widać okno, czy tylko monotoniczny wzrost ku ciszy.
-    v = payload['valid'].astype(bool)
-    if v.sum() >= 3:
-        a, dec = payload['active_frac'][v], payload['dec'][v]
-        j = np.argsort(a)
-        best = a[j][int(np.argmax(dec[j]))]
-        mono = bool(np.all(np.diff(dec[j]) <= 0) or np.all(np.diff(dec[j]) >= 0))
-        print(f"\nmaksimum separacji przy {best:.1%} aktywnych GC "
-              f"(dekorelacja {dec.max():.3f})")
-        if mono or best <= a.min() + 1e-9:
-            print("  ⚠️ Separacja rośnie MONOTONICZNIE ku rzadszej aktywności, a maksimum")
-            print("     leży na KRAŃCU siatki. To jest sygnatura artefaktu wyciszenia,")
-            print("     a nie okna funkcjonalnego — H1 NIE jest tym potwierdzona.")
-            print("     Rozszerz siatkę, albo zaostrz maskę ważności (MIN_ACTIVE_FRAC,")
-            print("     MIN_FR_ACTIVE) i sprawdź, czy maksimum przesuwa się do wnętrza.")
+    diagnose(payload)
+
+
+# Progi maski, po których jedzie test kształtu (patrz `diagnose`).
+PROBE_THRESHOLDS = (0.02, 0.03, 0.05, 0.08, 0.10, 0.15, 0.20)
+# Ile informacji o wejściu musi przeżyć, żeby punkt w ogóle liczył się jako
+# „sieć jeszcze koduje". Poniżej tego separacja jest własnością pustki.
+MIN_RETENTION = 0.25
+
+
+def diagnose(payload: dict) -> None:
+    """Czy maksimum separacji to okno funkcjonalne, czy artefakt wyciszenia.
+
+    ⚠️ Test KRAŃCA (`best == a.min()`) jest za słaby i dawał tu fałszywe
+    potwierdzenie H1: maksimum potrafi leżeć jeden koszyk NAD podłogą maski,
+    przejść test — i mimo to jechać razem z tą podłogą. Dlatego testujemy
+    KSZTAŁT: przesuwamy próg maski i patrzymy, czy maksimum zostaje w miejscu
+    (okno funkcjonalne), czy wędruje za progiem (artefakt pustego wektora).
+
+    Drugi, niezależny test: czy maksimum przeżywa warunek na `retention`.
+    Dekorelacja rośnie przy FR→0, retention wtedy spada — więc jeśli optimum
+    znika po nałożeniu MIN_RETENTION, nie było optimum, tylko cisza.
+    """
+    act, fra, dec = payload['active_frac'], payload['fr_gc_active'], payload['dec']
+
+    print("\n── test kształtu: czy maksimum jedzie za progiem maski ──")
+    print(f"{'MIN_ACTIVE_FRAC':>16} {'n':>5} {'maks. przy':>11} {'podłoga':>9} {'jedzie?':>8}")
+    rides = []
+    for thr in PROBE_THRESHOLDS:
+        v = (act >= thr) & (fra >= MIN_FR_ACTIVE)
+        if v.sum() < 3:
+            continue
+        a, d = act[v], dec[v]
+        peak = float(a[int(np.argmax(d))])
+        # „jedzie" = maksimum siedzi tuż nad podłogą, czyli to podłoga je stawia
+        on_floor = peak <= a.min() + 0.02
+        rides.append(on_floor)
+        print(f"{thr:>16.2f} {int(v.sum()):>5} {peak:>11.3f} {a.min():>9.3f} "
+              f"{'TAK' if on_floor else 'nie':>8}")
+
+    artifact = len(rides) >= 3 and sum(rides) >= 0.6 * len(rides)
+
+    # Niezależny test: optimum przy zachowanej informacji.
+    ret = payload.get('retention')
+    if ret is not None:
+        vr = payload['valid'].astype(bool) & (np.asarray(ret) >= MIN_RETENTION)
+        print(f"\n── test informacyjny: retention ≥ {MIN_RETENTION} ──")
+        if vr.sum() < 3:
+            print(f"  ⚠️ tylko {int(vr.sum())} punktów zachowuje informację — cała siatka")
+            print("     siedzi w reżimie stratnym, o oknie funkcjonalnym nie ma co mówić.")
         else:
-            print("  Maksimum leży WEWNĄTRZ siatki — zgodne z H1, do potwierdzenia")
-            print("  na pełnej siatce z przedziałami ufności.")
+            a, d = act[vr], dec[vr]
+            peak = float(a[int(np.argmax(d))])
+            inside = a.min() + 1e-9 < peak < a.max() - 1e-9
+            print(f"  punktów: {int(vr.sum())}  |  maksimum dekorelacji {d.max():.3f} "
+                  f"przy {peak:.1%} aktywnych GC")
+            print(f"  maksimum {'WEWNĄTRZ' if inside else 'na KRAŃCU'} zakresu aktywności")
+
+    print()
+    if artifact:
+        print("⚠️ WYNIK: maksimum separacji jedzie za progiem maski — to sygnatura")
+        print("   ARTEFAKTU WYCISZENIA, nie okna funkcjonalnego. H1 NIE jest potwierdzona.")
+        print("   Rozszerzanie siatki tego nie naprawi: `dec = r_in − r_out` jest")
+        print("   monotoniczna względem rzadkości i strukturalnie nie odróżnia")
+        print("   separacji od ciszy. Patrz na kurs wymiany separacja↔retention.")
+    else:
+        print("WYNIK: maksimum NIE jedzie za progiem maski — zgodne z H1,")
+        print("   do potwierdzenia przedziałami ufności po seedach.")
 
 
 if __name__ == '__main__':

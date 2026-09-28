@@ -11,3 +11,4 @@ __pycache__/
 snn_sep_venv/
 .pytest_cache/
 experiments/**/results/
+experiments/hpc/logs/

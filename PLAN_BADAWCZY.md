@@ -71,20 +71,39 @@ Kierunek: przestać badać „czy DG separuje" (na to odpowiedziano), zacząć b
 
 ### 1.3 Hipotezy H1–H5 (falsyfikowalne, z warunkiem obalenia)
 
+> ⛔ **STAN NA 2026-09-28: H1 JEST OBALONA, a H2 nie została sprawdzona w tej formie.**
+> Ten rozdział jest zapisem hipotez **sprzed** eksperymentów i celowo NIE został
+> przepisany — bo decyzja, czym zastąpić H1, jeszcze nie zapadła
+> ([STATUS.md](STATUS.md) §4 pkt 2). Czytaj go jako dokument historyczny:
+> stan zmierzony jest w STATUS §3.2, §3.2b i §3.3, nie tutaj.
+>
+> H1 spełniła **swój własny, zapisany niżej warunek obalenia**, łącznie
+> z zastrzeżeniem w nawiasie: separacja rośnie monotonicznie ku ciszy, a po
+> odrzuceniu artefaktu pustego wektora (null o dopasowanej rzadkości) nadwyżka
+> obwodu jest **ujemna** — −0.389 ± 0.245, 43 SEM poniżej zera, n=733. To działa
+> jak preregistracja: warunek był spisany przed pomiarem i został trafiony
+> dosłownie.
+
 | ID | hipoteza | obala ją |
 |---|---|---|
-| **H1** | Separacja jest **niemonotoniczną** funkcją poziomu aktywności populacji GC — istnieje optimum przy pośredniej frakcji aktywnych komórek. | monotoniczny wzrost separacji przy spadku aktywności aż do reżimu ciszy (po odrzuceniu artefaktu pustego wektora) |
+| **H1** ⛔ **OBALONA** (STATUS §3.2b) | Separacja jest **niemonotoniczną** funkcją poziomu aktywności populacji GC — istnieje optimum przy pośredniej frakcji aktywnych komórek. | monotoniczny wzrost separacji przy spadku aktywności aż do reżimu ciszy (po odrzuceniu artefaktu pustego wektora) ← **warunek TRAFIONY** |
 | **H2** | Hamowanie MC (`FS→HMC`) **tworzy** reżim pośredni — bez niego okno funkcjonalne znika (bistabilność: cisza albo runaway). | istnienie szerokiego reżimu pośredniego przy `W_FS_HMC = 0` w pełnej siatce, nie tylko w punkcie domyślnym |
 | **H3** | Wielkością regulowaną, która najlepiej utrzymuje separację przy zmiennej statystyce wejścia, jest **frakcja aktywnych GC**, a nie średnia częstotliwość ani lokalny E/I. | kontroler na FR lub na E/I utrzymuje separację równie dobrze lub lepiej w teście uogólnienia poza reżim strojenia |
 | **H4** | Prosta reguła homeostatyczna (plastyczność wewnętrzna progu + iSTDP na `FS→GC`) samodzielnie odnajduje punkt pracy zidentyfikowany offline i przywraca separację po dezinhibicji oraz po utracie 50% MC. | kontroler zbiega do punktu istotnie różnego od optimum offline albo nie odzyskuje separacji w żadnym z warunków |
 | **H5** | Regulacja **przesuwa separację między kodami**: przy niskiej aktywności dominuje separacja wzorcowa (NDP), przy wysokiej częstotliwościowa (SF). | brak dysocjacji NDP/SF wzdłuż osi aktywności — w modelu I w danych Madara |
 
-**Podział ciężaru:** H1 i H2 mają wyniki wstępne (§2). **H3–H5 są nowe i to one
-niosą publikację** — a ich eksperymenty (E4, E5) jeszcze nie istnieją.
+~~**Podział ciężaru:** H1 i H2 mają wyniki wstępne (§2). **H3–H5 są nowe i to one
+niosą publikację** — a ich eksperymenty (E4, E5) jeszcze nie istnieją.~~
+
+**Nieaktualne od 2026-09-28.** H1 nie ma „wyniku wstępnego", tylko wynik końcowy
+i negatywny. Ciężar pracy nie może już leżeć na H3–H5 „plus potwierdzone H1/H2",
+bo fundament pod nimi (że w tym modelu w ogóle istnieje okno funkcjonalne
+separacji) nie istnieje. Patrz STATUS §4 pkt 2 — to jest decyzja do podjęcia.
 
 | hipoteza | eksperyment | kod |
 |---|---|---|
-| H1, H2 | E1 — mapa reżimów | `experiments/e1_regime_map/` ✅ |
+| H1, H2 | E1 — mapa reżimów | `experiments/e1_regime_map/` ✅ policzone → **H1 obalona** |
+| H1′ (następca H1) | E1′ — separacja przy dopasowanej aktywności | `run_matched_activity.py` ✅ policzone → **też obalona** |
 | „który motyw tworzy okno" | E2 — atrybucja | `experiments/e2_motif_attribution/` ✅ |
 | **H3, H4** | E4 — kontroler, E5 — uogólnienie | **niezbudowane** |
 | H5 | wymaga metryk NDP/SF (§5.2) | niezbudowane |

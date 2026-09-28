@@ -27,6 +27,9 @@ from .metrics import (
     first_spike_latency, mean_pairwise_cosine, mean_pairwise_jaccard,
     activity_battery, BATTERY_KEYS, nan_mean,
 )
+from .nulls import (
+    shuffle_null_vectors, kwta_random_projection, separation_vs_null,
+)
 
 __all__ = [
     'DGConfig', 'MOTIFS', 'MOTIF_LABELS', 'config_from_motif_set', 'DT_MS', 'T_MS',
@@ -38,4 +41,5 @@ __all__ = [
     'isi_cv', 'fano_factor', 'synchrony_index', 'activity_entropy', 'binary_mi_io',
     'first_spike_latency', 'mean_pairwise_cosine', 'mean_pairwise_jaccard',
     'activity_battery', 'BATTERY_KEYS', 'nan_mean',
+    'shuffle_null_vectors', 'kwta_random_projection', 'separation_vs_null',
 ]

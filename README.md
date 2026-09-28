@@ -56,23 +56,53 @@ python -m dg_core.madar_intrinsics          # wymaga dataset/
 
 # eksperymenty — każdy ma --preset quick (minuty) i --preset full
 cd e1_regime_map        && python run_regime_map.py --preset quick
+python analyze_regime_map.py            # E1  — figura + werdykt H1
+python run_matched_activity.py --preset quick   # E1′ — wersja poprawiona
+python analyze_matched_activity.py      # E1′ — figura + werdykt H1′
 cd ../e2_motif_attribution
 python run_lesion_grid.py --preset quick
 python analyze_motifs.py --in results/lesion_grid_quick.npz
 ```
 
-Na HPC (Ares/PLGrid):
+Na HPC (Athena/PLGrid) — skrypty `hpc/athena_*.sbatch`:
 
 ```bash
-cd experiments
-sbatch --array=0-19 hpc/ares_e1_regime_map.sbatch
-sbatch --array=0-49 hpc/ares_e2_attribution.sbatch
+cd experiments/hpc
+sbatch athena_e1_matched_activity.sbatch        # E1′ — aktualny, ~40 min
+sbatch athena_e1_regime_map.sbatch              # E1 stary (wynik negatywny, §3.2)
+sbatch --array=0-7 athena_e2_attribution.sbatch
+sbatch --array=0-7 athena_readout.sbatch classification
+```
+
+Venv na Athenie (raz, przed pierwszym sbatchem) — Brian2 2.10 i numpy 2.4
+wymagają Pythona ≥3.11, a moduł `Python/3.10.4` jest za stary, więc interpreter
+bierzemy z Miniconzy:
+
+```bash
+module load Miniconda3/25.7.0-2
+python -m venv $SCRATCH/venvs/snn_sep_venv
+$SCRATCH/venvs/snn_sep_venv/bin/pip install -r requirements.txt joblib scipy scikit-learn pytest
 ```
 
 Każdy skrypt wspiera `--shard i --n-shards N` → job array SLURM; analiza scala
-shardy po globie. W `.sbatch` wpisz swój grant PLGrid (`--account`).
-⚠️ Skrypty ustawiają osobny `BRIAN2_CACHE_DIR` na task — bez tego równoległe taski
-nadpisują sobie cache kompilacji Brian2 i job losowo pada.
+shardy po globie. Grant jest już wpisany (`plgdyplomanci7-gpu-a100`).
+
+⚠️ **Athena nie ma partycji CPU-only.** `plgrid-gpu-a100` wymaga `--gpus`, więc
+joby alokują 1 GPU, którego Brian2 nie używa, i **rozliczają się w godzinach GPU**
+(`gpu=1`, `cpu=0.0625`). Dlatego liczba tasków w arrayu jest tu dobierana do
+kosztu, a nie do dostępnych rdzeni: E1 (`full` = 450 punktów ≈ 2 h rdzenia) mieści
+się w JEDNYM tasku na 16 CPU, a 20-taskowy array z wersji na Aresa kosztowałby
+20 godzin GPU zamiast jednej. 16 CPU jest „darmowe" — mieści się w rozliczeniu
+tego jednego GPU.
+
+⚠️ O cache'u Brian2 dwie rzeczy, bo komentarze w skryptach na Aresa myliły w obie
+strony. Po pierwsze **`BRIAN2_CACHE_DIR` nie istnieje** — Brian2 bierze katalog
+z Cythona (`CYTHON_CACHE_DIR`, domyślnie `$HOME/.cython`), więc tamto ustawienie
+było bezskuteczne. Po drugie **w tym projekcie i tak nic się nie kompiluje**:
+`dg_core/circuit.py` ustawia `prefs.codegen.target = 'numpy'`, więc cache zostaje
+pusty i ostrzeżenie o „losowo padającym jobie" nie dotyczy tej konfiguracji.
+Skrypty ustawiają `CYTHON_CACHE_DIR` na task jako zabezpieczenie na wypadek
+przełączenia targetu na `cython`.
 
 ### Testy
 

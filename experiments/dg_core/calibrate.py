@@ -61,6 +61,7 @@ from .circuit import _on_pre, make_connectivity, simulate
 from .params import (
     A_GC, B_GC, C_GC, D_GC, DGConfig, DT_MS, TAU_EX_GC, TAU_IN_GC,
 )
+from .metrics import active_fraction
 from .patterns import make_input_spikes, make_patterns
 
 prefs.codegen.target = 'numpy'
@@ -330,6 +331,54 @@ def solve_w_fs_gc_for_share(cfg: DGConfig, target_share: float,
         else:
             w_hi = w_mid
     return best_w, best_s
+
+
+def measure_active_fraction(cfg: DGConfig, conn, pattern, seed: int = 0) -> float:
+    """Frakcja GC, które strzelają, przy danym wzorcu wejściowym."""
+    idx, t = make_input_spikes(pattern, cfg, seed=seed)
+    return active_fraction(simulate(cfg, idx, t, conn)['gc_rates'])
+
+
+def solve_k_gc_for_active_fraction(cfg: DGConfig, conn, pattern, target: float,
+                                   seed: int = 0, k_lo: float = 0.0, k_hi: float = 24.0,
+                                   tol: float = 0.005, max_iter: int = 12
+                                   ) -> tuple[float, float]:
+    """
+    Bisekcja po K_GC, aż frakcja aktywnych GC trafi w `target`.
+
+    Po co: w sweepie po parametrach aktywność jest WYNIKIEM, a mierzona separacja
+    jest monotoniczna względem aktywności — więc oś sweepu pokrywa się z
+    confounderem i niczego nie da się przypisać obwodowi (STATUS §3.2). Tutaj
+    odwracamy zależność: aktywność jest ZADANA i wyrównana między warunkami,
+    więc różnice wolno przypisać temu, co faktycznie zmieniamy.
+
+    Większe K_GC → silniejsze hamowanie toniczne → MNIEJSZA aktywność, więc
+    funkcja jest malejąca i bisekcja idzie odwrotnie niż zwykle (jak
+    `solve_w_fs_gc_for_share`).
+
+    Zwraca (K_GC, osiągnięta frakcja). Gdy cel leży poza zasięgiem [k_lo, k_hi],
+    zwraca najbliższy koniec — NIE udaje, że trafił.
+    """
+    f = lambda k: measure_active_fraction(replace(cfg, K_GC=k), conn, pattern, seed)
+    a_lo, a_hi = f(k_lo), f(k_hi)           # a_lo = najwyższa aktywność (K=0)
+    if a_lo < target:                        # nawet bez hamowania jest za cicho
+        return k_lo, a_lo
+    if a_hi > target:                        # nawet maksymalne hamowanie nie wycisza
+        return k_hi, a_hi
+
+    best_k, best_a = k_hi, a_hi
+    for _ in range(max_iter):
+        k_mid = 0.5 * (k_lo + k_hi)
+        a_mid = f(k_mid)
+        if abs(a_mid - target) < abs(best_a - target):
+            best_k, best_a = k_mid, a_mid
+        if abs(a_mid - target) <= tol:
+            return k_mid, a_mid
+        if a_mid > target:                   # za głośno → dołóż hamowania
+            k_lo = k_mid
+        else:
+            k_hi = k_mid
+    return best_k, best_a
 
 
 # ══════════════════════════════════════════════════════════════════════════════

@@ -65,7 +65,8 @@ from sklearn.preprocessing import StandardScaler  # noqa: E402
 
 from dg_core import (  # noqa: E402
     DGConfig, make_class_trials, make_connectivity, make_input_spikes,
-    pp_rate_vector_empirical, simulate, active_fraction, mean_pairwise_r,
+    kwta_random_projection, pp_rate_vector_empirical, simulate, active_fraction,
+    mean_pairwise_r,
 )
 
 RESULTS = Path(__file__).parent / "results"
@@ -101,22 +102,6 @@ PRESETS = {
         p_active=0.25,
     ),
 }
-
-
-def kwta_random_projection(X: np.ndarray, k: int, rng: np.random.Generator) -> np.ndarray:
-    """
-    Losowa rzadka ekspansja: X @ W, potem k-WTA (zostaw k najsilniejszych, reszta 0).
-
-    To jest kontrola „rzadkość bez DG": ta sama wymiarowość i ta sama liczba
-    aktywnych jednostek co w wyjściu GC, ale selekcja losowa, nie przez obwód.
-    """
-    n_feat = X.shape[1]
-    W = rng.normal(0, 1 / np.sqrt(n_feat), size=(n_feat, n_feat))
-    H = X @ W
-    if k <= 0 or k >= n_feat:
-        return H
-    thr = np.partition(H, -k, axis=1)[:, -k][:, None]
-    return np.where(H >= thr, H, 0.0)
 
 
 def run_cell(r_in: float, noise: float, seed: int, n_classes: int, n_trials: int,

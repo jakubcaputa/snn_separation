@@ -1,6 +1,13 @@
 # Status — stan prac, wyniki, co dalej
 
-*Aktualizacja: 2026-09-14.*
+*Aktualizacja: 2026-09-28.*
+
+> **Gdzie zacząć (2026-09-28).** Obliczenia są skończone i nic nie czeka
+> w kolejce. Teza „DG separuje wzorce, a hamowanie tym steruje" jest obalona
+> trzema niezależnymi kontrolami — §3.2 (E1), §3.2b (E1′), §3.3 (1A).
+> **Jedyna otwarta rzecz to decyzja o tezie pracy: §4 pkt 2.** Reszta tego pliku
+> jest materiałem do tej decyzji. `PLAN_BADAWCZY.md` jest świadomie NIE
+> przepisany — czeka na tę decyzję.
 
 **Ten plik odpowiada na jedno pytanie: gdzie jestem i co dalej.** Jest jedynym
 źródłem prawdy dla STANU prac i ZMIERZONYCH LICZB — wszędzie indziej są odnośniki
@@ -18,8 +25,9 @@ biologiczne** (§2) — maszyneria kalibracyjna jest gotowa i czeka na te trzy l
 |---|---|
 | Narzędzie `interactive_dg.py` | działa, rozbudowane o bilans hamowania i panel P(AP) |
 | Rdzeń `experiments/dg_core/` | działa; testy regresji 17/17, wyniki bit-w-bit jak przed zmianami |
-| **E1** — mapa reżimów (→ H1, H2) | uruchamialne, wynik wstępny **ostrzegawczy** (§3.2) |
-| **E2** — atrybucja motywów (Shapley) | maszyneria gotowa, wynik wstępny stabilny (§3.1) |
+| **E1** — mapa reżimów (→ H1, H2) | **policzone, H1 OBALONA** (§3.2); figura + analiza gotowe |
+| **E1′** — separacja przy dopasowanej aktywności | **policzone, H1′ OBALONA** (§3.2b); nadwyżka ponad null ujemna |
+| **E2** — atrybucja motywów (Shapley) | pełna siatka **policzona**, czeka na `analyze_motifs.py` (§3.1) |
 | **E4/E5** — kontroler (→ H3, H4) | **niezbudowane** ← niosą ciężar publikacji |
 | Kalibracja punktu pracy | maszyneria gotowa, **specyfikacja niedomknięta** (§2) |
 | Właściwości błony z danych Madara | **wyciągnięte**, 91 komórek (§3.4) |
@@ -65,19 +73,31 @@ i trzeba wybrać, który jest warunkiem kontrolnym.
 
 ## 3. Wyniki
 
-### 3.1 E2 — atrybucja motywów (preset `quick`, 576 symulacji, stabilne)
+### 3.1 E2 — atrybucja motywów (preset `full`, 216 punktów × 5 seedów)
+
+Policzone na Athenie 2026-09-14 (job 3167904, 8 shardów po ~9 min). Figury:
+`e2_motif_attribution/results/fig1..fig4*.png`.
 
 ```
-[mc_inert]   FF 49.9%  FB 50.1%  MC   0.0%    dekorelacja +0.067 → +0.143
-[mc_active]  FF 79.2%  FB 115.3% MC −94.5%    dekorelacja +0.067 → +0.244
-             FF×FB +0.148 (synergia)   FB×MC +0.301 (synergia)
+[mc_inert]   FF  66.8%  FB  33.2%  MC    0.0%   dekorelacja +0.065 → +0.173
+             FF×FB +0.025 (synergia)
+[mc_active]  FF 152.1%  FB 119.7%  MC −171.8%   dekorelacja +0.065 → +0.197
+             FF×FB +0.126   FF×MC +0.223   FB×MC +0.210  (wszystkie synergie)
+             FR aktywnych GC 4.7 Hz | FR MC 5.9 Hz
 ```
+
+⚠️ **Liczby różnią się od presetu `quick`, który tu wcześniej stał** (FF/FB było
+50/50, teraz 67/33 w `mc_inert`; `mc_active` dawało +0.244, daje +0.197). Wniosek
+JAKOŚCIOWY przeżył — φ_MC ujemne, MC w parach silnie synergiczne — ale **żadnej
+liczby z presetu `quick` nie cytować**, bo siatka `full` je przesuwa.
 
 φ_MC ujemne: mossy cells **same** korelują wzorce (re-ekscytują GC), ale w parze
 z hamowaniem podnoszą separację najmocniej ze wszystkich motywów. **MC to motyw
 warunkowy.** (Udziały >100% i ujemne są matematycznie poprawne — sumują się do 100%.)
 
-Pełna bateria metryk, średnie „brak hamowania → pełny obwód":
+Pełna bateria metryk, średnie „brak hamowania → pełny obwód"
+(⚠️ ta tabela jest wciąż z presetu `quick` — `analyze_motifs.py` nie drukuje baterii
+dla siatki `full`; przeliczyć, zanim pójdzie do tekstu):
 
 | metryka | mc_inert | mc_active |
 |---|---|---|
@@ -114,23 +134,102 @@ pobudzająca i bez hamulca nie ma reżimu pośredniego:
 stała frakcja aktywnych GC): +0.149 → +0.231 → **+0.296** dla N_GC = 200 → 400 → 800.
 Zgodne z teorią kodowania ekspansyjnego; do policzenia porządnie na HPC (E6).
 
-### 3.2 ⚠️ E1 — mapa reżimów: wynik wstępny jest OSTRZEŻENIEM, nie potwierdzeniem
+### 3.2 E1 — mapa reżimów: ROZSTRZYGNIĘTE. H1 w obecnym brzmieniu jest FAŁSZYWA
 
-Preset `quick` (12 punktów, 1 seed) **nie potwierdza H1**:
+Pełna siatka policzona (Athena, job 3167903, 450 punktów = 10 `K_GC` × 9 `W_FS_GC`
+× 5 seedów, 1800 symulacji, 3.7 min na 16 CPU; 419/450 przeszło maskę).
+Figura: `e1_regime_map/results/regime_map_full.png`.
 
-```
-maksimum separacji przy 8.0% aktywnych GC (dekorelacja 0.558)
-⚠️ monotonicznie ku rzadszej aktywności, maksimum na KRAŃCU siatki
-   → sygnatura artefaktu wyciszenia, nie okna funkcjonalnego
-```
+**Separacja NIE ma optimum przy pośredniej aktywności — jest MONOTONICZNA.**
+Maksimum `dec` jedzie za progiem maski ważności przy każdym progu, jaki mu podstawić:
 
-To dokładnie pułapka „separacja czy wyciszenie". Skrypt sam to wykrywa i mówi
-wprost. Zanim cokolwiek z tego wyniknie, trzeba rozszerzyć siatkę i zaostrzyć maskę
-ważności (`MIN_ACTIVE_FRAC`, `MIN_FR_ACTIVE`) i sprawdzić, czy maksimum przesunie
-się do wnętrza. **Nie raportować tej liczby jako wyniku.**
+| `MIN_ACTIVE_FRAC` | 0.02 | 0.03 | 0.05 | 0.08 | 0.10 | 0.15 | 0.20 |
+|---|---|---|---|---|---|---|---|
+| maksimum przy | 0.025 | 0.030 | 0.065 | 0.085 | 0.120 | 0.150 | 0.200 |
+| podłoga maski | 0.020 | 0.030 | 0.050 | 0.080 | 0.100 | 0.150 | 0.200 |
 
-H1 jest tezą nośną całej pracy, więc rozstrzygnięcie tego jest **priorytetem nr 1**
-(§4 pkt 1).
+Maksimum siedzi zawsze na podłodze albo koszyk nad nią — to podłoga je stawia, nie
+biologia. **Rozszerzanie siatki tego nie naprawi**: `dec = r_in − r_out` jest
+strukturalnie monotoniczna względem rzadkości i nie odróżnia separacji od ciszy.
+Warunkowanie na `retention` też nie ratuje H1 — maksimum dalej wędruje za progiem
+(0.04 przy `MIN_RETENTION` 0.10 → 0.18 przy 0.60).
+
+⚠️ Poprzednia wersja `run_regime_map.py` **raportowała fałszywe potwierdzenie H1**:
+jej test krańca sprawdzał równość z minimum siatki, więc maksimum leżące jeden
+koszyk nad podłogą przechodziło test. Zastąpiony testem KSZTAŁTU (przesuwamy próg
+maski, patrzymy czy maksimum zostaje). Każda liczba z E1 sprzed 2026-09-21 jest
+podejrzana.
+
+**Kurs wymiany separacja↔informacja jest gładki i monotoniczny — nie ma kolana,**
+czyli nie ma wyróżnionego punktu pracy (`retention` = MI/H, nowa kolumna w sweepie):
+
+| retention ≥ | 0.00 | 0.20 | 0.40 | 0.50 | 0.60 | 0.70 | 0.80 | 0.90 |
+|---|---|---|---|---|---|---|---|---|
+| osiągalne max `dec` | 0.785 | 0.623 | 0.533 | 0.417 | 0.352 | 0.330 | 0.257 | 0.232 |
+
+Najlepszy KURS (separacja na jednostkę utraconej informacji) wypada w reżimie
+prawie bezstratnym, przy SŁABYM hamowaniu: `dec` 0.173 za 1.3% utraconej
+informacji (`K_GC` 10, `W_FS_GC` 0.25). To jest wynik do sformułowania na nowo
+zamiast H1: nie „istnieje okno", tylko „DG wymienia informację na separację po
+kursie, który jest najkorzystniejszy przy słabym hamowaniu".
+
+**`retention` MA maksimum wewnętrzne — przy ~25% aktywnych GC** (średnia po
+koszykach: 0.08 przy <4% → 0.95 przy 24–32% → 0.16 powyżej 45%). ⚠️ Ale to jest
+dokładnie `P_active` = 0.25 z siatki, więc **prawdopodobnie tautologia estymatora
+MI** (informacja przechodzi najlepiej, gdy rzadkość wyjścia = rzadkość wejścia),
+a nie własność obwodu. **Nie raportować tego jako wyniku, dopóki nie przejdzie
+testu z §4 pkt 1.**
+
+### 3.2b E1′ — separacja przy DOPASOWANEJ aktywności. Wynik negatywny, mocny
+
+`run_matched_activity.py`, Athena job 3189473, 810 punktów (6 celów aktywności ×
+9 `W_FS_GC` × 3 `P_active` × 5 seedów), 20.6 min. Dostrojono 733/810 — reszta
+to kombinacje, dla których cel leży poza zasięgiem `K_GC` ∈ [0, 24].
+Odtworzenie wszystkich liczb z tej sekcji **bez ponownego liczenia**:
+`python analyze_matched_activity.py`. Figura:
+`e1_regime_map/results/matched_activity_full.png`.
+
+Konstrukcja naprawia trzy wady starego E1: aktywność jest **zadana** (bisekcja po
+`K_GC`), mierzona jest **nadwyżka ponad null** o tej samej rzadkości, a `P_active`
+jest osią, nie stałą.
+
+**1. Obwód separuje GORZEJ niż przetasowanie własnego wyjścia.**
+
+| cel aktywności | 0.02 | 0.05 | 0.10 | 0.15 | 0.20 | 0.30 |
+|---|---|---|---|---|---|---|
+| `dec` | 0.632 | 0.495 | 0.333 | 0.257 | 0.188 | 0.113 |
+| nadwyżka − null permutacyjny | −0.116 | −0.252 | −0.413 | −0.490 | −0.561 | −0.633 |
+
+Średnio **−0.389 ± 0.245** (SD), SEM 0.009, n=733 → **43 SEM od zera**. Ujemna
+nadwyżka znaczy, że gdyby losowo poprzestawiać, KTÓRY GC strzela (zachowując
+rozkład częstotliwości co do wartości), dekorelacja by WZROSŁA. Czyli tożsamość
+strzelających GC jest dyktowana przez wejście: nakładające się wzorce pobudzają
+nakładające się GC, a obwód **zachowuje** korelację względem losowego przypisania.
+To jest mocniejszy wynik niż zero — DG tu nie „nie pomaga", tylko aktywnie trzyma
+korelację wejścia.
+
+**2. Hamowanie fazowe `W_FS_GC` nie kupuje NICZEGO przy wyrównanej aktywności.**
+Nadwyżka jest płaska na całym zakresie 0.0–5.0 (rozstęp średnich 0.024 przy SEM
+komórki 0.027). Sprawdzone też z osobna na każdym poziomie aktywności — płasko
+wszędzie (jedna komórka z sześciu ledwo przekracza 2·SEM, czyli tyle, ile wypada
+z przypadku przy sześciu porównaniach). **Cały efekt hamowania w starym E1 był
+efektem wyciszania, nie obwodu.**
+
+**3. Maksimum `retention` IDZIE za `P_active` — to tautologia, zamknięte.**
+
+| `P_active` | 0.10 | 0.25 | 0.40 |
+|---|---|---|---|
+| maksimum retention przy AF | 0.100 | 0.200 | 0.280 |
+
+Czyli własność estymatora MI (informacja przechodzi najlepiej, gdy rzadkość
+wyjścia ≈ rzadkość wejścia), nie punkt pracy obwodu. **Nie raportować tych 25%.**
+To domyka pytanie postawione w §4 pkt 1 — odpowiedź negatywna.
+
+⚠️ Null k-WTA daje nadwyżkę DODATNIĄ (+0.32 przy AF 2% → +0.08 przy 30%), czyli DG
+dekoreluje lepiej niż losowa projekcja o tej samej rzadkości. To NIE jest
+sprzeczność z pkt 1 — to inne pytanie (losowa projekcja gaussowska jest słabym
+dekorelatorem). Wniosek nośny opiera się na nullu permutacyjnym, bo tylko on
+trzyma rozkład częstotliwości prawdziwego wyjścia co do wartości.
 
 ### 3.3 Odczyt downstream — 1A zamknięte, 1B odłożone
 
@@ -199,19 +298,41 @@ Wzajemne hamowanie interneuronów, którego w modelu w ogóle nie było
 ## 4. Co dalej — kolejność wg wartości
 
 **Bez odpowiedzi od prof. Błasiak (§2) można robić 1, 2, 4, 5 i 6.**
+Stan na 2026-09-22: E1, E1′ i E2 policzone na Athenie. **Obliczenia przestały być
+wąskim gardłem — wąskim gardłem jest decyzja z pkt 2.**
 
-1. **Rozstrzygnąć wynik E1** — pełna mapa reżimów na HPC: szersza siatka,
-   zaostrzona maska ważności. Bez tego H1 wisi w powietrzu, a H1 jest tezą nośną.
-2. **`analyze_regime_map.py`** — figura „separacja vs aktywność" z panelem
-   kontrolnym FR i przedziałami ufności.
+1. ~~Test tautologii `retention`~~ — **zrobione, wynik negatywny** (§3.2b pkt 3):
+   maksimum idzie za `P_active`, więc to tautologia estymatora MI. Zamknięte.
+2. **⛔ DECYZJA O TEZIE PRACY — to jest teraz pytanie nr 1 i nie jest techniczne.**
+   Trzy niezależne eksperymenty mówią to samo: 1A (DG przegrywa z `random`
+   o dopasowanej rzadkości, §3.3), E1 (separacja = wyciszenie, §3.2) i E1′
+   (nadwyżka ponad null UJEMNA, hamowanie fazowe bez efektu, §3.2b). Wersja
+   „DG separuje wzorce, a hamowanie tym steruje" jest **nie do obronienia
+   na tym modelu**. Do wyboru:
+   - **(a) opublikować wynik negatywny** — „separacja przypisywana DG jest
+     rzadkością, nie obwodem", z trzema niezależnymi kontrolami. Uczciwe,
+     spójne, i całe potrzebne liczenie JEST już zrobione.
+   - **(b) zmienić model** — obecny obwód przy domyślnych wagach ma martwe MC
+     (§5) i hamulec FS→HMC jako jedyny motyw o dużym efekcie (§3.1). Teza
+     mogłaby dotyczyć REGULACJI aktywności (E4/E5), nie separacji.
+   - **(c) zmienić miarę** — porzucić dekorelację na rzecz czegoś, czego
+     rzadkość nie fałszuje. ⚠️ Ale `retention` już odpadło (§3.2b pkt 3),
+     a decodability odpadła w 1A. Trzeciego kandydata nie widać.
+   Bez tej decyzji nie ma sensu liczyć niczego dalej — każdy kolejny sweep
+   odpowiada na pytanie, które właśnie straciło podstawę.
+3. **Przeformułować H1 w `PLAN_BADAWCZY.md`** — dopiero po decyzji z pkt 2.
+   „Separacja ma optimum przy pośredniej aktywności" jest obalone (§3.2, §3.2b)
+   i nie da się tego naprawić ani siatką, ani miarą.
 3. **Kalibracja siły FS→FS** do docelowej częstotliwości FS — czeka na B2,
    maszyneria bisekcji już jest w `calibrate.py`.
 4. **Krzywe f–I z CCIV.** Protokół prądowy JEST odzyskiwalny z adnotacji Axographu
    (`Pulse #1 … -100, 20` → start −100 pA, krok 20 pA, 30 epizodów, onset 100 ms,
    szerokość 500 ms). Dostępne: HMC 26 plików, GC+CA3 66. **FS nie mają ani jednego
    CCIV** — ich parametry tylko z adnotacji (4 komórki, §3.4).
-5. **Pełna siatka atrybucji (E2) na Aresie** z całą baterią metryk (~35 tys.
-   symulacji, ~12 h CPU — obliczenia nie są ograniczeniem).
+5. ~~Pełna siatka atrybucji (E2)~~ — **policzona** (Athena, job 3167904, 8 shardów
+   po ~9 min; `e2_motif_attribution/results/lesion_grid_full_shard00*.npz`).
+   Zostaje `analyze_motifs.py --in "lesion_grid_full_shard*.npz"` i wpisanie
+   liczb do §3.1 w miejsce wyników z presetu `quick`.
 6. **`io_madar.py`** — odczyt bodźców z `dataset/…/Protocols/` i podanie ich jako
    wejścia PP do `dg_core.circuit.simulate()`. Jeden dzień pracy, a zmienia status
    projektu z „model z syntetycznymi wzorcami" na „model napędzany tymi samymi
