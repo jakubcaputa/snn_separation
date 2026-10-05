@@ -12,3 +12,8 @@ snn_sep_venv/
 .pytest_cache/
 experiments/**/results/
 experiments/hpc/logs/
+
+# Figury do artykułu MUSZĄ być w repo — Overleaf kompiluje je z gita,
+# a reguła *.png wyżej by je wycięła.
+!article/figures/
+!article/figures/*.png

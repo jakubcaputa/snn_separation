@@ -1,0 +1,555 @@
+% =============================================================================
+% article_draft.tex — DRAFT, snn_separation
+%
+% Zakres ustalony 2026-10-05: artykuł opisuje APLIKACJĘ zbudowaną dla
+% neurobiologów oraz sam MECHANIZM separacji wzorców. NIE przesądza tezy pracy
+% — decyzja o niej jest otwarta (STATUS.md §4 pkt 2). Dlatego §6 raportuje
+% wyniki jako demonstracje możliwości warsztatu, a nie jako tezę nośną.
+%
+% Kompilacja: pdflatex article_draft.tex  (dwa przebiegi, bez bibtexa —
+% bibliografia jest inline w thebibliography).
+% Figury: article/figures/*.png, generowane przez make_article_figures.py
+% =============================================================================
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+\usepackage{caption}
+
+\captionsetup{font=small,labelfont=bf}
+\graphicspath{{figures/}}
+
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+\newcommand{\Kgc}{K_{\mathrm{GC}}}
+\newcommand{\Wfsgc}{W_{\mathrm{FS}\to\mathrm{GC}}}
+
+\title{\textbf{An interactive, data-constrained spiking model of the dentate
+gyrus for studying pattern separation}}
+
+\author{Jakub Caputa\thanks{\todo{affiliation, e-mail}} \and \todo{co-authors}}
+
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+Pattern separation --- the transformation of similar input patterns into less
+similar output patterns --- is the function most often attributed to the
+hippocampal dentate gyrus (DG). It is also a function that is easy to assert and
+hard to measure: the usual readout, a drop in pairwise correlation between
+population vectors, is confounded with how sparsely the network happens to be
+firing. We describe an open, data-constrained spiking model of the DG
+microcircuit (granule cells, fast-spiking interneurons, hilar mossy cells)
+implemented in Brian2, together with two interfaces built around it: an
+interactive browser application in which a neurobiologist can move biophysical
+parameters and immediately see their effect on circuit behaviour, and a headless
+experimental layer that runs the same model at scale on an HPC cluster. The
+model's operating point is pinned by whole-cell patch-clamp recordings
+(Madar, Ewell \& Jones, 2019) rather than chosen for convenience. We present the
+mechanism the model implements, the design of the application, and the
+experiments carried out with it so far, including a methodological result we
+consider the most transferable: decorrelation measured without a
+sparsity-matched null control is not interpretable as pattern separation.
+\todo{tighten abstract once the framing of the companion results paper is fixed}
+\end{abstract}
+
+% =============================================================================
+\section{Introduction}
+% =============================================================================
+
+The dentate gyrus is the entry stage of the hippocampal trisynaptic circuit and
+the structure most commonly assigned the role of a \emph{pattern separator}: it
+is supposed to take the overlapping cortical activity patterns arriving over the
+perforant path and re-encode them into granule cell population vectors that
+overlap less, so that downstream area CA3 can store them as distinct memories
+without catastrophic interference \cite{marr1971,treves1994,leutgeb2007}.
+
+Three features of DG anatomy are usually cited in support of this role. The
+granule cell population is large and its activity is extremely sparse, which by
+itself provides expansion recoding. Granule cells are embedded in strong
+feedforward and feedback inhibition mediated by fast-spiking basket cells.
+And hilar mossy cells form an excitatory loop back onto granule cells whose
+functional sign has remained contested.
+
+What is much less settled is \emph{how much} of each of these is needed, and
+which of them actually carries the effect. Those questions are quantitative, and
+answering them requires a model that is (i) constrained by measurements rather
+than hand-tuned, (ii) cheap enough to sweep over wide parameter grids, and
+(iii) transparent enough that an experimentalist --- not only the person who
+wrote the code --- can interrogate it.
+
+\paragraph{What this paper describes.} We present such a model and, more
+importantly, the tooling built around it. Section~\ref{sec:mechanism} states the
+mechanism and the measurement problem it poses. Section~\ref{sec:model} gives
+the model and its data constraints. Section~\ref{sec:app} describes the
+interactive application, which is the part intended for experimental
+collaborators. Section~\ref{sec:experiments} reports the experiments run so far.
+Section~\ref{sec:outlook} states what is planned and what is currently undecided.
+
+\paragraph{What this paper does not do.} It does not advance a single
+mechanistic claim about DG function. The empirical programme is still open
+(Section~\ref{sec:outlook}), and we deliberately report the experiments
+performed to date as demonstrations of what the framework can resolve.
+
+% =============================================================================
+\section{The mechanism and the measurement problem}
+\label{sec:mechanism}
+% =============================================================================
+
+Pattern separation is defined operationally. Two input patterns are presented,
+their similarity $r_{in}$ is measured, the resulting output population vectors
+are recorded, their similarity $r_{out}$ is measured, and the circuit is said to
+separate when
+\begin{equation}
+  \mathrm{dec} \;=\; r_{in} - r_{out} \;>\; 0 .
+  \label{eq:dec}
+\end{equation}
+Figure~\ref{fig:concept} shows one such measurement in the model.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{fig1-concept.png}
+  \caption{\textbf{Pattern separation, operationally.} Two input patterns drive
+  overlapping sets of granule cells (left). Each cell responds with a firing
+  rate (centre). The pairwise correlation of the output vectors is lower than
+  that of the inputs (right); the difference is the separation score of
+  Eq.~\eqref{eq:dec}. Single run of the model at default parameters.}
+  \label{fig:concept}
+\end{figure}
+
+This definition carries a trap that shapes everything in
+Section~\ref{sec:experiments}. The correlation between two nearly empty vectors
+tends to zero for purely statistical reasons. A network that stops firing
+therefore scores a \emph{perfect} separation under Eq.~\eqref{eq:dec} while
+computing nothing at all. Any manipulation that reduces activity --- which
+includes every manipulation that increases inhibition --- moves the score in the
+``good'' direction for a reason that has nothing to do with the circuit. We
+return to this in Section~\ref{sec:nulls}, where it stops being a caveat and
+becomes a result.
+
+\subsection{Two axes of inhibition}
+
+The model distinguishes two ways of inhibiting a granule cell, because they are
+biophysically distinct and, as it turns out, behave differently:
+
+\begin{itemize}
+  \item \textbf{Tonic} inhibition $\Kgc$: a standing hyperpolarising current,
+        cell-intrinsic, always on, representing ambient GABA acting on
+        extrasynaptic receptors.
+  \item \textbf{Phasic} inhibition $\Wfsgc$: spike-driven synaptic inhibition
+        delivered by fast-spiking interneurons.
+\end{itemize}
+
+These are the two principal knobs of the model (Figure~\ref{fig:circuit}), and
+separating them matters: they are often lumped together as ``inhibition'', yet
+only the second is part of a circuit motif.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\textwidth]{fig2-circuit.png}
+  \caption{\textbf{The modelled microcircuit.} Perforant path (PP) input drives
+  granule cells (GC) directly and fast-spiking interneurons (FS) in parallel
+  (feedforward, FF); granule cells also recruit FS (feedback, FB); FS inhibit
+  GC. Hilar mossy cells (HMC) form an excitatory loop. The two inhibition axes
+  are indicated at lower left.}
+  \label{fig:circuit}
+\end{figure}
+
+\subsection{Three dissociable motifs}
+
+The inhibitory architecture decomposes into three motifs that can be switched on
+and off independently in the model, which is what makes a formal attribution
+analysis possible (Section~\ref{sec:e2}):
+\textbf{FF} (PP\,$\to$\,FS\,$\to$\,GC),
+\textbf{FB} (GC\,$\to$\,FS\,$\to$\,GC), and
+\textbf{MC} (GC\,$\to$\,HMC\,$\to$\,GC/FS).
+
+% =============================================================================
+\section{Model and implementation}
+\label{sec:model}
+% =============================================================================
+
+\subsection{Neurons and synapses}
+
+All three cell types are Izhikevich neurons \cite{izhikevich2003}, chosen as the
+cheapest model that still reproduces the distinct firing signatures of granule
+cells and fast-spiking interneurons. Membrane dynamics are
+\begin{align}
+  \frac{dv}{dt} &= 0.04\,v^2 + 5v + 140 - u + g_{ex} - g_{in} - K,
+  \label{eq:izh_v}\\
+  \frac{du}{dt} &= a\,(b\,v - u),
+  \label{eq:izh_u}
+\end{align}
+with reset $v \leftarrow c$, $u \leftarrow u + d$ on each spike. Synaptic
+conductances decay exponentially, $\tau_{ex}=\SI{5}{\milli\second}$ and
+$\tau_{in}=\SI{8}{\milli\second}$ for granule cells. Parameters are listed in
+Table~\ref{tab:params}.
+
+The tonic term $K$ in Eq.~\eqref{eq:izh_v} is what makes the two inhibition axes
+separable: it enters the voltage equation directly rather than through a synapse.
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Default model parameters. Weights are in mV of instantaneous
+  post-synaptic depolarisation.}
+  \label{tab:params}
+  \begin{tabular}{llll}
+    \toprule
+    \textbf{Quantity} & \textbf{GC} & \textbf{FS} & \textbf{HMC}\\
+    \midrule
+    Population size            & 200   & 20    & 10 \\
+    Izhikevich $a,b,c,d$       & 0.02,\,0.2,\,$-65$,\,6
+                               & 0.10,\,0.2,\,$-65$,\,2
+                               & 0.02,\,0.2,\,$-65$,\,4 \\
+    $\tau_{ex}$ [ms]           & 5 & 3 & 5 \\
+    Tonic inhibition $K$       & 10 & 5 & 10 \\
+    \midrule
+    \multicolumn{4}{l}{\textbf{Connection probability} \quad
+      PP$\to$FS 0.40 \quad GC$\to$FS 0.40 \quad FS$\to$GC 0.50}\\
+    \multicolumn{4}{l}{\phantom{\textbf{Connection probability}} \quad
+      GC$\to$HMC 0.25 \quad HMC$\to$FS 0.40 \quad HMC$\to$GC 0.40}\\
+    \midrule
+    \multicolumn{4}{l}{\textbf{Weights [mV]} \quad
+      PP$\to$GC 4.0 \quad PP$\to$FS 0.25 \quad GC$\to$FS 10.0 \quad
+      FS$\to$GC 1.0}\\
+    \multicolumn{4}{l}{\phantom{\textbf{Weights [mV]}} \quad
+      GC$\to$HMC 1.0 \quad HMC$\to$FS 1.0 \quad HMC$\to$GC 0.5}\\
+    \midrule
+    \multicolumn{4}{l}{\textbf{Simulation} \quad
+      $dt=\SI{0.1}{\milli\second}$, $T=\SI{600}{\milli\second}$,
+      PP delay \SI{4}{\milli\second}, internal delay \SI{1}{\milli\second}}\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Input: the perforant path}
+
+Each granule cell receives 40 perforant path fibres. A fibre belonging to a
+driven cell fires at \SI{10}{\hertz}, a background fibre at \SI{1}{\hertz},
+giving aggregate Poisson drives of \SI{400}{\hertz} and \SI{40}{\hertz}
+respectively. With $W_{\mathrm{PP}\to\mathrm{GC}}=\SI{4}{\milli\volt}$ the
+steady-state excitatory drive is
+\begin{equation}
+  g_{ex}^{ss} = r \cdot W \cdot \tau_{ex}
+  = 400 \cdot 4 \cdot 0.005 = \SI{8}{\milli\volt}.
+  \label{eq:gex}
+\end{equation}
+This single number is held as the project's frequency canon, in one file, because
+an earlier audit found two different values (400 vs \SI{600}{\hertz}) in
+use across scripts, which silently changed the regime: \SI{600}{\hertz} drives
+granule cells to \SI{16.6}{\hertz}, far above the sparse-coding regime expected
+of DG.
+
+\subsection{Why the circuit is sparse: an analytic handle}
+
+For the Izhikevich neuron, the resting and threshold potentials are the stable
+and unstable fixed points of Eq.~\eqref{eq:izh_v}, available in closed form.
+The consequence used throughout is that the drive needed to make a granule cell
+fire is
+\begin{equation}
+  G_{crit} = 4 + K,
+  \label{eq:gcrit}
+\end{equation}
+verified against simulation to within \SI{0.1}{\milli\volt}. At the default
+$\Kgc=10$ this gives \SI{14}{\milli\volt} against an actual drive of
+\SI{8}{\milli\volt} (Eq.~\eqref{eq:gex}): granule cells sit \emph{below}
+threshold and fire only on fluctuations (Figure~\ref{fig:opoint}a). This is the
+mechanistic basis of sparse DG coding in the model, and it is a statement one can
+check rather than tune.
+
+\subsection{Data constraints}
+
+The operating point is anchored to whole-cell recordings from
+Madar, Ewell \& Jones \cite{madar2019}, deposited as BioStudies
+\texttt{S-BSST219}. Membrane properties are read from the experimenters'
+own annotations rather than re-derived from the raw traces. After
+de-duplication by cell identity (72 raw records resolve to 42 granule cells ---
+without de-duplication the median shifts from $-76$ to $-70$\,mV), granule cell
+resting potential is $-76$\,mV, IQR $[-81,-70]$.
+
+This pins $\Kgc$ (Figure~\ref{fig:opoint}b). The model at $\Kgc=10$ rests at
+$-78.7$\,mV, inside the data IQR; at $\Kgc=0$ it rests at $-70$\,mV, at the
+upper edge. The default is therefore supported by the data, not merely inherited.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{fig3-operating-point.png}
+  \caption{\textbf{The operating point is constrained.} (a) The drive required
+  to spike grows as $G_{crit}=4+K$; the actual perforant path drive
+  (\SI{8}{\milli\volt}) is below it at the default $\Kgc=10$, placing granule
+  cells in a fluctuation-driven, sparse regime. (b) The same parameter sets the
+  resting potential, which the patch-clamp data constrain independently.}
+  \label{fig:opoint}
+\end{figure}
+
+\todo{Methods must note a discrepancy: $\tau_m$ extracted from the data is
+$\approx\SI{3}{\milli\second}$ for granule cells, not the 10--50\,ms quoted in
+correspondence. The Izhikevich neuron has no explicit $\tau_m$, so this does not
+affect the simulations, but the definitional question (input vs membrane
+resistance) should be resolved before submission.}
+
+% =============================================================================
+\section{The application}
+\label{sec:app}
+% =============================================================================
+
+The model is exposed through two interfaces that share one implementation of the
+circuit. Keeping a single source of truth is a design constraint, not an
+accident: an earlier version in which the interactive tool and the batch code had
+drifted apart produced experimental results that no longer matched what the tool
+displayed.
+
+\subsection{Interactive tool}
+
+\texttt{interactive\_dg.py} is a browser application (Streamlit) aimed at
+experimental collaborators rather than modellers. It offers two modes: a
+single-neuron mode for intuition about excitability, and a network mode running
+the full microcircuit. Every biophysical parameter in Table~\ref{tab:params} is
+a slider, and the following are shown live as they change:
+
+\begin{itemize}
+  \item membrane potential traces for two competing input patterns;
+  \item input and output correlation matrices side by side --- the separation
+        measurement of Eq.~\eqref{eq:dec} made visible;
+  \item a circuit schematic whose connection widths track the actual flow of
+        excitation and inhibition in the current configuration;
+  \item a \emph{voltage budget} panel decomposing what excites and what inhibits
+        granule cells, which is how the dominance of tonic over phasic
+        inhibition first became visible;
+  \item $P(\mathrm{AP}\,|\,\mathrm{pulse})$ under the stimulation protocol used
+        by Madar et al., so that a model setting can be compared against the
+        experiment it is supposed to match.
+\end{itemize}
+
+The intent is that a question of the form ``what happens to separation if basket
+cell inhibition is halved?'' can be answered by the person who has that question,
+in the browser, without reading any code.
+
+\subsection{Headless experimental layer}
+
+\texttt{experiments/dg\_core/} is the same circuit without the interface:
+a frozen configuration dataclass, the Brian2 circuit, pattern generators,
+a metric library, calibration routines, and null models. Experiments are plain
+command-line scripts that support \texttt{-{}-shard i -{}-n-shards N}, so a
+parameter grid maps onto a SLURM job array; results are written per shard and
+merged by the analysis step. The full grids reported below run in minutes on 16
+cores.
+
+\subsection{Calibration rather than tuning}
+
+Three quantities are set by bisection against a target rather than by hand:
+the synaptic weight that achieves a required $P(\mathrm{AP}\,|\,\mathrm{pulse})$,
+the phasic weight that achieves a required tonic/phasic balance, and --- added
+for the experiment in Section~\ref{sec:nulls} --- the tonic inhibition $\Kgc$
+that achieves a required fraction of active granule cells. The last of these
+converts activity level from an outcome into a controlled variable, which is what
+makes the comparison in Section~\ref{sec:nulls} meaningful.
+
+\subsection{Reproducibility}
+
+Default behaviour is covered by regression tests (17 tests) that assert the
+circuit remains bit-for-bit identical as features are added; parameters
+introduced later default to neutral values and, where relevant, take a code path
+that consumes no random numbers, so earlier results need not be recomputed.
+\todo{before submission: container, configuration YAMLs, Zenodo deposit for the
+derived data layers}
+
+% =============================================================================
+\section{Experiments performed so far}
+\label{sec:experiments}
+% =============================================================================
+
+Four experiments have been run with the framework. We report them here as
+demonstrations of what it resolves; the overall interpretation is deferred to
+Section~\ref{sec:outlook}. Figure~\ref{fig:findings} summarises all four.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{fig4-findings.png}
+  \caption{\textbf{Summary of experiments to date.} (a) Measured separation
+  rises monotonically as the network falls silent; the apparent optimum sits at
+  whatever activity cut-off the analysis imposes. (b) With activity held fixed
+  by calibration, randomly shuffling which granule cell fires yields
+  \emph{more} decorrelation than the real circuit. (c) Shapley attribution of
+  separation to the three inhibitory motifs. (d) A linear decoder does not read
+  granule cell output more accurately than it reads the raw input.}
+  \label{fig:findings}
+\end{figure}
+
+\subsection{E1 --- mapping the inhibition plane}
+
+A $10\times9$ grid over $\Kgc$ and $\Wfsgc$, five network seeds, 450 grid points
+and 1800 simulations, run in \SI{3.7}{\minute} on 16 cores. The question was
+whether separation has an optimum at intermediate activity.
+
+It does not. Measured separation increases monotonically as activity falls
+(Figure~\ref{fig:findings}a). Because the analysis discards points below an
+activity floor --- itself a guard against the empty-vector artefact --- the
+apparent maximum lands immediately above that floor, and moves when the floor
+moves: cut-offs of 0.02, 0.05, 0.10 and 0.20 place the maximum at 0.025, 0.065,
+0.120 and 0.200 respectively. A maximum that tracks the analyst's threshold is
+a property of the analysis, not of the circuit.
+
+\subsection{E1$'$ --- separation above a sparsity-matched null}
+\label{sec:nulls}
+
+E1 motivated the methodological core of this work. If decorrelation is partly
+guaranteed by sparsity, then the quantity of interest is not decorrelation but
+decorrelation \emph{in excess of} what a code of the same sparsity achieves by
+chance. We therefore (i) fixed the activity level by bisection on $\Kgc$ instead
+of letting it vary, and (ii) compared each measurement against two null models:
+
+\begin{description}
+  \item[Permutation null.] The output rate vector is permuted across cells,
+        independently per pattern. The rate distribution is preserved exactly;
+        only the correspondence between pattern and cell identity is destroyed.
+  \item[Random-projection null.] A random sparse expansion of the input with the
+        number of active units matched to the DG output ($k$-WTA).
+\end{description}
+
+Over 810 grid points (6 activity targets $\times$ 9 phasic weights $\times$ 3
+input sparsities $\times$ 5 seeds), 733 of which could be tuned to the requested
+activity, the excess over the permutation null is
+$-0.389 \pm 0.245$ (SD), SEM $0.009$ --- that is, negative, and far from zero.
+Shuffling which granule cell fires \emph{increases} decorrelation relative to
+the intact circuit (Figure~\ref{fig:findings}b). With activity equalised, the
+phasic weight $\Wfsgc$ has no detectable effect anywhere in the range $0$--$5$
+(spread of means 0.024 against a per-cell SEM of 0.027).
+
+The interpretation is mechanical rather than mysterious: which granule cells fire
+is dictated by which ones receive input, so overlapping patterns drive
+overlapping cells, and the circuit \emph{preserves} input correlation relative to
+a random assignment.
+
+\subsection{E2 --- attributing separation to motifs}
+\label{sec:e2}
+
+With three motifs that can be independently lesioned, the contribution of each
+is well defined as a Shapley value over the $2^3$ lesion coalitions. Over a grid
+of input statistics (216 points $\times$ 5 seeds), the feedforward and feedback
+motifs contribute positively, while mossy cells contribute
+\emph{negatively in isolation} yet show strong positive interaction with both
+inhibitory motifs (Figure~\ref{fig:findings}c). Mossy cells in this model are
+thus a conditional motif: on their own they re-excite granule cells and
+\emph{correlate} patterns; combined with inhibition they are associated with the
+largest gains.
+
+\todo{E2 computes Shapley values on raw decorrelation, i.e. on the metric that
+Section~\ref{sec:nulls} shows to be confounded. Re-run with
+\texttt{separation\_vs\_null} before these numbers are claimed. The machinery
+exists; the cost is minutes. Note also that the strongest apparent separation in
+this grid occurs where active granule cells fire at \SI{2.2}{\hertz}, well below
+the \SI{6}{\hertz} canon.}
+
+\subsection{1A --- does a downstream decoder benefit?}
+
+A complementary question avoids correlation metrics entirely: can a linear
+classifier read pattern identity better from granule cell output than from the
+raw input? Across four conditions --- raw input, DG output, DG with inhibition
+removed, and a random sparse projection with matched sparsity --- it cannot
+(Figure~\ref{fig:findings}d). Accuracy via DG is $0.885$ against $0.940$ for the
+raw input, and the sparsity-matched random control matches DG exactly.
+
+This is a negative result obtained with an independent measure, and it is
+consistent with Section~\ref{sec:nulls}.
+
+% =============================================================================
+\section{Status and planned work}
+\label{sec:outlook}
+% =============================================================================
+
+\subsection{What we take to be established}
+
+The methodological point is the one we would most like to see adopted:
+\textbf{decorrelation reported without a sparsity-matched null is not evidence of
+pattern separation.} The confound is not subtle --- in our grids it is larger
+than the effect --- and it is invisible to the usual guard of discarding
+low-activity points, because that guard simply relocates the apparent optimum to
+its own threshold. The permutation null is nearly free: it requires no additional
+simulation.
+
+\subsection{What remains open}
+
+The framework has returned negative results for the specific separation
+hypotheses tested so far. Whether the right response is to report that as the
+finding, to move the question from separation to activity \emph{regulation}, or
+to find a measure that sparsity cannot counterfeit, is a decision we have not
+yet taken. Two candidate measures are already spent: mutual information
+retention proved to be an artefact of the estimator (its optimum tracks input
+sparsity rather than any circuit property), and decodability was closed by
+experiment 1A.
+
+\subsection{Planned extensions}
+
+\begin{itemize}
+  \item \textbf{Adaptive control.} Whether a homeostatic rule --- intrinsic
+        plasticity plus inhibitory STDP --- can find and hold the operating
+        point autonomously. This is the direction we consider most likely to
+        carry a positive result, because the model's behaviour is dominated by
+        where its activity sits, which is precisely what such a rule regulates.
+  \item \textbf{Driving the model with the experimental stimuli.} The stimulus
+        protocols are recoverable from the Madar deposit; using them as perforant
+        path input would move the model from ``synthetic patterns'' to ``the same
+        stimuli as the experiment''.
+  \item \textbf{Expansion.} Separation grows with network size at fixed
+        in-degree ($+0.149 \to +0.296$ for 200 $\to$ 800 granule cells in
+        preliminary runs); this should be quantified properly, and re-measured
+        against the null.
+  \item \textbf{Mossy cell brake.} The GC\,$\to$\,HMC\,$\to$\,GC loop is purely
+        excitatory and runs away without inhibition onto mossy cells; the
+        strength of that brake needs an experimental anchor.
+\end{itemize}
+
+% =============================================================================
+\section*{Code and data availability}
+% =============================================================================
+
+The model, the interactive application and all experiment scripts are in a
+single repository \todo{URL, DOI, licence --- BSD-3-Clause planned}.
+Electrophysiological recordings are from \cite{madar2019}, available as
+BioStudies \texttt{S-BSST219}; we do not redistribute the raw recordings.
+
+\section*{Acknowledgements}
+\todo{funding; PLGrid/ACK Cyfronet AGH computational grant; collaborators}
+
+% =============================================================================
+\begin{thebibliography}{9}
+\small
+
+\bibitem{marr1971} Marr, D. (1971). Simple memory: a theory for archicortex.
+\emph{Phil. Trans. R. Soc. Lond. B} 262, 23--81.
+
+\bibitem{treves1994} Treves, A. \& Rolls, E. T. (1994). Computational analysis
+of the role of the hippocampus in memory. \emph{Hippocampus} 4, 374--391.
+
+\bibitem{leutgeb2007} Leutgeb, J. K., Leutgeb, S., Moser, M.-B. \& Moser, E. I.
+(2007). Pattern separation in the dentate gyrus and CA3 of the hippocampus.
+\emph{Science} 315, 961--966.
+
+\bibitem{izhikevich2003} Izhikevich, E. M. (2003). Simple model of spiking
+neurons. \emph{IEEE Trans. Neural Netw.} 14, 1569--1572.
+
+\bibitem{madar2019} Madar, A. D., Ewell, L. A. \& Jones, M. V. (2019).
+Pattern separation of spiketrains in hippocampal neurons.
+\emph{PLOS Computational Biology}. Data: BioStudies \texttt{S-BSST219}.
+
+\bibitem{stimberg2019} Stimberg, M., Brette, R. \& Goodman, D. F. M. (2019).
+Brian 2, an intuitive and efficient neural simulator. \emph{eLife} 8, e47314.
+
+\todo{add: GABA tonic inhibition in DG; mossy cell function; sparse coding in
+DG; Shapley attribution in neuroscience}
+\end{thebibliography}
+
+\end{document}

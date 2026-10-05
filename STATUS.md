@@ -1,6 +1,6 @@
 # Status — stan prac, wyniki, co dalej
 
-*Aktualizacja: 2026-09-28.*
+*Aktualizacja: 2026-10-05.*
 
 > **Gdzie zacząć (2026-09-28).** Obliczenia są skończone i nic nie czeka
 > w kolejce. Teza „DG separuje wzorce, a hamowanie tym steruje" jest obalona
@@ -8,6 +8,10 @@
 > **Jedyna otwarta rzecz to decyzja o tezie pracy: §4 pkt 2.** Reszta tego pliku
 > jest materiałem do tej decyzji. `PLAN_BADAWCZY.md` jest świadomie NIE
 > przepisany — czeka na tę decyzję.
+>
+> Od 2026-10-05 jest też **draft artykułu** (`article/article_draft.tex`, §6).
+> Jest napisany tak, żeby §4 pkt 2 NIE przesądzać: opisuje aplikację i mechanizm,
+> a wyniki raportuje jako demonstracje możliwości warsztatu.
 
 **Ten plik odpowiada na jedno pytanie: gdzie jestem i co dalej.** Jest jedynym
 źródłem prawdy dla STANU prac i ZMIERZONYCH LICZB — wszędzie indziej są odnośniki
@@ -32,6 +36,7 @@ biologiczne** (§2) — maszyneria kalibracyjna jest gotowa i czeka na te trzy l
 | Kalibracja punktu pracy | maszyneria gotowa, **specyfikacja niedomknięta** (§2) |
 | Właściwości błony z danych Madara | **wyciągnięte**, 91 komórek (§3.4) |
 | Odczyt downstream | 1A zamknięte (wynik negatywny), 1B odłożone (§3.3) |
+| **Draft artykułu** | `article/` — tekst + 4 figury objaśniające, **do przeczytania** (§6) |
 
 ---
 
@@ -382,7 +387,45 @@ skokowa (0.00 → 0.99). Stąd zawodność synaptyczna `P_REL_*`: przy kompensac
 
 ---
 
-## 6. Dziennik porządków
+## 6. Draft artykułu — co w nim jest i czego świadomie nie ma
+
+`article/article_draft.tex` (ang., Overleaf-ready) + `article/figures/*.png`
++ `article/make_article_figures.py` (figury są ODTWARZALNE, nie wklejone).
+
+**Zakres ustalony 2026-10-05:** artykuł opisuje **aplikację zbudowaną dla
+neurobiologów** i **mechanizm separacji wzorców**. NIE przesądza tezy pracy —
+§4 pkt 2 zostaje otwarte. Dlatego wyniki z §3 są tam podane jako demonstracje
+tego, co warsztat rozstrzyga, a nie jako teza nośna.
+
+| sekcja draftu | treść |
+|---|---|
+| §1 Introduction | po co DG, po co model, czego brakuje (narzędzie dla eksperymentatora) |
+| §2 Mechanism | definicja operacyjna separacji + **pułapka pomiarowa** (Fig. 1) |
+| §3 Model | równania, parametry, kanon PP, `G_crit = 4 + K`, dane Madara (Fig. 2, 3) |
+| §4 Application | `interactive_dg.py`, warstwa headless, kalibracja przez bisekcję |
+| §5 Experiments | E1, E1′, E2, 1A jako demonstracje (Fig. 4) |
+| §6 Outlook | co ustalone, **co otwarte**, plany (kontroler, bodźce Madara, ekspansja) |
+
+**Cztery figury objaśniające** (`article/figures/`) — jedna figura = jedna myśl,
+po angielsku, do tłumaczenia komuś, a nie do analizy:
+
+1. `fig1-concept` — czym JEST separacja wzorców (wejście → wyjście → spadek korelacji)
+2. `fig2-circuit` — obwód i dwie osie hamowania (toniczna vs fazowa)
+3. `fig3-operating-point` — dlaczego GC są rzadkie + jak dane Madara przypinają `K_GC`
+4. `fig4-findings` — po jednym panelu na eksperyment, jedna myśl na panel
+
+⚠️ **W drafcie są jawne `\todo{}`** — m.in. afiliacje, rozbieżność τ_m (§3.4),
+brakujące pozycje bibliografii oraz zastrzeżenie, że **E2 liczy Shapleya na
+surowej dekorelacji**, czyli na metryce, którą §3.2b podważa. To są miejsca do
+Twojej decyzji, nie przeoczenia.
+
+⚠️ Na Athenie **nie ma LaTeX-a**, więc draft nie został skompilowany lokalnie —
+sprawdzony statycznie (balans środowisk i nawiasów, brak pustych jednostek
+`\SI`, nazwy figur bez podkreślników). Pierwsza kompilacja na Overleafie.
+
+---
+
+## 7. Dziennik porządków
 
 **2026-09-14 — scalenie dokumentacji, cztery pliki .md → trzy.**
 `doktorat_plan.md` + `PLAN_PUBLIKACJI.md` → jeden

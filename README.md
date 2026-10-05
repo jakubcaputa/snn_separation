@@ -133,6 +133,9 @@ experiments/               łańcuch eksperymentalny bez GUI — z linii polece�
 separation_parameters_sweep/   linia LIF pojedynczego neuronu
 single_neuron_patsep.py        (jej zależność)
 
+article/                   draft artykułu (Overleaf) + figury objaśniające
+                           article_draft.tex · figures/ · make_article_figures.py
+
 tests/                     regresja modelu i kalibracji
 archive/                   skrypty, które zrobiły swoje — patrz archive/README.md
 prezentacja/               materiały na spotkania
@@ -181,6 +184,25 @@ było tłumaczyć numeracji. **Każdy folder odpowiada na jedno pytanie.**
 
 Statusy i wyniki: [STATUS.md](STATUS.md) §3. Eksperymenty jeszcze niezbudowane
 (E3–E7) i pełne brzmienie hipotez: [PLAN_BADAWCZY.md](PLAN_BADAWCZY.md).
+
+---
+
+## Artykuł
+
+```bash
+python article/make_article_figures.py     # przelicza 4 figury do article/figures/
+```
+
+`article/article_draft.tex` kompiluje się na Overleafie (`pdflatex`, dwa
+przebiegi, bez bibtexa — bibliografia jest inline). Zakres: **aplikacja dla
+neurobiologów + mechanizm separacji**; draft świadomie NIE przesądza tezy pracy,
+bo ta decyzja jest otwarta ([STATUS.md](STATUS.md) §4 pkt 2). Co dokładnie jest
+w drafcie i czego w nim nie ma: [STATUS.md](STATUS.md) §6.
+
+Figury są **generowane, nie wklejane** — liczby biorą się z `experiments/*/results/*.npz`
+albo z jawnie oznaczonych wartości zapisanych w STATUS. Po przeliczeniu sweepów
+wystarczy uruchomić skrypt ponownie. ⚠️ Figury artykułu są wyjątkiem w
+`.gitignore` (reszta `*.png` jest ignorowana), bo Overleaf bierze je z repo.
 
 ---
 
