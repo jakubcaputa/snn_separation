@@ -269,7 +269,7 @@ Standard PLOS: perturbacja pokazuje mechanizm, nie tylko korelację.
 
 | # | knockout | implementacja | przewidywanie |
 |---|---|---|---|
-| **K1** | lezje motywów FF/FB/MC (pełny 2³) | `cfg.with_motifs()` ✅ | Shapley: FB dominuje w `mc_inert`, MC warunkowo dominujący w `mc_active` (wstępnie potwierdzone) |
+| **K1** | lezje motywów FF/FB/MC (pełny 2³) | `cfg.with_motifs()` ✅ | ⚠️ Policzone (E2): wkłady zdominowane przez aktywność, r = −0.97 (STATUS sek. 3.6) — wymaga lezji przy wyrównanej aktywności |
 | **K2** | **utrata hamulca MC:** `W_FS_HMC → 0` | ✅ | zanik reżimu pośredniego → bistabilność (H2) |
 | **K3** | **stopniowa utrata mossy cells** (padaczka skroniowa) | `N_HMC` × {1.0, 0.75, 0.5, 0.25, 0}, stały in-degree | rozstrzyga „dormant basket cell" vs „irritable mossy cell": mierzymy napęd FS (`g_ex3`) i separację równocześnie |
 | **K4** | **symulowana gabazyna:** (a) tylko fazowa `W_FS_GC×(1−α)`, (b) tylko toniczna `K_GC×(1−α)`, (c) obie | nowy parametr `gaba_block` | dysocjacja toniczne/fazowe GABA-A; wersja (c) porównywana z danymi przed/po GZN (sek. 6.2 V4) |
@@ -413,8 +413,13 @@ literatura.
 
 ### 6.3 Falsyfikowalne przewidywania dla eksperymentatorów
 
-1. Częściowe wyciszenie MC (chemogenetyka) powinno *poprawić* separację przy niskim
-   R_in i *pogorszyć* przy wysokim — bo MC jest motywem **warunkowym**.
+1. ~~Częściowe wyciszenie MC powinno *poprawić* separację przy niskim R_in
+   i *pogorszyć* przy wysokim — bo MC jest motywem warunkowym.~~ **Nieaktualne:**
+   „warunkowa rola MC" okazała się efektem aktywności (STATUS sek. 3.6). Kandydat
+   z E1″ („fazowe ustala częstotliwość przy stałej liczbie aktywnych") też wycofany —
+   artefakt miary. Zostaje słabszy, eksploracyjny (STATUS sek. 3.4, E1‴): przy
+   aktywnych MC osłabienie hamowania fazowego może zapalić prawie całą populację GC;
+   jak często — zależy od siły MC→GC, nieznanej.
 2. Blokada tonicznego GABA-A (δ-GABA_A) i fazowego powinny dawać **przeciwne**
    przesunięcia na osi NDP/SF, mimo podobnej zmiany FR.
 3. Po utracie MC separacja powinna wracać w skali dziesiątek minut, jeśli homeostaza

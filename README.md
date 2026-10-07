@@ -61,6 +61,10 @@ cd e1_regime_map        && python run_regime_map.py --preset quick
 python analyze_regime_map.py            # E1  — figura + werdykt H1
 python run_matched_activity.py --preset quick   # E1′ — wersja poprawiona
 python analyze_matched_activity.py      # E1′ — figura + werdykt H1′
+python run_matched_activity.py --preset wide   # E1″ — szerszy sweep (1280 pkt)
+python analyze_matched_activity_wide.py        # E1″ — figury + test zapisany z góry
+python run_runaway_confirm.py --preset full --jobs 16   # E1‴ — test potwierdzający ucieczki
+python run_runaway_confirm.py --preset full --analyze   # E1‴ — figura + werdykt
 cd ../e2_motif_attribution
 python run_lesion_grid.py --preset quick
 python analyze_motifs.py --in results/lesion_grid_quick.npz
@@ -71,6 +75,8 @@ Na HPC (Athena/PLGrid) — skrypty `hpc/athena_*.sbatch`:
 ```bash
 cd experiments/hpc
 sbatch athena_e1_matched_activity.sbatch        # E1′ — aktualny, ~40 min
+# E1″ — na plgrid-now (limit 16 CPU / 1 h / jedno zadanie), 3 shardy po kolei:
+sbatch --export=ALL,SHARD=0,N_SHARDS=3 athena_e1_matched_activity_wide.sbatch
 sbatch athena_e1_regime_map.sbatch              # E1 stary (wynik negatywny, sek. 3.2)
 sbatch --array=0-7 athena_e2_attribution.sbatch
 sbatch --array=0-7 athena_readout.sbatch classification

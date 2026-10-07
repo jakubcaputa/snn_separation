@@ -16,7 +16,11 @@ podstawić (STATUS sek. 3.3). Maska tego nie leczy — tylko ucina zdegenerowany
 a maksimum siada na linii cięcia.
 
 Lekarstwo: policzyć, ile dekorelacji miałby kod o TEJ SAMEJ rzadkości, ale bez
-obwodu, i odjąć. Nadwyżka `dec − dec_null` znika przy wyciszeniu **z konstrukcji**,
+obwodu, i odjąć. ⚠️ KOREKTA (STATUS sek. 3.5): to założenie NIE trzyma się dla
+nulla permutacyjnego — ten ≈ r_in, więc nadwyżka nad nim = −r_out i nie kontroluje
+rzadkości; a w E2 (Shapley po lezjach) jego odjęcie nie może niczego zmienić, bo
+r_in jest stałe między lezjami. Pierwotne brzmienie: nadwyżka `dec − dec_null`
+znika przy wyciszeniu **z konstrukcji**,
 bo null wycisza się razem z siecią. Artefakt się skraca, zamiast być maskowany.
 
 Dwa null-e, bo odpowiadają na różne pytania

@@ -69,16 +69,13 @@ from dg_core import (  # noqa: E402
     make_patterns, make_input_spikes, mean_pairwise_r,
     population_sparseness, active_fraction,
     activity_battery, BATTERY_KEYS, mean_pairwise_cosine, mean_pairwise_jaccard,
-    nan_mean, separation_vs_null,
+    nan_mean, separation_vs_null, MC_REGIMES,
 )
 
 RESULTS = Path(__file__).parent / "results"
 
 # ── Reżimy mossy cells (drive = W_GC_HMC, gain = mnożnik wyjścia, brake = W_FS_HMC) ──
-MC_REGIMES = {
-    'mc_inert':  dict(drive=1.0,  gain=1.0,  brake=0.0),
-    'mc_active': dict(drive=16.0, gain=20.0, brake=2.0),
-}
+# MC_REGIMES: jedno źródło w dg_core.params (wspólne z E1′)
 
 # ── Siatki parametrów ─────────────────────────────────────────────────────────
 PRESETS = {
@@ -144,7 +141,10 @@ def run_cell(r_in: float, p_active: float, drive: float, regime: str,
         # + alternatywne miary separacji (kontrola dla dekorelacji Pearsona)
         **{k: {} for k in BATTERY_KEYS},
         'r_out_cos': {}, 'overlap_jac': {},
-        # Separacja PONAD null o dopasowanej rzadkości. Bez tego Shapley liczy się
+        # Separacja PONAD null. ⚠️ Dla Shapleya null PERMUTACYJNY jest pusty (≈ r_in,
+        # stałe między lezjami — odjęcie stałej nie zmienia φ); niepusty jest null
+        # projekcji losowej (zależy od liczby aktywnych). STATUS sek. 3.6.
+        # Pierwotna motywacja: bez kontroli Shapley liczy się
         # na `dec`, które rośnie przy wyciszaniu sieci — a E1′ pokazało, że ten
         # confound jest tu większy niż mierzony efekt (STATUS sek. 3.4).
         'dec_null_shuffle': {}, 'dec_excess_shuffle': {},

@@ -245,6 +245,24 @@ MC_BASE_W_HMC_GC = 0.5
 MC_BASE_W_HMC_FS = 1.0
 
 
+# Dwa reżimy mossy cells — obowiązkowe w każdym sweepie (PLAN sek. 3.3).
+# Przy domyślnych wagach MC są martwe, więc każdy wniosek o MC liczony tylko
+# w punkcie domyślnym dotyczyłby obwodu BEZ nich. `mc_inert` jest numerycznie
+# identyczny z domyślną konfiguracją (drive=W_GC_HMC=1, gain=1, brake=W_FS_HMC=0).
+# Jedno miejsce dla E1′ i E2 — wcześniej żyło w e2_motif_attribution.
+MC_REGIMES = {
+    'mc_inert':  dict(drive=1.0,  gain=1.0,  brake=0.0),
+    'mc_active': dict(drive=16.0, gain=20.0, brake=2.0),
+}
+
+
+def config_for_regime(regime: str, N_GC: int, T_ms: float) -> "DGConfig":
+    """Konfiguracja bazowa dla reżimu MC, przeskalowana do N_GC."""
+    mc = MC_REGIMES[regime]
+    base = DGConfig(T_ms=T_ms, W_FS_HMC=mc['brake']).scaled(N_GC)
+    return base.with_mc_strength(drive=mc['drive'], gain=mc['gain'])
+
+
 # Nazwy motywów — jedno miejsce, używane w sweepach i na wykresach
 MOTIFS = ("FF", "FB", "MC")
 MOTIF_LABELS = {

@@ -249,9 +249,9 @@ def build():
         ("2 z 2", "Punkty odniesienia",
          "Oba naturalne null-e zawodzą — każdy w przeciwną stronę. To główny "
          "wynik metodologiczny.", ACCENT),
-        ("−0.23 / +0.22", "Mossy cells",
-         "Same pogarszają separację, w parze z hamowaniem pomagają najbardziej. "
-         "Jedyny wynik odporny na kontrolę.", GREEN),
+        ("0 / 210", "Zapłon sieci",
+         "Bez mossy cells sieć nie zapala się nigdy. Z nimi — może, ale rzadko; "
+         "test potwierdzający nie przeszedł.", GREEN),
     ]
     cw, gap, cy = Inches(3.85), Inches(0.37), Inches(1.75)
     for i, (big, label, body, col) in enumerate(cards):
@@ -265,13 +265,13 @@ def build():
               body, size=15, color=MUTED, name=f"body {label}")
     _text(s, MARGIN, Inches(5.95), W - 2 * MARGIN, Inches(0.6),
           [[("Do decyzji: ", {'bold': True, 'color': ACCENT}),
-            ("czym jest teza pracy, skoro pierwotna upadła — slajd 12.", {})]],
+            ("czym jest teza pracy, skoro pierwotna upadła — slajd 13.", {})]],
           size=18, name="bottom line")
     _num(s, 2)
     _notes(s, "Trzy rzeczy do zapamiętania. Pierwotna hipoteza upadła i nie da się jej "
-              "uratować ani większą siatką, ani inną miarą. Najciekawszy wynik jest "
-              "metodologiczny: z czym porównywać obwód. Na plusie zostaje rola mossy "
-              "cells jako motywu warunkowego.")
+              "uratować ani większą siatką, ani inną miarą. Najciekawszy wynik "
+              "metodologiczny: z czym porównywać obwód. Najciekawszy wynik o obwodzie "
+              "dotyczy regulacji aktywności, nie separacji — slajd 10.")
 
     # 3 ── Czym jest separacja ─────────────────────────────────────────────────
     s = prs.slides.add_slide(blank)
@@ -319,19 +319,27 @@ def build():
     # 5 ── Punkt pracy ─────────────────────────────────────────────────────────
     s = prs.slides.add_slide(blank)
     _bg(s, WHITE)
-    _title(s, "Punkt pracy jest przypięty danymi")
+    _title(s, "Punkt pracy jest zgodny z danymi")
     _picture(s, SL / "fig3-operating-point.png", MARGIN, Inches(1.5),
              W - 2 * MARGIN, Inches(4.15), name="figure operating point")
     _text(s, MARGIN, Inches(5.85), W - 2 * MARGIN, Inches(1.2), [
-        [("Napęd 8 mV < próg 14 mV: ", {'bold': True}),
+        [("Średni napęd 8 mV < próg 14 mV: ", {'bold': True}),
          ("komórki strzelają tylko na fluktuacjach — stąd rzadki kod.  ", {}),
          ("Ten sam parametr ", {'bold': True}),
-         ("daje spoczynek −78.7 mV, w środku zakresu z 42 komórek z danych Madara.", {})],
+         ("daje spoczynek −78.7 mV, w zakresie 42 komórek Madara (dopuszczalne K ≈ 0–13.6).", {})],
     ], size=17, name="takeaway")
     _num(s, 5)
-    _notes(s, "Oba panele są policzone analitycznie z punktów stałych równania "
-              "Izhikevicza i sprawdzone symulacją. Pokazujemy, że model nie jest "
-              "dostrojony pod wynik: kluczowy parametr jest związany pomiarem.")
+    _notes(s, "K_GC to hamowanie toniczne: stały prąd odejmowany od każdej komórki "
+              "ziarnistej. Panel a: żeby GC strzelała, stały napęd musi przekroczyć "
+              "4 + K mV (punkt stały Izhikevicza znika). Średni napęd aktywnej GC to "
+              "8 mV = 400 Hz wejścia (40 włókien × 10 Hz) × waga 4 mV × stała czasowa "
+              "synapsy 5 ms, z fluktuacjami ±4 mV. Waga 4 mV NIE jest zmierzona — "
+              "dobrano ją tak, żeby GC strzelały ~6 Hz; dlatego panel a opisuje "
+              "reżim, a nie jest niezależnym dowodem. Niezależny jest panel b: to "
+              "samo K wyznacza potencjał spoczynkowy, a ten jest zmierzony. Dane "
+              "dopuszczają K od 0 do ~13.6, nasze 10 jest w środku. Uwaga na pytania: "
+              "przy aktywności 2–5% bisekcja w E1′/E1″ wybiera K ~14–17, czyli "
+              "komórki bardziej spolaryzowane niż w ~75% danych.")
 
     # 6 ── E1 ──────────────────────────────────────────────────────────────────
     _exp_slide(prs, 6, "E1", "Separacja rośnie, gdy sieć cichnie",
@@ -390,28 +398,71 @@ def build():
               "jest punkt odniesienia o tej samej rzadkości. Dwa naturalne zawodzą w "
               "przeciwne strony i zamiast wyznaczać poziom szansy, obejmują obwód z "
               "dwóch stron. Panel b: obwód bez żadnego hamowania już daje większość "
-              "przewagi nad losowym kodem.")
+              "przewagi nad losową projekcją.")
 
     # 9 ── E2 ──────────────────────────────────────────────────────────────────
-    _exp_slide(prs, 9, "E2", "Mossy cells: motyw warunkowy",
+    _exp_slide(prs, 9, "E2", "Wkład motywów to głównie aktywność",
                SL / "slide-e2.png", [
-                   ("Pytanie", "Który motyw hamowania niesie separację?", 'plain'),
-                   ("Jak policzone", "Lezje 2³ = 8 koalicji motywów, wartości "
-                                     "Shapleya; 36 punktów statystyki wejścia × "
-                                     "5 seedów, przy kanonicznym napędzie.", 'muted'),
-                   ("Wniosek", "Mossy cells same szkodzą (−0.23), w parach z "
-                               "hamowaniem pomagają najbardziej (+0.21…+0.22). "
-                               "Korekta nullem nic nie zmienia.", 'key'),
-                   ("Zastrzeżenie", "Przy napędzie ×0.5 efekty są ~4× mniejsze; "
-                                    "nie są kontrolowane aktywnością.", 'muted'),
+                   ("Pytanie", "Który element obwodu odpowiada za separację?", 'plain'),
+                   ("Jak policzone", "Trzy elementy (FF, FB, MC) włączane i wyłączane "
+                                     "we wszystkich 8 kombinacjach; dla każdej: ile "
+                                     "komórek strzela i jaka jest separacja.", 'muted'),
+                   ("Wynik (a)", "Separacja idzie za liczbą aktywnych komórek "
+                                 "(r = −0.97). Same MC zapalają 94% komórek.", 'key'),
+                   ("Wniosek (b)", "„Wkłady” mierzą głównie to, jak element zmienia "
+                                   "aktywność — nie separację samą w sobie.", 'plain'),
                ],
-               "Pełne słupki to wkład liczony na surowej separacji, kreskowane — po "
-               "korekcie nullem. Są praktycznie identyczne, bo null nie zależy od "
-               "lezji, a wartości Shapleya są niewrażliwe na stałą. To jedyny wynik "
-               "pozytywny, który przeszedł kontrolę.")
+               "Trzy elementy: FF — hamowanie wyprzedzające (wejście pobudza "
+               "interneurony, te hamują komórki ziarniste), FB — hamowanie zwrotne "
+               "(komórki ziarniste same pobudzają interneurony), MC — mossy cells, "
+               "pętla pobudzająca. Każdy można wyłączyć, więc liczymy wszystkie 8 "
+               "wersji obwodu: od 'nic nie włączone' do 'pełny obwód'. Panel a: każda "
+               "kropka to jedna wersja (średnio po 36 zestawach wejść i 5 seedach); oś "
+               "x — ile komórek strzela, oś y — separacja. Wszystkie wersje leżą na "
+               "jednej linii: im więcej strzela, tym gorsza separacja. Panel b: wartość "
+               "Shapleya = o ile średnio rośnie separacja, gdy dany element dołączamy, "
+               "uśrednione po wszystkich kolejnościach dołączania. FF i FB wychodzą "
+               "dodatnie, bo wyciszają sieć; MC ujemne, bo ją rozpędzają. To nie jest "
+               "dowód, że hamowanie 'robi separację' — robi ciszę. Interakcje i korekta "
+               "nullem projekcji losowej (wkłady maleją o 15–27%) są w STATUS sek. 3.6.")
 
-    # 10 ── 1A ─────────────────────────────────────────────────────────────────
-    _exp_slide(prs, 10, "1A", "Odbiorca nie korzysta na DG",
+    # 10 ── E1″ ────────────────────────────────────────────────────────────────
+    s = prs.slides.add_slide(blank)
+    _bg(s, WHITE)
+    _title(s, "Zapłon sieci: jest, ale rzadki", tag="E1‴")
+    _picture(s, SL / "fig6-runaway.png", MARGIN, Inches(1.35), W - 2 * MARGIN,
+             Inches(4.45), name="figure runaway")
+    colw = (W - 2 * MARGIN - Inches(0.4)) // 2
+    _box(s, MARGIN, Inches(5.9), colw, Inches(1.1), LIGHT, name="card prereg")
+    _text(s, MARGIN + Inches(0.2), Inches(5.97), colw - Inches(0.4), Inches(1.0), [
+        [("Test zapisany z góry (nowe seedy): ", {'bold': True}),
+         ("nie przeszedł. Przy wagach z E1″ zapłon w 2 z 30 przebiegów; "
+          "bez mossy cells — nigdy.", {})]],
+        size=15, name="text prereg")
+    x2 = MARGIN + colw + Inches(0.4)
+    _box(s, x2, Inches(5.9), colw, Inches(1.1), SOFT_ACC, name="card runaway")
+    _text(s, x2 + Inches(0.2), Inches(5.97), colw - Inches(0.4), Inches(1.0), [
+        [("Co zostaje: ", {'bold': True, 'color': ACCENT}),
+         ("zjawisko jakościowe — hamowanie fazowe (W ≥ 3) zawsze mu zapobiega. "
+          "Częstość zależy od siły mossy cells, której nie znamy.", {})]],
+        size=15, name="text runaway")
+    _num(s, 10)
+    _notes(s, "Historia tego slajdu: w szerszym sweepie E1″ wyglądało na to, że przy "
+              "aktywnych mossy cells komórki strzelają ~280 Hz zamiast 4 Hz. To był "
+              "artefakt miary — średnia częstotliwość z czterech wzorców dzielona przez "
+              "liczbę aktywnych komórek z jednego wzorca. Naprawdę dzieje się co innego: "
+              "dla niektórych wzorców zapala się prawie cała sieć. Test potwierdzający "
+              "na nowych seedach (E1‴) sprawdził to wprost. Panel a: aktywność "
+              "wyrównana, oś y — odsetek przebiegów z zapłonem, linie — siła pętli "
+              "mossy cells (λ = 1 to wagi z E1″). Bez MC zero, przy λ = 1 kilka procent, "
+              "przy λ = 1.5 do 40%; od W = 3 nigdy. Panel b: bez wyrównywania aktywności, "
+              "przy hamowaniu tonicznym zgodnym z danymi i bez fazowego zapala się 100% "
+              "komórek. Kryterium zapisane z góry nie przeszło, bo przy naszych wagach "
+              "zapłony są za rzadkie. To, czy zjawisko jest realistyczne, zależy od siły "
+              "mossy cells — to pytanie do prof. Błasiak.")
+
+    # 11 ── 1A ─────────────────────────────────────────────────────────────────
+    _exp_slide(prs, 11, "1A", "Odbiorca nie korzysta na DG",
                SL / "slide-1a.png", [
                    ("Pytanie", "Czy klasyfikator liniowy rozpoznaje wzorce lepiej "
                                "po przejściu przez DG?", 'plain'),
@@ -426,7 +477,7 @@ def build():
                "jest spójny z resztą: przewaga DG to głównie rzadkość, a nie "
                "architektura hamowania.")
 
-    # 11 ── Co stoi, co upadło ─────────────────────────────────────────────────
+    # 12 ── Co stoi, co upadło ─────────────────────────────────────────────────
     s = prs.slides.add_slide(blank)
     _bg(s, WHITE)
     _title(s, "Co upadło, co stoi, co jest nowe")
@@ -434,11 +485,13 @@ def build():
         ("Upadło", NAVY, [
             "Separacja ma optimum przy pośredniej aktywności",
             "Hamowanie fazowe steruje separacją",
-            "DG pomaga odbiorcy liniowemu"]),
+            "Mossy cells jako motyw separacji",
+            "DG pomaga odbiorcy liniowemu",
+            "„Toniczne = ile, fazowe = jak szybko” (artefakt miary)"]),
         ("Stoi", GREEN, [
             "Punkt pracy zgodny z danymi Madara",
-            "Mossy cells jako motyw warunkowy — odporne na null",
-            "DG dekoreluje lepiej niż losowy kod rzadki, głównie dzięki progowi"]),
+            "Z aktywnymi MC możliwy zapłon sieci; hamowanie fazowe mu zapobiega (eksploracyjnie)",
+            "DG bije losową projekcję, głównie dzięki progowi"]),
         ("Metodologia", ACCENT, [
             "Oba naturalne null-e zawodzą, w przeciwne strony",
             "Próg odrzucania cichych punktów przesuwa maksimum",
@@ -452,24 +505,24 @@ def build():
               head, size=22, font=HEAD, bold=True, color=col, name=f"head {head}")
         _text(s, cx + Inches(0.3), Inches(2.55), cw - Inches(0.6), Inches(3.8),
               items, size=16, bullets=True, space_after=14, name=f"items {head}")
-    _num(s, 11)
+    _num(s, 12)
     _notes(s, "Podsumowanie. Lewa kolumna: czego już nie da się obronić w żadnym "
               "wariancie. Środkowa: co można cytować. Prawa: wyniki metodologiczne, "
               "których w literaturze o separacji wzorców nie ma.")
 
-    # 12 ── Decyzja ────────────────────────────────────────────────────────────
+    # 13 ── Decyzja ────────────────────────────────────────────────────────────
     s = prs.slides.add_slide(blank)
     _bg(s, WHITE)
     _title(s, "Decyzja: czym jest teza pracy")
     opts = [
         ("(a)", "Artykuł metodologiczny",
-         "Jak nie mierzyć separacji. Dowód: komplet. Koszt: samo pisanie.", False),
+         "Jak nie mierzyć separacji. Dowód: komplet. Koszt: samo pisanie.", True),
         ("(b)", "Mossy cells: motyw warunkowy",
-         "Dowód: Shapley. Ryzyko: efekt zależy od napędu i nie jest kontrolowany aktywnością.", False),
+         "Wkłady zdominowane przez aktywność (r = −0.97) — wariant praktycznie odpada.", False),
         ("(c)", "Regulacja zamiast separacji",
          "Kontroler adaptacyjny. Dowód: brak. Koszt: nowy moduł, miesiące.", False),
         ("(d)", "Padaczka: utrata mossy cells",
-         "Przepisana przez sam plan (bramka G2). Koszt: jeden sweep.", True),
+         "Przepisana przez plan (bramka G2). Nasz wynik jej nie podpiera, dopóki nie znamy siły MC.", False),
     ]
     cw, ch = Inches(5.95), Inches(2.05)
     for i, (k, head, body, rec) in enumerate(opts):
@@ -486,31 +539,34 @@ def build():
               body, size=15, color=MUTED, name=f"body {k}")
     _text(s, MARGIN, Inches(6.55), W - 2 * MARGIN, Inches(0.5),
           [[("Rekomendacja: ", {'bold': True, 'color': ACCENT}),
-            ("(d) jako teza nośna + (a) jako osobny, krótszy artykuł.", {})]],
+            ("najpierw (a); (d) po zakotwiczeniu siły mossy cells w danych.", {})]],
           size=18, name="recommendation")
-    _num(s, 12)
-    _notes(s, "Wariant d nie jest naszym pomysłem: plan badawczy przewidywał, że jeśli "
-              "H1 nie przejdzie, przechodzimy na odporność i padaczkę. Mossy cells to "
-              "jedyny motyw o dużych efektach, a spór dormant basket cell kontra "
-              "irritable mossy cell jest otwarty, więc wynik będzie publikowalny "
-              "niezależnie od znaku.")
+    _num(s, 13)
+    _notes(s, "Rekomendacja zmieniła się po teście potwierdzającym. Wariant a ma "
+              "komplet dowodów i da się go pisać od zaraz. Wariant d przewidział sam plan "
+              "badawczy (jeśli H1 nie przejdzie — odporność i padaczka), a zapłon sieci "
+              "przy aktywnych mossy cells, któremu zapobiega hamowanie fazowe, to dokładnie "
+              "mechanizm sporu dormant basket cell kontra irritable mossy cell. Ale przy "
+              "naszych wagach zapłon jest rzadki i nie przeszedł testu; bez siły mossy "
+              "cells z danych nie wiemy, czy jest realistyczny. Wariant b odpada, bo "
+              "warunkowa rola mossy cells okazała się efektem aktywności.")
 
-    # 13 ── Następne kroki ─────────────────────────────────────────────────────
+    # 14 ── Następne kroki ─────────────────────────────────────────────────────
     s = prs.slides.add_slide(blank)
     _bg(s, WHITE)
     _title(s, "Następne kroki")
     steps = [
-        ("Decyzja o tezie", "Wybór wariantu ze slajdu 12; dopiero po nim "
+        ("Decyzja o tezie", "Wybór wariantu ze slajdu 13; dopiero po nim "
                             "przepisanie hipotez w planie."),
-        ("Trzy pytania kalibracyjne", "Udział hamowania tonicznego (~74%), "
+        ("Siła mossy cells z danych", "Warunek dla wariantu d: od niej zależy, czy "
+                                      "zapłon sieci jest realistyczny."),
+        ("Pytania kalibracyjne", "Udział hamowania tonicznego (~74%), "
                                       "częstotliwość FS (~46 Hz), reżim kalibracji: "
                                       "in vitro czy in vivo."),
         ("Bodźce z eksperymentu", "Protokoły Madara jako wejście modelu — przydatne "
                                   "w każdym wariancie."),
-        ("Draft artykułu o narzędziu", "Kompilacja na Overleafie i uzupełnienie "
-                                       "brakujących elementów."),
-        ("Osobna ścieżka ML", "Rzadkość jako trzeci czynnik uczenia — propozycja, "
-                              "bez wyników."),
+        ("Artykuły", "Draft o narzędziu na Overleaf; osobna ścieżka ML "
+                     "(rzadkość jako trzeci czynnik, bez wyników)."),
     ]
     for i, (head, body) in enumerate(steps):
         cy = Inches(1.6) + i * Inches(1.0)
@@ -533,20 +589,21 @@ def build():
         _text(s, MARGIN + Inches(4.55), cy - Inches(0.02), Inches(7.7), Inches(0.65),
               body, size=15, color=MUTED, anchor=MSO_ANCHOR.MIDDLE,
               name=f"body {i + 1}")
-    _num(s, 13)
+    _num(s, 14)
     _notes(s, "Krok pierwszy blokuje resztę. Pytania kalibracyjne są wysłane do prof. "
               "Błasiak. Bodźce z eksperymentu warto zrobić niezależnie od decyzji.")
 
-    # 14–16 ── Zapas: gęste figury analityczne na pytania z sali ───────────────
+    # 15–17 ── Zapas: gęste figury analityczne na pytania z sali ───────────────
     backups = [
         ("Zapas: E1 — pełna mapa reżimów", RES_E1 / "regime_map_full.png",
          "Panel c: separacja zmienia się niemal wyłącznie wzdłuż osi hamowania "
          "tonicznego (pionowo), prawie wcale wzdłuż fazowego. Panel d: kurs wymiany "
          "separacja–informacja jest gładki, bez wyróżnionego punktu."),
-        ("Zapas: E1′ — kontrola dostrojenia", RES_E1 / "matched_activity_full.png",
-         "Panel d: czy bisekcja trafiła w zadaną aktywność. 77 z 810 punktów było "
-         "poza zasięgiem i jest wykluczonych. Panel c: maksimum retencji idzie za "
-         "rzadkością wejścia — tautologia estymatora."),
+        ("Zapas: E1″ — pełna siatka", RES_E1 / "matched_activity_wide_dec.png",
+         "Separacja vs hamowanie fazowe przy zadanej aktywności: górny rząd mossy "
+         "cells martwe, dolny aktywne; kolumny — podobieństwo wejść. Płasko "
+         "wszędzie poza żółtą linią (20%) w dolnym rzędzie, gdzie przy słabym "
+         "hamowaniu część wzorców zapala całą sieć."),
         ("Zapas: E2 — profile wkładów motywów", RES_E2 / "fig2_shapley_profiles.png",
          "Wkłady motywów w funkcji podobieństwa i rzadkości wejścia. Mossy cells są "
          "martwe przy domyślnych wagach (górny rząd), stąd dwa reżimy w każdym "
@@ -560,7 +617,7 @@ def build():
                  name="backup figure")
         _text(s, MARGIN, Inches(6.45), W - 2 * MARGIN, Inches(0.7), cap, size=14,
               color=MUTED, name="caption")
-        _num(s, 14 + j)
+        _num(s, 15 + j)
         _notes(s, "Slajd zapasowy na pytania z sali. " + cap)
 
     prs.save(OUT)

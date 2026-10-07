@@ -14,6 +14,7 @@ Używany przez:
 
 from .params import (
     DGConfig, MOTIFS, MOTIF_LABELS, config_from_motif_set, DT_MS, T_MS,
+    MC_REGIMES, config_for_regime,
 )
 from .circuit import make_connectivity, simulate
 from .patterns import (
@@ -33,6 +34,7 @@ from .nulls import (
 
 __all__ = [
     'DGConfig', 'MOTIFS', 'MOTIF_LABELS', 'config_from_motif_set', 'DT_MS', 'T_MS',
+    'MC_REGIMES', 'config_for_regime',
     'make_connectivity', 'simulate',
     'make_patterns', 'make_class_trials', 'make_input_spikes',
     'pp_rate_vector_empirical', 'pp_rate_vector_expected', 'mean_pairwise_r_binary',

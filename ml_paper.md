@@ -18,7 +18,7 @@
 | `K_GC` — hamowanie toniczne | globalny, skalarny, wewnątrzkomórkowy prąd wchodzący **wprost do równania napięcia**; próg odpalenia `G_crit = 4 + K` w formie zamkniętej | gotowy „pokrętło wzmocnienia": jeden skalar steruje tym, **kto** odpala |
 | `solve_k_gc_for_active_fraction()` | bisekcja po `K` do **zadanej frakcji aktywnych** | to jest już kontroler rzadkości w pętli zamkniętej |
 | wynik: aktywność dominuje wszystko | separacja, retencja informacji i dekodowalność są przede wszystkim funkcjami rzadkości, a nie obwodu (STATUS sek. 3.3, sek. 3.4) | uzasadnia, dlaczego sterować rzadkością, a nie wagami |
-| wynik: ~61% przewagi to sam próg | obwód bez hamowania bije losowy kod rzadki o +0.094 z +0.152 (STATUS sek. 3.5) | nieliniowość progowa jest głównym składnikiem — tanie w implementacji |
+| wynik: ~61% przewagi to sam próg | obwód bez hamowania bije losową projekcję o +0.094 z +0.152 (STATUS sek. 3.5) | nieliniowość progowa jest głównym składnikiem — tanie w implementacji |
 | **null-e o dopasowanej rzadkości** | dwa naturalne null-e zawodzą w przeciwne strony (STATUS sek. 3.5) | **protokół ewaluacji, którego ML nie stosuje** |
 
 **Z `snn_stdp_vs_surrogate_gradient` — gotowa infrastruktura:**

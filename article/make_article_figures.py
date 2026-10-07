@@ -226,7 +226,7 @@ def fig3_operating_point():
     ax.plot(Ks, [g_crit(k) for k in Ks], color=BLUE, lw=2,
             label='threshold $G_{crit} = 4 + K$')
     ax.axhline(8.0, color=VERM, lw=1.8, ls='--',
-               label='PP drive $g_{ex}=8$ mV')
+               label='mean PP drive 8 mV\n(400 Hz × 4 mV × 5 ms)')
     ax.axvline(10.0, color='k', lw=1, ls=':')
     ax.plot([10.0], [g_crit(10.0)], 'o', color=BLUE, ms=7, zorder=5)
     ax.annotate('$K_{GC}=10$: drive < threshold\n'
@@ -240,6 +240,11 @@ def fig3_operating_point():
 
     ax = axes[1]
     vr = np.array([izh_fixed_points(k)[0] for k in Ks])
+    # zakres K zgodny z IQR danych — dane OGRANICZAJĄ K, nie wyznaczają jednej wartości
+    k_ok = Ks[(vr >= MADAR_LO) & (vr <= MADAR_HI)]
+    ax.axvspan(k_ok.min(), k_ok.max(), color='0.5', alpha=0.10, lw=0)
+    ax.text((k_ok.min() + k_ok.max()) / 2, -67.6, f'K consistent with data: 0–{k_ok.max():.1f}',
+            ha='center', fontsize=7.2, color='0.3')
     ax.axhspan(MADAR_LO, MADAR_HI, color=GREEN, alpha=0.18,
                label=f'Madar et al. GC data, IQR (n={MADAR_N})')
     ax.axhline(MADAR_MED, color=GREEN, lw=1.8, label='data median $-76$ mV')
@@ -251,7 +256,7 @@ def fig3_operating_point():
     ax.set_ylim(-88, -66)
     ax.set_xlabel('$K_{GC}$ — tonic inhibition')
     ax.set_ylabel('$V_{rest}$ [mV]')
-    ax.set_title('(b) The same knob is pinned\nby patch-clamp data')
+    ax.set_title('(b) The same knob is constrained\nby patch-clamp data')
     ax.legend(fontsize=7.2, loc='lower left', framealpha=0.95)
 
     if not SLIDE: fig.suptitle('Figure 3. The operating point is constrained, not chosen freely',
@@ -291,14 +296,14 @@ def fig4_findings():
     real = e1p['dec'][m].mean()
     n_shuf = e1p['dec_null_shuffle'][m].mean()
     n_kwta = e1p['dec_null_kwta'][m].mean()
-    ax.bar(['DG', 'random\nsparse', 'scrambled'],
+    ax.bar(['DG', 'random\nprojection', 'permuted\nDG output'],
            [real, n_kwta, n_shuf], color=[BLUE, PINK, GREY], width=0.62)
     ax.text(2, n_shuf + 0.03, 'discards\nthe input', ha='center', color=GREY,
             fontsize=7.2, style='italic')
     ax.set_ylim(0, 0.92)
     ax.set_ylabel('separation  $r_{in}-r_{out}$')
-    ax.set_title('(b) E1$^\\prime$: DG beats a random sparse code,\n'
-                 'but not a code that discards the input')
+    ax.set_title('(b) E1$^\\prime$: DG beats a random projection,\n'
+                 'but not its own permuted output')
     ax.annotate(f'+{real - n_kwta:.2f}', xy=(0.5, max(real, n_kwta) + 0.03),
                 ha='center', color=GREEN, fontsize=8.5, fontweight='bold')
 
@@ -309,12 +314,12 @@ def fig4_findings():
     ax.bar(list(phi), list(phi.values()), color=cols, width=0.6)
     ax.axhline(0, color='k', lw=1)
     ax.set_ylabel('Shapley contribution to separation')
-    ax.set_title('(c) E2: mossy cells HURT alone\nbut help in combination')
+    ax.set_title('(c) E2: motif contributions\n(not activity-controlled)')
 
     # (d) 1A — odczyt downstream
     ax = axes[3]
     acc = {'raw\ninput': 0.940, 'via\nDG': 0.885, 'DG no\ninhib.': 0.935,
-           'random\nsparse': 0.885}
+           'random\nprojection': 0.885}
     ax.bar(list(acc), list(acc.values()),
            color=[VERM, BLUE, GREEN, PINK], width=0.65)
     ax.set_ylim(0.80, 0.98)
@@ -331,7 +336,7 @@ def fig4_findings():
     fig.savefig(_out("fig4-findings.png"))
     plt.close(fig)
     print(f"  fig4: E1' DG={real:.3f}  kWTA={n_kwta:.3f} (nadwyzka {real - n_kwta:+.3f})"
-          f"  scrambled={n_shuf:.3f}")
+          f"  permuted={n_shuf:.3f}")
 
 
 def fig5_nulls():
@@ -346,7 +351,7 @@ def fig5_nulls():
 
     # (a) oba null-e OBEJMUJĄ DG — żaden nie jest poziomem szansy
     ax = axes[0]
-    names = ['input', 'k-WTA\nnull', 'DG', 'permutation\nnull']
+    names = ['input', 'random\nprojection', 'DG', 'permuted\nDG output']
     vals = [r_in, ro('dec_null_kwta'), ro('dec'), ro('dec_null_shuffle')]
     cols = [GREY, PINK, BLUE, '#4D4D4D']
     ax.bar(names, vals, color=cols, width=0.62)
@@ -383,7 +388,7 @@ def fig5_nulls():
             va='center', color='w', fontsize=9, fontweight='bold')
     ax.text(1, none_v + (full_v - none_v) / 2, f'+{full_v - none_v:.3f}', ha='center',
             va='center', color='w', fontsize=9, fontweight='bold')
-    ax.set_ylabel('advantage over the random sparse code')
+    ax.set_ylabel('advantage over random projection')
     ax.set_title('(b) Most of the advantage is the threshold,\n'
                  'not the inhibitory circuit', fontsize=9.5)
     ax.grid(axis='y', alpha=0.25, lw=0.6); ax.set_axisbelow(True)
@@ -394,6 +399,70 @@ def fig5_nulls():
     plt.close(fig)
     print(f"  fig5: r_in={r_in:.3f} kWTA={vals[1]:.3f} DG={vals[2]:.3f} perm={vals[3]:.3f}"
           f" | nieliniowosc {none_v:+.3f} -> pelny {full_v:+.3f}")
+
+
+
+def fig6_runaway():
+    """E1‴ (test potwierdzający, nowe seedy): przy aktywnych mossy cells sieć bywa
+    BISTABILNA — dla części wzorców wejścia zapala się prawie cała populacja GC.
+    Zastępuje wersję z E1″, której miara („częstotliwość na aktywną komórkę" =
+    średnia z 4 wzorców / frakcja aktywnych z 1 wzorca) mieszała wzorce i dawała
+    pozorne ~280 Hz (STATUS sek. 3.4). Wynik eksploracyjny — test zapisany z góry
+    nie przeszedł (zapłony za rzadkie przy λ = 1)."""
+    import glob as _g
+    P = {}
+    for f in sorted(_g.glob(str(REPO / "experiments/e1_regime_map/results/"
+                                     "runaway_confirm_full_shard*.npz"))):
+        z = np.load(f, allow_pickle=True)
+        for k in ('part', 'lam', 'W_FS_GC', 'K_GC', 'af'):
+            P.setdefault(k, []).append(z[k])
+    P = {k: np.concatenate(v) for k, v in P.items()}
+    ign = P['af'] > 0.4      # średnia z 2 wzorców > 40% ⇔ jeden wzorzec zapalił ~całą sieć
+
+    fig, axes = plt.subplots(1, 2, figsize=_fs(10.5, 3.7, 0.80),
+                             gridspec_kw={'wspace': 0.30})
+    ax = axes[0]
+    A = P['part'] == 'A'
+    ws = sorted(set(P['W_FS_GC'][A].tolist()))
+    cols = {0.0: GREY, 0.5: '#9fb3c8', 0.75: '#e7a86b', 1.0: VERM, 1.5: '#7a1f0a'}
+    for lam in sorted(set(P['lam'][A].tolist())):
+        y = [ign[A & (P['lam'] == lam) & (P['W_FS_GC'] == w)].mean() for w in ws]
+        lab = {0.0: 'MC silent (λ = 0)', 1.0: 'λ = 1 (as in E1″)'}.get(lam, f'λ = {lam:g}')
+        ax.plot(ws, y, '-o', ms=4, lw=1.8, color=cols.get(lam, 'k'), label=lab,
+                zorder=3 if lam >= 1 else 2)
+    ax.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0, decimals=0))
+    ax.set_ylim(-0.02, 0.5)
+    ax.set_xlabel('phasic inhibition  $W_{FS \\to GC}$')
+    ax.set_ylabel('runs in which the network ignites')
+    ax.set_title('(a) Activity matched: ignition is rare, grows\n'
+                 'with mossy-cell loop strength, gone for $W \\geq 3$')
+    ax.legend(fontsize=7.6, title='MC loop strength', title_fontsize=7.6, loc='upper right')
+
+    ax = axes[1]
+    B = (P['part'] == 'B') & (P['lam'] == 1.0)
+    wsB = sorted(set(P['W_FS_GC'][B].tolist()))
+    ks = [6.0, 10.0, 14.0, 18.0]
+    kcol = {6.0: VERM, 10.0: '#e7a86b', 14.0: BLUE, 18.0: GREY}
+    for k in ks:
+        y = [P['af'][B & (P['K_GC'] == k) & (P['W_FS_GC'] == w)].mean() for w in wsB]
+        note = ' (data range)' if k <= 13.6 else ' (beyond data)'
+        ax.plot(wsB, y, '-o', ms=4, lw=1.8, color=kcol[k], ls='-' if k <= 13.6 else '--',
+                label=f'$K_{{GC}}$ = {k:g}{note}')
+    ax.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0, decimals=0))
+    ax.set_ylim(-0.03, 1.05)
+    ax.set_xlabel('phasic inhibition  $W_{FS \\to GC}$')
+    ax.set_ylabel('granule cells active')
+    ax.set_title('(b) No matching, λ = 1: at physiological tonic\n'
+                 'inhibition only phasic inhibition prevents ignition')
+    ax.legend(fontsize=7.6, loc='upper right')
+    for a_ in axes:
+        a_.grid(alpha=0.25, lw=0.6); a_.set_axisbelow(True)
+    if not SLIDE: fig.suptitle('Figure 6. With mossy cells active the network can ignite; '
+                              'phasic inhibition prevents it (exploratory)',
+                              fontsize=10, y=1.03)
+    fig.savefig(_out("fig6-runaway.png"))
+    plt.close(fig)
+    print("  fig6 zapisana")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -460,65 +529,88 @@ def slide_e1p():
 
 
 def slide_e2():
-    """E2: wkłady Shapleya na surowej separacji i po korekcie nullem — prawie identyczne.
+    """E2 dla słuchacza: (a) każda lezja zmienia przede wszystkim LICZBĘ aktywnych
+    komórek, a separacja idzie za nią (r = −0.97); (b) wartości Shapleya to ten sam
+    efekt zapisany jako „wkład motywu".
 
-    Przy KANONICZNYM napędzie PP (×1.0), tak jak raportuje `analyze_motifs.py`.
-    Uśrednianie po wszystkich napędach (×0.5, ×1, ×2) rozmywa efekt — przy ×0.5
-    wkłady są kilkukrotnie mniejsze (STATUS sek. 3.6)."""
+    `mc_active`, KANONICZNY napęd PP (×1.0), tak jak raportuje `analyze_motifs.py`.
+    Interakcje i korekta nullem projekcji są w STATUS sek. 3.6 i na slajdzie
+    zapasowym — na slajdzie głównym tylko to, co niesie wniosek."""
     import glob as _g
-    from dg_core.metrics import interaction_2way, shapley_values
+    from dg_core.metrics import shapley_values
     from dg_core import MOTIFS
-    acc = {'dec': [], 'dec_excess_shuffle': []}
-    reg, drv, coal = [], [], None
+    D, A, reg, drv, coal = [], [], [], [], None
     for f in sorted(_g.glob(str(REPO / "experiments/e2_motif_attribution/results/"
                                       "lesion_grid_full_shard*.npz"))):
         z = np.load(f, allow_pickle=True)
         coal = [str(c) for c in z['coalitions']]
-        for k in acc:
-            acc[k].append(z[k])
-        reg.append(z['task_regime'])
-        drv.append(z['task_drive'])
-    R = np.concatenate(reg)
-    keep = (R == 'mc_active') & (np.concatenate(drv) == 1.0)
-    labels = ['FF', 'FB', 'MC', 'FF×FB', 'FF×MC', 'FB×MC']
-    out = {}
-    for metric, arrs in acc.items():
-        A = np.concatenate(arrs)[keep]
-        rows = []
-        for row in A:
-            v = {frozenset(c.split('+')) - {''}: row[i] for i, c in enumerate(coal)}
-            phi = shapley_values(v, MOTIFS)
-            rows.append([phi['FF'], phi['FB'], phi['MC'],
-                         interaction_2way(v, 'FF', 'FB'),
-                         interaction_2way(v, 'FF', 'MC'),
-                         interaction_2way(v, 'FB', 'MC')])
-        out[metric] = np.mean(rows, axis=0)
+        D.append(z['dec']); A.append(z['active_frac'])
+        reg.append(z['task_regime']); drv.append(z['task_drive'])
+    keep = (np.concatenate(reg) == 'mc_active') & (np.concatenate(drv) == 1.0)
+    D, A = np.concatenate(D)[keep], np.concatenate(A)[keep]       # (punkty, 8 koalicji)
+    d_mu, a_mu = D.mean(0), A.mean(0)
+    r = np.corrcoef(a_mu, d_mu)[0, 1]
+    names = {'': 'nothing on (no inhibition, no MC)', 'FF': 'FF only', 'FB': 'FB only',
+             'MC': 'MC only', 'FF+FB': 'FF+FB', 'FF+MC': 'FF+MC', 'FB+MC': 'FB+MC',
+             'FF+FB+MC': 'full circuit'}
+    phi = []
+    for row in D:
+        v = {frozenset(c.split('+')) - {''}: row[k] for k, c in enumerate(coal)}
+        sv = shapley_values(v, MOTIFS)
+        phi.append([sv['FF'], sv['FB'], sv['MC']])
+    phi = np.array(phi).mean(0)
+
     with plt.rc_context(SLIDE_RC):
-        fig, ax = plt.subplots(figsize=(7.4, 4.9))
-        x = np.arange(len(labels)); w = 0.38
-        base = [BLUE, VERM, GREEN, GREY, GREY, GREY]
-        ax.bar(x - w / 2, out['dec'], w, color=base, label='raw separation')
-        ax.bar(x + w / 2, out['dec_excess_shuffle'], w, color=base, alpha=0.45,
-               hatch='//', edgecolor='w', label='after null correction')
-        ax.axhline(0, color='k', lw=1)
-        ax.axvline(2.5, color='k', lw=0.8, ls=':')
-        ax.text(1.0, 0.30, 'single motifs', ha='center', fontsize=12, color='0.3')
-        ax.text(4.0, 0.30, 'pairs (interaction)', ha='center', fontsize=12, color='0.3')
-        ax.set_xticks(x); ax.set_xticklabels(labels)
-        ax.set_ylabel('Shapley contribution to separation')
-        ax.set_ylim(-0.30, 0.34)
-        ax.legend(loc='lower left', frameon=False)
-        ax.grid(axis='y', alpha=0.25, lw=0.6); ax.set_axisbelow(True)
+        fig, axes = plt.subplots(1, 2, figsize=(7.4, 4.9),
+                                 gridspec_kw={'width_ratios': [1.65, 1], 'wspace': 0.42})
+        ax = axes[0]
+        ax.scatter(A.ravel() * 100, D.ravel(), s=5, color='0.82', zorder=1, lw=0)
+        ax.scatter(a_mu * 100, d_mu, s=55, color=VERM, zorder=3, edgecolor='k', lw=0.6)
+        # skupisko przy 13–20%: etykiety odsunięte w wolne pole, ze strzałkami,
+        # w kolejności separacji (od góry); pozostałe — obok punktu
+        crowd = sorted([k for k, c in enumerate(coal) if a_mu[k] < 0.3], key=lambda k: -d_mu[k])
+        for n_, k in enumerate(crowd):
+            ax.annotate(names[coal[k]], (a_mu[k] * 100, d_mu[k]),
+                        xytext=(34, 0.74 - 0.115 * n_), fontsize=9.5, va='center',
+                        arrowprops=dict(arrowstyle='-', color='0.45', lw=0.7,
+                                        shrinkA=2, shrinkB=4))
+        for k, c in enumerate(coal):
+            if k in crowd:
+                continue
+            ax.annotate(names[c], (a_mu[k] * 100, d_mu[k]),
+                        xytext=(0, -19 if c == 'FB+MC' else 11),
+                        textcoords='offset points', fontsize=9.5, ha='center')
+        ax.axhline(0, color='k', lw=0.8)
+        ax.set_xlim(0, 100)
+        ax.xaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(decimals=0))
+        ax.set_xlabel('granule cells active')
+        ax.set_ylabel('separation  $r_{in} - r_{out}$')
+        ax.set_title(f'(a) 8 lesion variants: separation\nfollows activity (r = {r:.2f})',
+                     fontsize=12.5)
+        ax.grid(alpha=0.25, lw=0.5); ax.set_axisbelow(True)
+
+        ax = axes[1]
+        ax.bar([0, 1, 2], phi, color=[BLUE, VERM, GREEN], width=0.65)
+        for x_, v_ in enumerate(phi):
+            ax.text(x_, v_ + (0.012 if v_ >= 0 else -0.012), f'{v_:+.2f}', ha='center',
+                    va='bottom' if v_ >= 0 else 'top', fontsize=11)
+        ax.axhline(0, color='k', lw=0.8)
+        ax.set_xticks([0, 1, 2]); ax.set_xticklabels(['FF', 'FB', 'MC'])
+        ax.set_ylim(-0.30, 0.28)
+        ax.set_ylabel('avg. change in separation\nwhen the motif is switched on')
+        ax.set_title('(b) "Contributions"\n(Shapley values)', fontsize=12.5)
+        ax.grid(axis='y', alpha=0.25, lw=0.5); ax.set_axisbelow(True)
+        fig.subplots_adjust(left=0.11, right=0.98, top=0.86, bottom=0.13)
         fig.savefig(SLIDES / "slide-e2.png", dpi=200)
         plt.close(fig)
-    print("  slide-e2: " + "  ".join(f"{l} {a:+.3f}/{b:+.3f}" for l, a, b in
-                                      zip(labels, out['dec'], out['dec_excess_shuffle'])))
-
+    print(f"  slide-e2: r(aktywność, dec) po koalicjach = {r:+.3f}; "
+          + "  ".join(f"{c or 'brak'} {a:.2f}/{d:+.3f}" for c, a, d in zip(coal, a_mu, d_mu))
+          + f";  φ FF {phi[0]:+.3f} FB {phi[1]:+.3f} MC {phi[2]:+.3f}")
 
 def slide_1a():
     """1A: dokładność klasyfikatora liniowego (STATUS sek. 3.7 — eksperyment zamknięty)."""
     acc = {'raw input': 0.940, 'via DG': 0.885, 'DG without\ninhibition': 0.935,
-           'random sparse\ncode': 0.885}
+           'random\nprojection': 0.885}
     with plt.rc_context(SLIDE_RC):
         fig, ax = plt.subplots(figsize=(7.4, 4.9))
         ax.bar(list(acc), list(acc.values()), color=[VERM, BLUE, GREEN, PINK], width=0.6)
@@ -542,6 +634,7 @@ if __name__ == '__main__':
     fig3_operating_point()
     fig4_findings()
     fig5_nulls()
+    fig6_runaway()
 
     # te same figury pod slajdy (bez nagłówków „Figure N.") + figury jednopanelowe
     print("Figury pod slajdy:")
@@ -551,6 +644,7 @@ if __name__ == '__main__':
     fig2_circuit()
     fig3_operating_point()
     fig5_nulls()
+    fig6_runaway()
     slide_e1()
     slide_e1p()
     slide_e2()

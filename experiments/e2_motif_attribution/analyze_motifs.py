@@ -368,7 +368,9 @@ def main():
                     choices=['dec', 'dec_excess_shuffle', 'dec_excess_kwta'],
                     help='na czym liczyć Shapleya. `dec` = surowa dekorelacja '
                          '(UWAGA: confound rzadkości, STATUS sek. 3.4); '
-                         '`dec_excess_*` = nadwyżka ponad null o dopasowanej rzadkości')
+                         '`dec_excess_kwta` = nadwyżka ponad null projekcji losowej '
+                         '(niepusta kontrola); `dec_excess_shuffle` = ponad null '
+                         'permutacyjny — dla Shapleya PUSTA (STATUS sek. 3.6)')
     args = ap.parse_args()
 
     global FIG_SUFFIX

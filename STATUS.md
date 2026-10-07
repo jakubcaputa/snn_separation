@@ -30,16 +30,25 @@ fazowe nie zmienia separacji wcale.
 
 **Najciekawszy wynik jest metodologiczny.** Żeby odróżnić separację od wyciszenia,
 porównuje się obwód z *nullem* — sztucznym kodem o tej samej rzadkości, ale bez
-obwodu (definicja: sek. 3.1). Oba naturalne null-e **zawodzą, w przeciwne strony**:
-jeden niszczy całą informację, drugi prawie nic nie zmienia. Zamiast wyznaczać
-poziom odniesienia, obejmują obwód z dwóch stron (sek. 3.5).
+obwodu (sek. 3.1). Oba naturalne null-e **zawodzą, w przeciwne strony**: jeden
+niszczy całą informację, drugi prawie nic nie zmienia. Obejmują obwód z dwóch stron
+zamiast wyznaczać poziom odniesienia (sek. 3.5).
 
-**Co zostaje na plusie.** Podział zasług między motywami hamowania jest realny
-i przeżywa kontrolę nullem: mossy cells **same pogarszają** separację, a w parze
-z hamowaniem dają największy wkład (sek. 3.6).
+**Jedyny efekt obwodu, jaki widzimy, dotyczy regulacji, nie separacji — i jest
+słaby.** Przy aktywnych mossy cells sieć bywa **bistabilna**: dla części wejść
+zapala się prawie cała populacja komórek ziarnistych (stan przypominający napad),
+a hamowanie fazowe (`W_FS_GC` ≥ 3) temu zapobiega. Test potwierdzający na nowych
+seedach (E1‴) **nie przeszedł** kryterium zapisanego z góry: przy wagach `mc_active`
+zapłony są rzadkie (2/20). Wcześniejsza interpretacja „toniczne ustala ile,
+fazowe — jak szybko" (~280 Hz na aktywną komórkę) była artefaktem miary i jest
+**wycofana** (sek. 3.4).
 
-**Co dalej.** Jedna decyzja: **czym jest teza pracy** — cztery warianty
-z rekomendacją w sek. 4.1. Nic nie zostało do policzenia, co zmieniłoby ten obraz.
+**Co upadło po drodze.** Atrybucja motywów E2 wyglądała na wynik pozytywny
+(„mossy cells jako motyw warunkowy"). Jest zdominowana przez aktywność, a jej
+„kontrola nullem" była pusta z konstrukcji (sek. 3.6).
+
+**Co dalej.** Decyzja o tezie pracy — warianty z rekomendacją w sek. 4.1. Test
+potwierdzający dla E1″ jest zrobiony (E1‴, sek. 3.4) i osłabia wariant (d).
 
 ---
 
@@ -49,18 +58,18 @@ z rekomendacją w sek. 4.1. Nic nie zostało do policzenia, co zmieniłoby ten o
 |---|---|
 | Narzędzie `interactive_dg.py` | działa; bilans hamowania, panel P(AP) |
 | Rdzeń `experiments/dg_core/` | działa; testy regresji 17/17, domyślna konfiguracja bit w bit jak przed zmianami |
-| Eksperymenty E1, E1′, E2, 1A | **policzone i przeanalizowane** — wyniki w sek. 3.2 |
+| Eksperymenty E1, E1′, E1″, E1‴, E2, 1A | **policzone i przeanalizowane** — wyniki w sek. 3.2 |
 | Kontroler adaptacyjny (E4/E5) | **niezbudowany**; to wariant (c) w sek. 4.1, nie domyślny kierunek |
 | Kalibracja punktu pracy | maszyneria gotowa, **specyfikacja czeka na odpowiedzi z sek. 2** |
 | Draft artykułu o narzędziu | `article/article_draft.tex` — gotowy do przeczytania, **nieskompilowany** (sek. 6) |
-| Prezentacja stanu prac | `article/prezentacja_stan_prac.pptx`, 13 + 3 zapasowe slajdy (sek. 7) |
+| Prezentacja stanu prac | `article/prezentacja_stan_prac.pptx`, 14 + 3 zapasowe slajdy (sek. 7) |
 | Pomysł na artykuł ML | [`ml_paper.md`](ml_paper.md) — propozycja, zero wyników (sek. 4.2) |
 
 ---
 
-## 2. Pytania do prof. Błasiak — blokują tylko kalibrację
+## 2. Pytania do prof. Błasiak — kalibracja i warunek dla wariantu (d)
 
-Nie blokują ani decyzji z sek. 4.1, ani pisania. Blokują domknięcie punktu pracy:
+B1–B3 nie blokują decyzji z sek. 4.1 ani pisania, tylko domknięcie punktu pracy:
 bez tych liczb każda próba kalibracji trafia w jedno kryterium kosztem drugiego.
 Mail z 2026-09-11 bez odpowiedzi; draft ponowienia:
 [`korespondencja/2026-10-07_mail_blasiak.md`](korespondencja/2026-10-07_mail_blasiak.md).
@@ -85,6 +94,12 @@ FS→FS obniża ją do ~28 Hz (sek. 3.9), ale jego siła wymaga zakotwiczenia w 
 najważniejsze. Waga dobrana protokołem pulsowym Madara (tło 40 Hz), użyta w sieci
 przy napędzie 400 Hz, daje GC **22 Hz zamiast 2–6 Hz**. Jedna waga nie obsłuży obu
 reżimów — trzeba wybrać warunek kontrolny.
+
+**B4. Jak silna jest pętla mossy cells → komórki ziarniste?** Od tego zależy, czy
+zapłon sieci z E1‴ jest realistyczny: przy obecnych wagach `mc_active` zdarza się
+w 2 na 30 przebiegów, przy wadze o połowę większej — do 40%, bez MC — nigdy
+(sek. 3.4). To warunek dla wariantu (d) w sek. 4.1. Szukamy dowolnej liczby z
+literatury lub danych: amplituda EPSP MC→GC, liczba MC na GC, częstotliwość MC in vivo.
 
 **Drobne: τ_m.** Z danych Madara τ_m ≈ 3 ms dla GC, a nie 10–50 ms z korespondencji.
 Izhikevich nie ma jawnego τ_m, więc symulacji to nie zmienia, ale do Methods trzeba
@@ -121,9 +136,24 @@ strzela, tylko *czy*; i jest maksymalna, gdy rzadkość wyjścia ≈ rzadkość 
 kryterium punktu pracy.
 
 **`null` — punkt odniesienia.** Sztuczny kod o tej samej rzadkości co wyjście DG,
-ale bez obwodu; odejmuje tę część dekorelacji, którą daje sama rzadkość.
-*Permutacyjny*: wektor częstotliwości przetasowany po komórkach. *k-WTA*: losowa
-projekcja wejścia, zostawione tyle najsilniejszych jednostek, ile aktywnych GC.
+ale bez obwodu; ma odjąć tę część dekorelacji, którą daje sama rzadkość. Używamy
+dwóch — **na figurach nazywają się `permuted DG output` i `random projection`**:
+
+| | **null permutacyjny** — *permuted DG output* | **null projekcji losowej** — *random projection* |
+|---|---|---|
+| z czego powstaje | z **wyjścia DG** | z **wejścia** |
+| jak | wektor częstotliwości GC przetasowany po komórkach, osobno dla każdego wzorca | wejście rzucone przez losową macierz gaussowską, zostawione `k` najsilniejszych jednostek (`k` = liczba aktywnych GC) |
+| co zachowuje | dokładnie te same częstotliwości (ta sama rzadkość) | tę samą rzadkość i zależność od wejścia |
+| co niszczy | **którą komórkę** napędza który wzorzec — całą informację o bodźcu | obwód: zamiast DG losowe połączenia |
+| `r_out` (E1′) | 0.001 — **sufit**, osiągalny tylko przez wyrzucenie bodźca | 0.580 (78% `r_in`) — **słaba podłoga**: losowa projekcja z definicji zachowuje korelację |
+| kod | `dg_core/nulls.py::shuffle_null_vectors` | `dg_core/nulls.py::kwta_random_projection` (to samo, co warunek „random" w 1A) |
+
+Przykład dla intuicji: jeśli wzorce A i B napędzają w dużej części te same komórki,
+DG odpowie w dużej części tymi samymi komórkami (`r_out` > 0). Permutacja losuje,
+*które* komórki strzelają, więc A i B przestają się pokrywać (`r_out` ≈ 0) —
+„separacja" jest idealna, ale z wyjścia nie da się już powiedzieć, który bodziec
+padł. Projekcja losowa liczy wyjście z wejścia, więc pokrycie A i B w dużej części
+przenosi dalej. DG leży pomiędzy (sek. 3.5).
 
 **Dwie osie hamowania.** `K_GC` — **toniczne**: stały prąd w równaniu napięcia,
 zawsze włączony. `W_FS_GC` — **fazowe**: synaptyczne, wyzwalane spajkami
@@ -139,9 +169,11 @@ interneuronów. W literaturze bywają zlewane w jedno „hamowanie".
 | **E1** mapa reżimów (sek. 3.3) | czy separacja ma optimum przy pośredniej aktywności? | **Nie.** Maksimum jedzie za progiem odrzucania cichych punktów |
 | **E1′** wyrównana aktywność (sek. 3.4) | czy hamowanie fazowe zmienia separację przy tej samej aktywności? | **Nie.** Nachylenie −0.003, p = 0.60 |
 | **null-e** (sek. 3.5) | z czym w ogóle porównywać obwód? | **Oba naturalne zawodzą**, w przeciwne strony |
-| **E2** motywy (sek. 3.6) | który motyw hamowania niesie separację? | **Mossy cells warunkowo:** same −0.23, w parach +0.21…+0.22; odporne na null |
+| **E1″** szerszy sweep (sek. 3.4) | czy zależność pojawia się przy innym `R_in`, z aktywnymi MC albo w czasie? | **Nie** (kryterium zapisane z góry) |
+| **E1‴** test potwierdzający (sek. 3.4) | czy aktywne MC + słabe hamowanie fazowe dają ucieczkę, na nowych seedach i przy różnej sile pętli MC? | **Nie przeszedł.** Zapłony całej sieci są, ale rzadkie (λ = 1: 2/20); bez MC — nigdy; przy `W` ≥ 3 — nigdy |
+| **E2** motywy (sek. 3.6) | który motyw hamowania niesie separację? | **Zdominowane przez aktywność** (r = −0.97); wcześniejsza „kontrola nullem" była pusta |
 | **1A** odczyt (sek. 3.7) | czy klasyfikator czyta DG lepiej niż wejście? | **Nie.** 0.885 vs 0.940 |
-| **dane Madara** (sek. 3.8) | czy punkt pracy jest związany danymi? | **Tak.** `K_GC=10` → `V_rest` −78.7 mV, wewnątrz IQR [−81, −70] |
+| **dane Madara** (sek. 3.8) | czy punkt pracy jest związany danymi? | **Zgodny, ale nie wyznaczony.** `K_GC=10` → `V_rest` −78.7 mV, wewnątrz IQR; dane dopuszczają `K` ≈ 0–13.6 |
 
 ### 3.3 E1 — mapa reżimów · wynik: H1 obalona
 
@@ -217,6 +249,79 @@ Separacja wobec nulli przy kolejnych poziomach aktywności — interpretacja w s
 > (−0.389 ± 0.245) jako „obwód separuje gorzej niż null". **Wycofane** — ta nadwyżka
 > to algebraicznie `−r_out` (sek. 3.5).
 
+**E1″ — szerszy sweep (2026-10-07) · wynik: brak zależności; bliskie trafienie
+to zapłon sieci.** E1′ trzymało na sztywno trzy rzeczy: `R_in` = 0.75,
+mossy cells martwe, miarę ślepą na czas. E1″: `R_in` ∈ {0.5, 0.75, 0.9, 0.95} ×
+reżim ∈ {mc_inert, mc_active} × `W_FS_GC` ∈ {0, 0.5, 1, 2, 3, 5, 8, 12} × aktywność
+∈ {2, 5, 10, 20%} × 5 seedów = 1280 punktów, dostrojono 1267 (`--preset wide`;
+3 shardy na `plgrid-now`). Drugi wynik obok `dec`: **dyskryminowalność czasowa**
+`sep_t` = (korelacja wzorca z własnym powtórzeniem) − (korelacja z innym wzorcem),
+okna 20 ms. Analiza: `python analyze_matched_activity_wide.py`; figury
+`matched_activity_wide_{dec,sept,tuning}.png`.
+
+*Kryterium zapisane przed liczeniem* (`prereg_test`): zależność tylko wtedy, gdy
+nachylenie względem `W_FS_GC` jest istotne po korekcie Bonferroniego na wszystkie
+testy **i** potwierdza się z tym samym znakiem w sąsiednim `R_in`. `sep_t` oceniane
+tylko tam, gdzie korelacja z powtórzeniem ≥ 0.05 (próg dodany po pilocie, przed
+głównym przebiegiem — przy 5% aktywności taktowanie się nie powtarza).
+
+**Wynik zapisanego testu: brak zależności.** 40 testów, próg p < 1.25·10⁻³.
+`dec`: 32 komórki, nominalnie p < 0.05 w 6 (z przypadku ~1.6), po korekcie w 2 —
+obie w `mc_active` przy 20%: `R_in` 0.95 (zmiana −0.293, p = 1.4·10⁻⁴) i 0.75
+(−0.192, p = 7.0·10⁻⁴). Nie są sąsiednie; komórka między nimi (0.90) ma ten sam
+znak, ale p = 3.2·10⁻³, więc kryterium nie jest spełnione. `sep_t`: 8 ocenianych
+komórek, po korekcie 0. Bez mossy cells wszystko jest płaskie do `W` = 12, w każdym
+`R_in`.
+
+**Bliskie trafienie to zapłon sieci, nie „szybsze komórki".** W komórce `mc_active` /
+20% przy `W_FS_GC` = 0 większość punktów miała pozorną częstotliwość ~280 Hz na
+aktywną komórkę (przy `W` ≥ 2: ~4 Hz). ⚠️ **Ta miara była błędna:** liczyła średnią
+częstotliwość z 4 wzorców wejścia, a frakcję aktywnych — tylko z wzorca 0, na którym
+bisekcja trzymała aktywność. Gdy inny wzorzec zapalał całą sieć, iloraz dawał
+„280 Hz na aktywną komórkę". Pomiar per wzorzec (E1‴) pokazuje, że komórki nie
+strzelają szybciej: wzorzec albo zostaje przy zadanej aktywności i 2–4 Hz, albo
+zapala ~100% GC. **Wycofane (2026-10-07):** odczyt „toniczne ustala ile komórek
+strzela, fazowe — jak szybko" i liczby 278.5 / 90.4 / 26.4 Hz z poprzedniej wersji.
+
+**E1‴ — test potwierdzający (2026-10-07) · wynik: nie przeszedł.**
+`run_runaway_confirm.py` (3 shardy na `plgrid-now`, jobs 3345806/09/13), figura
+`article/figures/fig6-runaway.png`. Nowe seedy 10–19, oś siły pętli MC λ (0 =
+`mc_inert`, 1 = `mc_active`, liniowo; też 0.5 / 0.75 / 1.5). Część A: aktywność
+zadana (5 λ × {5, 10, 20%} × 7 `W` × 10 seedów = 1050 pkt). Część B: bez bisekcji,
+`K_GC` ∈ {6…26} × `W` ∈ {0…5} × λ ∈ {0, 1} × 5 seedów = 360 pkt. Kryterium zapisane
+w kodzie przed przebiegiem (`PREREG_RUNAWAY`; poprawka po pilocie — częstość
+zapłonu jako wynik główny — też przed przebiegiem).
+
+| kryterium | wynik |
+|---|---|
+| **R1b** (główne): więcej zapłonów przy `W` = 0 niż `W` = 2, λ = 1 i 1.5 | ✗ — λ = 1: 2/20 vs 0/20 (p = 0.24); λ = 1.5: 4/20 vs 0/20 (p = 0.053, próg 0.025) |
+| R1a: średnia log-częstotliwość, `W` = 0 vs 2 | ✗ — w żadnej komórce |
+| R2: bez MC (λ = 0) brak zapłonów | ✓ — 0/210 |
+| R3: zapłon da się zatrzymać przy `W` ≤ 5 | ✓ — ale niemal trywialnie, bo zapłonów prawie nie ma |
+| R4: bez bisekcji toniczne steruje liczbą aktywnych, fazowe częstotliwością (λ = 1) | ✗ — fazowe wyjaśnia 5% wariancji częstotliwości, toniczne 78% |
+
+**Co widać eksploracyjnie** (zapłon = jeden z dwóch wzorców zapala ~całą sieć;
+liczone na wszystkich aktywnościach, n = 30 na punkt):
+
+| λ | `W` = 0 | 0.25 | 0.5 | 1 | 2 | 3 | 5 |
+|---|---|---|---|---|---|---|---|
+| 0 i 0.5 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 0.75 | 1 | 0 | 0 | 0 | 0 | 0 | 0 |
+| **1** (`mc_active`) | 2 | 2 | 1 | 0 | 0 | 0 | 0 |
+| 1.5 | 6 | 8 | 12 | 7 | 1 | 0 | 0 |
+
+Część B (λ = 1, bez wyrównywania aktywności): przy `K_GC` zgodnym z danymi (6, 10)
+i `W` = 0 aktywnych jest **100%** komórek; `W` = 2 sprowadza to do 18–26%. `K_GC` = 14
+(poza zakresem danych, sek. 3.8) zapobiega zapłonowi także bez hamowania fazowego.
+
+**Odczyt:** z aktywnymi mossy cells sieć ma drugi, patologiczny stan — zapłon prawie
+całej populacji — a hamowanie fazowe (`W` ≥ 3) zawsze mu zapobiega. To zjawisko
+jakościowe i spójne, ale **jego częstość zależy od siły pętli MC, której nie znamy**
+(przy wagach `mc_active` 2/20). Przy fizjologicznym hamowaniu tonicznym tylko
+hamowanie fazowe chroni przed zapłonem. Wynik eksploracyjny; nie raportować jako
+potwierdzonego. Rozbieżność z E1″ (tam zapłon w większości punktów przy 20%) to
+częściowo liczba wzorców (4 zamiast 2 — więcej okazji do zapłonu), częściowo seedy.
+
 ### 3.5 ⭐ Null-e — z czym porównujemy obwód · wynik: oba zawodzą
 
 **Metodologiczny rdzeń pracy i najmocniejszy kandydat na wynik publikowalny.**
@@ -246,7 +351,7 @@ wyrzucenie bodźca.
 
 **Dlaczego k-WTA zawodzi w drugą stronę.** Losowa projekcja gaussowska zachowuje
 iloczyny skalarne (Johnson–Lindenstrauss), więc z konstrukcji słabo dekoreluje.
-„DG bije losowy kod rzadki o +0.19" jest prawdą, ale to niska poprzeczka, a przewaga
+„DG bije losową projekcję o +0.19" jest prawdą, ale to niska poprzeczka, a przewaga
 maleje z aktywnością (tabela w sek. 3.4) — w tę samą stronę co confound rzadkości.
 
 **Skąd ta przewaga: z progu spajkowania, nie z hamowania.** Na koalicjach E2
@@ -256,48 +361,53 @@ kontrolowane aktywnością (frakcja spada 0.149 → 0.129), a pomiar kontrolowan
 (sek. 3.4) nie wykrywa efektu hamowania fazowego. Zgodne z 1A, gdzie usunięcie
 hamowania poprawiało odczyt.
 
-**Co przeżywa:** atrybucja motywów — szczegóły w sek. 3.6.
+**Uwaga dla E2:** odjęcie nulla permutacyjnego nie może zmienić wartości Shapleya
+(null ≈ `r_in`, stałe między lezjami) — więc nie jest kontrolą dla E2. Sek. 3.6.
 
-### 3.6 E2 — atrybucja motywów · wynik: jedyny pozytywny, odporny na kontrolę
+### 3.6 E2 — atrybucja motywów · wynik: zdominowany przez aktywność
 
 **Jak policzone.** Trzy motywy można niezależnie wyłączać, więc wkład każdego to
 wartość Shapleya po 2³ = 8 koalicjach lezji. Siatka `full`: 6 `R_in` × 6 `P_active`
-× 3 poziomy napędu × 2 reżimy MC × 5 seedów (job 3167904; przeliczone z nullami jako
-3334385, `dec` odtworzone bit w bit). Liczby poniżej: **kanoniczny napęd ×1.0**,
-36 punktów × 5 seedów. Figury: `article/figures/slides/slide-e2.png`,
-`e2_motif_attribution/results/fig1..4*.png`.
+× 3 poziomy napędu × 2 reżimy MC × 5 seedów (job 3167904; przeliczone z nullami
+jako 3334385). Liczby: **kanoniczny napęd ×1.0**, 36 punktów × 5 seedów. Figury:
+`article/figures/slides/slide-e2.png`, `e2_motif_attribution/results/fig1..4*.png`.
 
 | reżim MC | φ_FF | φ_FB | φ_MC | interakcje | `dec`: bez hamowania → pełny obwód |
 |---|---|---|---|---|---|
 | `mc_inert` | +0.072 | +0.036 | 0.000 | FF×FB +0.025 | +0.065 → +0.173 |
-| `mc_active` | +0.200 | +0.157 | **−0.226** | FF×FB +0.126 · FF×MC +0.223 · FB×MC +0.210 | +0.065 → +0.197 |
+| `mc_active` | +0.200 | +0.157 | −0.226 | FF×FB +0.126 · FF×MC +0.223 · FB×MC +0.210 | +0.065 → +0.197 |
 
-**Co znaczy.** Mossy cells **same** korelują wzorce (re-ekscytują GC), ale w parze
-z każdym motywem hamowania dają największy wkład ze wszystkich. **MC to motyw
-warunkowy.** W `mc_inert` są martwe (sek. 5), stąd φ_MC = 0.
+**Wkłady są zdominowane przez aktywność.** Lezje zmieniają frakcję aktywnych GC
+(`mc_active`, napęd ×1.0):
 
-**Odporne na null.** Null jest praktycznie stały po koalicjach (rozstęp 0.0051 przy
-rozstępie `dec` 0.3774), bo zależy od `r_in`, którego lezja nie zmienia, a Shapley
-jest niewrażliwy na stałą: φ_FF +0.1998 → +0.1999, φ_FB +0.1572 → +0.1555,
-φ_MC −0.2257 → −0.2245, FF×MC +0.2227 → +0.2217, FB×MC +0.2096 → +0.2085.
+| koalicja | brak | FF | FB | **MC** | FF+FB | FF+MC | FB+MC | pełny |
+|---|---|---|---|---|---|---|---|---|
+| frakcja aktywnych | 0.20 | 0.15 | 0.20 | **0.94** | 0.13 | 0.70 | 0.60 | 0.18 |
+| `dec` | 0.065 | 0.124 | 0.088 | **−0.343** | 0.173 | −0.162 | −0.211 | 0.197 |
 
-⚠️ **Zależność od napędu** (`mc_active`) — przy słabszym wejściu efekty są kilkukrotnie
-mniejsze:
+Po koalicjach korelacja aktywności z `dec` wynosi **−0.97**. Same mossy cells, przy
+wyłączonych motywach hamowania, rozpędzają sieć do 94% aktywnych komórek — to ta
+sam zapłon sieci, który widać w E1″/E1‴. Ujemne φ_MC i dodatnie interakcje MC
+z hamowaniem znaczą więc przede wszystkim: **MC rozpędzają sieć, hamowanie ją
+trzyma** — to zdanie o regulacji aktywności, nie o separacji.
 
-| napęd PP | φ_FF | φ_FB | φ_MC | FF×MC |
-|---|---|---|---|---|
-| ×0.5 | +0.024 | +0.034 | −0.058 | +0.053 |
-| **×1.0** | **+0.200** | **+0.157** | **−0.226** | **+0.223** |
-| ×2.0 | +0.185 | +0.098 | −0.237 | +0.285 |
+⚠️ **Wycofane:** twierdzenie, że ta atrybucja „przeżywa kontrolę nullem" (2026-10-06).
+Null permutacyjny ≈ `r_in`, a `r_in` jest stałe między lezjami, więc jego odjęcie
+nie może zmienić wartości Shapleya — test był pusty z konstrukcji. Niepusta kontrola
+(null projekcji losowej, który zależy od liczby aktywnych komórek) zmniejsza wkłady
+o 15–27% (φ_FF +0.170, φ_FB +0.131, φ_MC −0.164, FF×MC +0.191, FB×MC +0.166), ale
+ich nie usuwa — i sama jest słaba (sek. 3.5).
 
-**Hamulec FS→HMC.** Pętla GC→HMC→GC jest czysto pobudzająca i bez hamulca ucieka:
-`W_FS_HMC` = 0 → `dec` −0.267 (FR_HMC → 98 Hz, obwód *koreluje* wzorce); = 2 →
-+0.247; ≥ 5 → +0.15 (MC znów wyciszone). ⚠️ Z mniejszej, wcześniejszej siatki,
-bez nulla — do powtórzenia przed cytowaniem.
+**Zależność od napędu** (`mc_active`): przy ×0.5 φ_FF +0.024, φ_FB +0.034,
+φ_MC −0.058, FF×MC +0.053; przy ×2.0 φ_FF +0.185, φ_FB +0.098, φ_MC −0.237,
+FF×MC +0.285.
 
-**Skalowanie.** Separacja rośnie z rozmiarem sieci (`scaled(N)`, stały in-degree):
-+0.149 → +0.231 → +0.296 dla N_GC = 200 → 400 → 800. ⚠️ Bez nulla — może być
-efektem samej rzadkości.
+**Hamulec FS→HMC** (wcześniejsza, mała siatka, bez kontroli aktywności): `W_FS_HMC`
+= 0 → `dec` −0.267 (FR_HMC 98 Hz); = 2 → +0.247; ≥ 5 → +0.15. W świetle powyższego
+najpewniej też efekt aktywności.
+
+**Skalowanie:** separacja rośnie z rozmiarem sieci (+0.149 → +0.231 → +0.296 dla
+N_GC = 200 → 400 → 800) — bez kontroli aktywności.
 
 ### 3.7 1A — odczyt downstream · wynik: DG nie pomaga odbiorcy
 
@@ -333,8 +443,27 @@ wychodzi −70 zamiast −76**):
 | HMC | 19 | −67 [−74…−60] | — | — |
 | CA3 | 15 | −72 [−76…−68] | — | — |
 
-Model przy `K_GC = 10` ma V_rest = −78.7 mV — **wewnątrz IQR**; przy `K_GC = 0` ma
-−70 mV, na górnej krawędzi. **Obecne `K_GC = 10` jest wspierane przez dane.**
+Model przy `K_GC = 10` ma V_rest = −78.7 mV — **wewnątrz IQR**. Dane **ograniczają**
+`K`, ale go nie wyznaczają: IQR odpowiada `K` ≈ 0–13.6.
+
+| `K_GC` | 0 | 5 | **10** | 13.6 | 15 | 20 |
+|---|---|---|---|---|---|---|
+| `V_rest` [mV] | −70.0 | −75.0 | **−78.7** | −81.0 | −81.8 | −84.5 |
+
+⚠️ **Konsekwencja dla E1′/E1″:** bisekcja dobiera `K` sama. Przy celu 2–5% aktywności
+wychodzi mediana `K` ≈ 14–17 (E1″: 99% punktów przy 2%, 89% przy 5% ma `K` > 13.6),
+czyli komórki bardziej spolaryzowane niż ~75% zmierzonych GC. Przy 10% — 44%, przy
+20% — 3%. Wyniki przy najniższych aktywnościach dotyczą więc obwodu na skraju
+zakresu fizjologicznego.
+
+**Skąd napęd 8 mV (panel a fig. 3) — to nie jest pomiar.** Średni napęd aktywnej GC =
+częstotliwość wejścia × waga × stała czasowa synapsy = 400 Hz × 4 mV × 5 ms = 8 mV,
+z fluktuacjami ok. ±4 mV (szum Poissona). 400 Hz = 40 włókien × 10 Hz (`dg_params.py`;
+reprezentacja zagregowana, prawdziwa GC ma tysiące synaps PP). Waga 4 mV została
+**dobrana** tak, żeby GC strzelały ~6 Hz. Panel (a) opisuje więc reżim pracy
+(próg 14 mV leży ~1.5 odchylenia nad średnią → odpalają tylko fluktuacje), a
+niezależnym ograniczeniem z danych jest wyłącznie panel (b). To samo pytanie, od
+strony danych: B3 w sek. 2.
 Rozbieżność τ_m: pytanie w sek. 2.
 
 ### 3.9 Kanał FS→FS (poboczne)
@@ -353,28 +482,32 @@ Wzajemne hamowanie interneuronów (`W_FS_FS`, domyślnie 0.0 — obwód bez zmia
 ### 4.1 ⛔ Jedna decyzja blokująca: czym jest teza pracy
 
 Pierwotna teza („separacja ma optimum przy pośredniej aktywności, a hamowanie nią
-steruje") jest obalona (sek. 3.3, 3.4). Następcę trzeba wybrać z tego, co dane
-faktycznie podpierają.
+steruje") jest obalona (sek. 3.3, 3.4), także w szerszym sweepie E1″. Następcę
+trzeba wybrać z tego, co dane faktycznie podpierają.
 
 | | teza | dowód, który mamy | koszt | główne ryzyko |
 |---|---|---|---|---|
-| **(a)** | metodologiczna: dekorelacja bez kontroli jest zwodnicza, a oczywiste kontrole same są pułapkami | **komplet** (sek. 3.3, 3.5) | samo pisanie | praca metodyczna — niższy prestiż, ale wynik nowy |
-| **(b)** | mossy cells jako motyw warunkowy | Shapley odporny na null (sek. 3.6) | niski | efekt **zależy od napędu** i nie jest kontrolowany aktywnością |
-| **(c)** | regulacja zamiast separacji (kontroler E4/E5) | brak | najwyższy: nowy moduł | wynik nieznany, miesiące pracy |
-| **(d)** ⭐ | **padaczka: utrata mossy cells** (K3) | maszyneria MC gotowa | **jeden sweep** | — |
+| **(a)** | metodologiczna: dekorelacja bez kontroli aktywności jest zwodnicza, a oczywiste kontrole same są pułapkami | **komplet** (sek. 3.3, 3.5, 3.6) | samo pisanie | praca metodyczna — niższy prestiż, ale wynik nowy |
+| **(b)** | mossy cells jako motyw warunkowy separacji | Shapley — **zdominowany przez aktywność** (sek. 3.6) | — | **praktycznie odpada** |
+| **(c)** | regulacja aktywności (kontroler E4/E5) | tylko pośredni: E2 (aktywność dominuje), zapłon z E1‴ | nowy moduł, miesiące | wynik kontrolera nieznany |
+| **(d)** ⭐ | **padaczka: utrata mossy cells / hamowania** (K3) | maszyneria MC gotowa; zapłon sieci przy aktywnych MC (E1‴, eksploracyjnie, rzadki przy obecnych wagach) | **jeden–dwa sweepy** | częstość zapłonu zależy od nieznanej siły pętli MC — trzeba ją zakotwiczyć w danych |
 
-**Wariant (d) przepisuje sam plan.** PLAN sek. 7.1, **bramka G2**: „H1 potwierdzona
-ORAZ H2 potwierdzona na pełnej siatce. Jeśli nie — pivot na robustness/padaczkę z K3
-jako wynikiem głównym." H1 jest obalona od 2026-09-21, więc bramka jest otwarta. K3
-(PLAN sek. 4): `N_HMC` × {1.0, 0.75, 0.5, 0.25, 0} przy stałym in-degree; rozstrzyga
-spór „dormant basket cell" vs „irritable mossy cell", mierząc napęd FS i separację
-naraz. Mocny, bo nie zakłada, że DG dobrze separuje; MC to jedyny motyw o dużych
-efektach w naszych danych; spór jest kliniczny i otwarty, więc wynik jest publikowalny
-niezależnie od znaku.
+**Wariant (d) przepisuje sam plan** — PLAN sek. 7.1, bramka G2: „H1 potwierdzona
+ORAZ H2 potwierdzona. Jeśli nie — pivot na robustness/padaczkę z K3 jako wynikiem
+głównym." H1 jest obalona, więc bramka jest otwarta. **Test E1‴ osłabił
+uzasadnienie z E1″:** zjawisko jest (zapłon prawie całej sieci przy aktywnych MC,
+któremu zapobiega hamowanie fazowe — dokładnie spór „dormant basket cell" vs
+„irritable mossy cell"), ale przy obecnych wagach jest rzadkie i nie przeszło testu
+zapisanego z góry. (d) stoi więc na planie (bramka G2), nie na naszym wyniku; bez
+zakotwiczenia siły MC→GC w danych nie powiemy, czy zapłon jest realistyczny.
+(b) odpada: „warunkowa rola MC" okazała się regulacją aktywności.
 
-**Rekomendacja: (d) jako teza nośna + (a) jako osobny, krótszy artykuł.** Nie robić
-(c) przed (d). W każdym wariancie przy K3 mierzyć **przy wyrównanej aktywności**
-i w kilku napędach — to są dwie słabości (b), których (d) nie powinno odziedziczyć.
+**Rekomendacja (zaktualizowana po E1‴): (a) jako pierwszy artykuł — ma komplet
+dowodów; (d) dopiero po zakotwiczeniu siły pętli MC w danych** (pytanie do prof.
+Błasiak, sek. 2). Jeśli dane wskażą siłę bliską λ ≥ 1.5, (d) ma gotowy punkt
+startu (tabela E1‴); jeśli słabszą — zapłonu w modelu praktycznie nie ma. Mierzyć
+zawsze przy wyrównanej aktywności — to lekcja z E2; i liczyć wynik per wzorzec —
+to lekcja z E1″.
 
 ### 4.2 Osobna ścieżka: artykuł ML
 
@@ -392,6 +525,9 @@ gotowe). Zero wyników ML na dziś.
 
 ### 4.4 Niezależne od decyzji — można robić od zaraz
 
+0. ~~Test potwierdzający dla E1″~~ — **zrobione (E1‴), nie przeszedł**; wyniki
+   i kryterium w sek. 3.4. Następny krok w tym wątku zależy od siły pętli MC
+   z danych, nie od kolejnego sweepu.
 1. **Skompilować draft na Overleafie** — nigdy nie był kompilowany (na Athenie nie ma
    LaTeX-a), sprawdzony tylko statycznie.
 2. **`io_madar.py`** — bodźce z `dataset/…/Protocols/` jako wejście PP do
@@ -442,8 +578,8 @@ ważności, potrójna rola `K_GC`): PLAN sek. 3.5.
 | plik | co to jest |
 |---|---|
 | `article_draft.tex` | draft artykułu o **narzędziu i mechanizmie** (ang., Overleaf; bez bibtexa) |
-| `figures/fig1..fig5-*.png` | 5 figur artykułu |
-| `figures/slides/*.png` | te same figury bez nagłówków „Figure N." + 4 figury jednopanelowe pod slajdy |
+| `figures/fig1..fig6-*.png` | 6 figur artykułu |
+| `figures/slides/*.png` | figury artykułu bez nagłówków „Figure N." + 4 figury jednopanelowe pod slajdy |
 | `prezentacja_stan_prac.pptx` | prezentacja stanu prac (sek. 7) |
 | `make_article_figures.py`, `build_presentation.py` | generatory — wszystko jest odtwarzalne |
 
@@ -456,8 +592,8 @@ python article/build_presentation.py       # deck .pptx
 
 **Draft** opisuje aplikację dla neurobiologów i mechanizm separacji; wyniki podaje
 jako demonstracje możliwości warsztatu, nie jako tezę — więc nie przesądza sek. 4.1.
-Ma jawne `\todo{}`: afiliacje, rozbieżność τ_m, brakująca bibliografia, uwaga do
-Methods o 2.2 Hz.
+Ma jawne `\todo{}`: afiliacje i współautorzy, rozbieżność τ_m, kontener i depozyt
+danych, URL repozytorium, finansowanie, brakująca bibliografia.
 
 **Prezentacja** jest w python-pptx (precedens repo). Na Athenie nie ma LaTeX-a ani
 LibreOffice, więc: draft sprawdzony statycznie (balans nawiasów i środowisk), deck —
@@ -469,101 +605,116 @@ kontrolą.**
 
 ## 7. Prezentacja — slajd po slajdzie
 
-`article/prezentacja_stan_prac.pptx`: 13 slajdów głównych (~20 min) + 3 zapasowe na
-pytania. Każdy slajd ma notatki prelegenta. Figury na slajdach są po angielsku
-(spójnie z artykułem), tekst po polsku. Pointą jest slajd 8; reszta do niego prowadzi.
+`article/prezentacja_stan_prac.pptx`: 14 slajdów głównych (~22 min) + 3 zapasowe na
+pytania. Każdy slajd ma notatki prelegenta. Figury po angielsku (spójnie
+z artykułem), tekst po polsku. Pointa: slajd 8 (metodologia); slajd 10 pokazuje
+jedyny efekt obwodu i to, że nie przeszedł testu potwierdzającego.
 
-**1. Tytuł.** Na slajdzie: tytuł i schemat obwodu. Do powiedzenia: model sieci
-spajkującej DG, związany danymi patch-clamp; będzie o tym, co ustaliliśmy, co okazało
-się pułapką pomiarową i jaka decyzja jest do podjęcia.
+**1. Tytuł.** Tytuł i schemat obwodu. Do powiedzenia: model sieci spajkującej DG,
+związany danymi patch-clamp; będzie o tym, co ustaliliśmy, co okazało się pułapką
+pomiarową i jaka decyzja jest do podjęcia.
 
-**2. W skrócie.** Na slajdzie: trzy karty z liczbami. *obalona* — H1, separacja nie
-ma optimum (sek. 3.3–3.4). *2 z 2* — oba naturalne null-e zawodzą (sek. 3.5).
-*−0.23 / +0.22* — wkład mossy cells samych i w parze z hamowaniem (sek. 3.6). Na dole
-odsyłacz do decyzji. Do powiedzenia: trzy rzeczy do zapamiętania, reszta prezentacji
-je rozwija.
+**2. W skrócie.** Trzy karty: *obalona* — H1 (sek. 3.3–3.4); *2 z 2* — oba naturalne
+null-e zawodzą (sek. 3.5); *0 / 210* — bez mossy cells sieć nie zapala się nigdy; z nimi zapłon jest możliwy,
+ale rzadki, a test potwierdzający nie przeszedł (sek. 3.4, E1‴). Na dole
+odsyłacz do decyzji (slajd 13).
 
-**3. Czym jest separacja wzorców** (`fig1-concept`). Na slajdzie: lewo — dwa wzorce
-wejściowe, czarne paski to komórki z silnym napędem (pokazane 80 z 200); środek —
-częstotliwość każdej komórki na wyjściu; prawo — korelacja wejść 0.73 i wyjść 0.58,
-różnica +0.15. Jak policzone: jedna symulacja domyślnej konfiguracji (200 GC,
-podobieństwo wejść 0.75, 25% napędzanych, 600 ms). Do powiedzenia: to definicja
-operacyjna całej pracy — i ta liczba rośnie sama, gdy sieć cichnie.
+**3. Czym jest separacja wzorców** (`fig1-concept`). Lewo: dwa wzorce wejściowe
+(czarne paski = komórki z silnym napędem; pokazane 80 z 200). Środek: częstotliwość
+każdej komórki. Prawo: korelacja wejść 0.73 i wyjść 0.58, różnica +0.15. Jedna
+symulacja domyślnej konfiguracji. Do powiedzenia: to definicja operacyjna całej
+pracy — i ta liczba rośnie sama, gdy sieć cichnie.
 
-**4. Model** (`fig2-circuit`). Na slajdzie: PP napędza GC i równolegle FS
-(wyprzedzająco, FF); GC też pobudzają FS (zwrotnie, FB); FS hamują GC; HMC w pętli
-pobudzającej. Ramka: dwie osie hamowania. Do powiedzenia: rozdzielenie hamowania
-tonicznego (`K_GC`, stały prąd) i fazowego (`W_FS_GC`, synaptyczne) to sedno modelu;
-trzy motywy można wyłączać niezależnie.
+**4. Model** (`fig2-circuit`). PP napędza GC i równolegle FS (FF); GC napędzają FS
+(FB); FS hamują GC; HMC w pętli pobudzającej. Ramka: dwie osie hamowania. Do
+powiedzenia: rozdzielenie tonicznego (`K_GC`) i fazowego (`W_FS_GC`) to sedno modelu.
 
-**5. Punkt pracy jest przypięty danymi** (`fig3-operating-point`). Na slajdzie:
-(a) próg odpalenia `G_crit = 4 + K` i realny napęd 8 mV; przy `K_GC = 10` napęd jest
-poniżej progu 14 mV. (b) `V_rest(K)` modelu na tle mediany i IQR z 42 komórek
-Madara. Jak policzone: analitycznie, z punktów stałych równania Izhikevicza,
-zweryfikowane symulacją. Do powiedzenia: komórki strzelają tylko na fluktuacjach —
-stąd rzadki kod; ten sam parametr trafia w środek danych. Model nie jest dostrojony
-pod wynik.
+**5. Punkt pracy jest zgodny z danymi** (`fig3-operating-point`). `K_GC` = hamowanie
+toniczne, stały prąd odejmowany od każdej GC. (a) Niebieska linia: ile stałego napędu
+potrzeba, żeby GC strzelała (`G_crit = 4 + K`); czerwona: średni napęd aktywnej GC,
+8 mV (= 400 Hz × 4 mV × 5 ms, fluktuacje ±4 mV). Przy `K_GC = 10` próg 14 mV leży nad
+średnią, więc odpalają tylko fluktuacje — stąd rzadki kod. (b) Ten sam `K` ustala
+potencjał spoczynkowy; zielony pas = IQR z 42 GC Madara, szary pas = `K` zgodne z
+danymi (0–13.6). Do powiedzenia: parametr, który robi z DG rzadki koder, daje też
+spoczynek zgodny z pomiarem. Jeśli padnie pytanie: waga 4 mV jest dobrana, nie
+zmierzona (panel a opisuje reżim, dowodem jest panel b), a dane ograniczają `K` do
+zakresu, nie do jednej wartości. Szczegóły sek. 3.8.
 
-**6. E1 — separacja rośnie, gdy sieć cichnie** (`slide-e1`). Na slajdzie: szare
-punkty to 450 punktów siatki (separacja wobec zmierzonej frakcji aktywnych, oś log
-w %). Przerywane linie to cztery progi odrzucania cichych punktów (2, 5, 10, 20%),
-gwiazdki — maksimum separacji przy każdym progu. Do powiedzenia: każda gwiazdka
-siedzi tuż przy swoim progu; gdyby istniało biologiczne optimum, stałyby w jednym
-miejscu. Liczby: sek. 3.3.
+**6. E1 — separacja rośnie, gdy sieć cichnie** (`slide-e1`). Szare punkty: 450
+punktów siatki (separacja wobec frakcji aktywnych, oś log w %). Przerywane linie:
+cztery progi odrzucania cichych punktów; gwiazdki: maksimum separacji przy każdym
+progu. Do powiedzenia: każda gwiazdka siedzi przy swoim progu — gdyby istniało
+biologiczne optimum, stałyby w jednym miejscu. Sek. 3.3.
 
-**7. E1′ — hamowanie fazowe nic nie zmienia** (`slide-e1p`). Na slajdzie: separacja
-wobec siły hamowania fazowego, osobna linia dla każdego z 6 zadanych poziomów
-aktywności. Jak policzone: aktywność ustawiana bisekcją po hamowaniu tonicznym,
-733 dostrojone punkty. Do powiedzenia: linie leżą na różnych wysokościach (to robi
-aktywność), ale żadna nie rośnie z hamowaniem; łączne nachylenie −0.003 (p = 0.60).
-Efekt hamowania z E1 był efektem wyciszenia. Liczby: sek. 3.4.
+**7. E1′ — hamowanie fazowe nic nie zmienia** (`slide-e1p`). Separacja wobec
+hamowania fazowego, osobna linia dla każdego z 6 zadanych poziomów aktywności
+(bisekcja po hamowaniu tonicznym, 733 punkty). Do powiedzenia: linie leżą na różnych
+wysokościach (to robi aktywność), ale żadna nie rośnie z hamowaniem; nachylenie
+−0.003, p = 0.60. Sek. 3.4.
 
-**8. ⭐ Z czym w ogóle porównujemy obwód** (`fig5-nulls`). Na slajdzie: (a) korelacja
-wyjścia dla: wejścia bez transformacji 0.75, nulla k-WTA 0.58, DG 0.39, nulla
-permutacyjnego 0.00. (b) przewaga DG nad losowym kodem rozbita na obwód bez hamowania
-(+0.094, 61%) i dodatek hamowania (+0.059). Jak policzone: (a) z E1′, `r_out` = `r_in`
-− `dec`; (b) z koalicji lezji E2. Do powiedzenia — **pointa**: żeby powiedzieć „DG
-separuje", trzeba punktu odniesienia o tej samej rzadkości. Oba naturalne zawodzą:
-permutacja osiąga zero, bo niszczy całą informację (sufit), losowa projekcja z
-definicji zachowuje korelację (trywialna podłoga). Obejmują obwód z dwóch stron.
-A przewaga nad losowym kodem to w większości sam próg spajkowania. Szczegóły: sek. 3.5.
+**8. ⭐ Z czym w ogóle porównujemy obwód** (`fig5-nulls`). (a) korelacja wyjścia:
+wejście 0.75, *random projection* 0.58, DG 0.39, *permuted DG output* 0.00 (oba
+null-e objaśnione w sek. 3.1). (b) przewaga DG nad projekcją losową: obwód bez
+motywów hamowania +0.094, z nimi +0.152. Do powiedzenia — pointa metodologiczna:
+permutacja osiąga zero, bo niszczy informację (sufit); projekcja losowa z definicji
+zachowuje korelację (trywialna podłoga); obejmują obwód z dwóch stron. A przewaga
+nad projekcją to w ~60% sam próg spajkowania. Sek. 3.5.
 
-**9. E2 — mossy cells: motyw warunkowy** (`slide-e2`). Na slajdzie: wartości Shapleya
-trzech motywów i trzech par; pełne słupki — na surowej separacji, kreskowane — po
-korekcie nullem. Jak policzone: 8 koalicji lezji, 36 punktów statystyki wejścia
-× 5 seedów, kanoniczny napęd. Do powiedzenia: MC same szkodzą (−0.23), w parach
-pomagają najbardziej (+0.21…+0.22); korekta nullem nic nie zmienia, bo null nie
-zależy od lezji. Zastrzeżenie: przy napędzie ×0.5 efekty ~4× mniejsze. Sek. 3.6.
+**9. E2 — wkład motywów to głównie aktywność** (`slide-e2`). Trzy elementy obwodu:
+FF (hamowanie wyprzedzające), FB (hamowanie zwrotne), MC (mossy cells, pętla
+pobudzająca); każdy można wyłączyć, więc jest 8 wersji obwodu.
+(a) Każda pomarańczowa kropka = jedna wersja (średnio po 36 zestawach wejść ×
+5 seedów, `mc_active`, napęd ×1.0); szare punkty = pojedyncze pomiary. Oś x — ile
+komórek ziarnistych strzela, oś y — separacja `r_in − r_out`. Wszystkie wersje leżą
+na jednej malejącej linii (r = −0.97). (b) Wartość Shapleya = o ile średnio zmienia
+się separacja, gdy element dołączamy, uśrednione po wszystkich kolejnościach
+dołączania. Do powiedzenia: FF i FB „pomagają", bo wyciszają sieć; MC „szkodzi", bo
+ją rozpędza (same MC: 94% aktywnych). Wkład mierzy więc wpływ na aktywność, nie
+separację samą w sobie. Uczciwie: wcześniej pokazywałem tu „odporność na null" —
+ta kontrola była pusta z konstrukcji. Interakcje i korekta projekcją losową: sek. 3.6.
 
-**10. 1A — odbiorca nie korzysta** (`slide-1a`). Na slajdzie: dokładność klasyfikatora
-liniowego dla czterech wejść; linia przerywana = surowe wejście. Do powiedzenia: miara
-niezależna od korelacji, więc nie podlega pułapce z E1 — i też nic: DG 0.885 wobec
-0.940, losowy kod remisuje z DG, bez hamowania lepiej. Sek. 3.7.
+**10. E1″ / E1‴ — zapłon sieci: jest, ale rzadki** (`fig6-runaway`). (a) Aktywność
+wyrównana; oś x — hamowanie fazowe, oś y — odsetek przebiegów, w których jeden ze
+wzorców zapalił prawie całą sieć; linie = siła pętli MC (λ = 0 bez MC, λ = 1 jak w
+E1″). Bez MC zapłonów nie ma nigdy, przy λ = 1 są 2 na 30, przy λ = 1.5 do 40%; od
+`W` = 3 — nigdy. (b) Bez wyrównywania aktywności, λ = 1: oś y — odsetek aktywnych
+komórek; przy hamowaniu tonicznym zgodnym z danymi (`K` = 6, 10) bez hamowania
+fazowego aktywne jest 100% komórek. Do powiedzenia: w E1″ wyglądało to na „szybsze
+komórki" (~280 Hz) — to był artefakt miary mieszającej wzorce; test na nowych seedach
+nie przeszedł kryterium zapisanego z góry. Zostaje zjawisko jakościowe, którego
+częstość zależy od siły mossy cells — dlatego pytamy o nią prof. Błasiak. Sek. 3.4.
 
-**11. Co upadło, co stoi, co jest nowe.** Na slajdzie: trzy kolumny. *Upadło* —
-optimum separacji, sterowanie hamowaniem fazowym, pomoc dla odbiorcy. *Stoi* — punkt
-pracy zgodny z danymi, MC jako motyw warunkowy, przewaga nad losowym kodem (głównie
-dzięki progowi). *Metodologia* — oba null-e zawodzą, próg odrzucania przesuwa
-maksimum, retencja idzie za rzadkością wejścia.
+**11. 1A — odbiorca nie korzysta** (`slide-1a`). Dokładność klasyfikatora liniowego
+dla czterech wejść. Miara niezależna od korelacji — i też nic: DG 0.885 wobec 0.940,
+losowa projekcja remisuje z DG, bez hamowania lepiej. Sek. 3.7.
 
-**12. Decyzja: czym jest teza pracy.** Na slajdzie: cztery warianty (a)–(d),
-rekomendowany (d) wyróżniony. Do powiedzenia: (d) nie jest naszym pomysłem — plan
-przewidywał ten pivot, jeśli H1 nie przejdzie (bramka G2). Rekomendacja: (d) jako teza
-nośna + (a) jako osobny artykuł. Sek. 4.1.
+**12. Co upadło, co stoi, co jest nowe.** *Upadło:* optimum separacji, sterowanie
+separacją przez hamowanie fazowe, mossy cells jako motyw separacji, pomoc dla
+odbiorcy, „toniczne = ile, fazowe = jak szybko" (artefakt miary). *Stoi:* punkt
+pracy zgodny z danymi; DG bije losową projekcję głównie dzięki progowi; z aktywnymi
+MC możliwy zapłon sieci, któremu zapobiega hamowanie fazowe (eksploracyjnie).
+*Metodologia:* oba null-e zawodzą; próg odrzucania przesuwa maksimum; retencja idzie
+za rzadkością wejścia.
 
-**13. Następne kroki.** Na slajdzie: pięć kroków; pierwszy (decyzja) blokuje resztę.
-Drugi to trzy pytania kalibracyjne do prof. Błasiak (sek. 2).
+**13. Decyzja: czym jest teza pracy.** Cztery warianty; (d) wyróżniony. Do
+powiedzenia: (d) przewidział sam plan (bramka G2), ale nasz własny wynik go nie
+podpiera, dopóki nie znamy siły mossy cells; (b) odpada. Rekomendacja: najpierw (a),
+(d) po zakotwiczeniu MC w danych. Sek. 4.1.
 
-**14–16. Zapas.** Gęste figury analityczne na pytania z sali: pełna mapa reżimów E1
-(panel c: separacja zmienia się prawie wyłącznie wzdłuż osi hamowania tonicznego),
-kontrola dostrojenia E1′ (panel d: czy bisekcja trafiła; panel c: tautologia retencji),
-profile wkładów motywów E2 w funkcji statystyki wejścia.
+**14. Następne kroki.** Decyzja; siła mossy cells z danych (warunek dla (d)); pytania
+do prof. Błasiak; bodźce Madara jako wejście; artykuły.
 
-**Trzy pytania, które padną:**
+**15–17. Zapas.** Pełna mapa reżimów E1; pełna siatka E1″ (separacja wobec hamowania
+fazowego w 8 panelach — płasko wszędzie poza 20% przy aktywnych MC); profile wkładów
+motywów E2.
 
-1. *„Czemu nie odrzucić cichych punktów?"* — Próbowaliśmy; maksimum przenosi się
-   dokładnie na próg, przy każdym progu (slajd 6).
-2. *„Czemu permutacja nie jest dobrą kontrolą?"* — Jej wynik zbiega do `r_in`
-   (0.5687 vs 0.5682), więc nadwyżka nad nią to algebraicznie `−r_out` (slajd 8).
-3. *„To co zostaje na plusie?"* — Atrybucja motywów: odporna na null, bo null jest
-   stały po lezjach, a Shapley ignoruje stałą (slajd 9).
+**Pytania, które padną:**
+
+1. *„Czemu nie odrzucić cichych punktów?"* — Maksimum przenosi się dokładnie na
+   próg, przy każdym progu (slajd 6).
+2. *„Czemu permutacja nie jest dobrą kontrolą?"* — Jej wynik zbiega do `r_in`, więc
+   nadwyżka nad nią to `−r_out` (slajd 8); a w E2 jej odjęcie nie może niczego
+   zmienić (slajd 9).
+3. *„Czy zapłon nie jest artefaktem ręcznie dobranych wag MC?"* — Jego częstość
+   tak: zależy od siły pętli MC (slajd 10a). Samo zjawisko i to, że hamowanie fazowe
+   mu zapobiega, powtarza się przy każdej sile, przy której występuje.
