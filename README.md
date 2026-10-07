@@ -16,7 +16,9 @@ miejsce, pozostałe odsyłają:
 |---|---|
 | `README.md` | jak to zainstalować, uruchomić, gdzie co leży |
 | [STATUS.md](STATUS.md) | gdzie jestem, co blokuje, jakie są zmierzone wyniki |
-| [PLAN_BADAWCZY.md](PLAN_BADAWCZY.md) | hipotezy H1–H5 i plan eksperymentów E1–E7 |
+| [PLAN_BADAWCZY.md](PLAN_BADAWCZY.md) | hipotezy H1–H5 i plan eksperymentów E1–E7 ⚠️ historyczny, czeka na decyzję |
+| [ml_paper.md](ml_paper.md) | pomysł na OSOBNY artykuł ML — rzadkość jako trzeci czynnik |
+| [article/](article/) | draft artykułu (Overleaf) + 5 figur objaśniających |
 
 ---
 
@@ -196,7 +198,7 @@ python article/make_article_figures.py     # przelicza 4 figury do article/figur
 `article/article_draft.tex` kompiluje się na Overleafie (`pdflatex`, dwa
 przebiegi, bez bibtexa — bibliografia jest inline). Zakres: **aplikacja dla
 neurobiologów + mechanizm separacji**; draft świadomie NIE przesądza tezy pracy,
-bo ta decyzja jest otwarta ([STATUS.md](STATUS.md) §4 pkt 2). Co dokładnie jest
+bo ta decyzja jest otwarta ([STATUS.md](STATUS.md) §4.1). Co dokładnie jest
 w drafcie i czego w nim nie ma: [STATUS.md](STATUS.md) §6.
 
 Figury są **generowane, nie wklejane** — liczby biorą się z `experiments/*/results/*.npz`

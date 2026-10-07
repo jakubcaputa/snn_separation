@@ -254,21 +254,24 @@ def fig4_findings():
     ax.set_ylabel('separation  $r_{in}-r_{out}$')
     ax.set_title('(a) E1: "separation" simply\ngrows as the network falls silent')
 
-    # (b) E1' — porównanie z nullem o dopasowanej rzadkości
+    # (b) E1' — porównanie z DWOMA nullami. Permutacyjny jest zdegenerowany
+    # (równa się r_in, bo niszczy całą informację), więc sam w sobie nie jest
+    # kontrolą rzadkości — pokazujemy oba, żeby to było widać. Patrz STATUS §3.2c.
     ax = axes[1]
     m = e1p['matched'].astype(bool)
     real = e1p['dec'][m].mean()
-    null = e1p['dec_null_shuffle'][m].mean()
-    ax.bar(['real\ncircuit', 'shuffled\ncontrol'], [real, null],
-           color=[BLUE, GREY], width=0.6)
-    # strzałka w przerwę między słupkami; etykieta nad niskim słupkiem, żeby
-    # nie wychodziła poza oś i nie wchodziła na sąsiedni panel
-    ax.annotate('', xy=(0.5, null), xytext=(0.5, real),
-                arrowprops=dict(arrowstyle='<->', color=VERM, lw=1.6))
-    ax.text(0.44, (real + null) / 2, f'{real - null:+.2f}\nthe circuit\nis WORSE',
-            color=VERM, fontsize=7.8, va='center', ha='right', fontweight='bold')
+    n_shuf = e1p['dec_null_shuffle'][m].mean()
+    n_kwta = e1p['dec_null_kwta'][m].mean()
+    ax.bar(['DG', 'random\nsparse', 'scrambled'],
+           [real, n_kwta, n_shuf], color=[BLUE, PINK, GREY], width=0.62)
+    ax.text(2, n_shuf + 0.03, 'discards\nthe input', ha='center', color=GREY,
+            fontsize=7.2, style='italic')
+    ax.set_ylim(0, 0.92)
     ax.set_ylabel('separation  $r_{in}-r_{out}$')
-    ax.set_title('(b) E1′: shuffling the output\nseparates BETTER than the circuit')
+    ax.set_title('(b) E1$^\\prime$: DG beats a random sparse code,\n'
+                 'but not a code that discards the input')
+    ax.annotate(f'+{real - n_kwta:.2f}', xy=(0.5, max(real, n_kwta) + 0.03),
+                ha='center', color=GREEN, fontsize=8.5, fontweight='bold')
 
     # (c) E2 — wkłady Shapleya (proweniencja w nagłówku pliku)
     ax = axes[2]
@@ -298,7 +301,71 @@ def fig4_findings():
                  'each panel is one experiment, one message', fontsize=10, y=1.05)
     fig.savefig(FIGS / "fig4-findings.png")
     plt.close(fig)
-    print(f"  fig4: E1' real={real:.3f} null={null:.3f} excess={real - null:+.3f}")
+    print(f"  fig4: E1' DG={real:.3f}  kWTA={n_kwta:.3f} (nadwyzka {real - n_kwta:+.3f})"
+          f"  scrambled={n_shuf:.3f}")
+
+
+def fig5_nulls():
+    """Dlaczego oba null-e nie są poziomem szansy, i skąd bierze się przewaga DG."""
+    e1p = np.load(REPO / "experiments/e1_regime_map/results/matched_activity_full.npz")
+    m = e1p['matched'].astype(bool)
+    r_in = float(e1p['r_in'][m].mean())
+    ro = lambda key: r_in - float(e1p[key][m].mean())
+
+    fig, axes = plt.subplots(1, 2, figsize=(11.5, 3.6),
+                             gridspec_kw={'wspace': 0.32, 'width_ratios': [1.15, 1]})
+
+    # (a) oba null-e OBEJMUJĄ DG — żaden nie jest poziomem szansy
+    ax = axes[0]
+    names = ['input\n(no transform)', 'random sparse\n(k-WTA null)', 'DG\ncircuit',
+             'scrambled\n(permutation null)']
+    vals = [r_in, ro('dec_null_kwta'), ro('dec'), ro('dec_null_shuffle')]
+    cols = [GREY, PINK, BLUE, '#4D4D4D']
+    ax.bar(names, vals, color=cols, width=0.62)
+    for x, v in enumerate(vals):
+        ax.text(x, v + 0.018, f'{v:.2f}', ha='center', fontsize=8.5, fontweight='bold')
+    ax.axhline(r_in, color=GREY, ls=':', lw=1.2)
+    ax.set_ylabel('output correlation  $r_{out}$')
+    ax.set_ylim(0, r_in * 1.22)
+    ax.set_title('(a) Neither null is a chance level — they BRACKET the circuit\n'
+                 'lower $r_{out}$ = more decorrelation', fontsize=9.5)
+    ax.annotate('preserves almost\neverything\n(near-isometry)', xy=(1, vals[1]),
+                xytext=(1, r_in * 1.02), ha='center', fontsize=7, color=PINK)
+    ax.annotate('destroys everything\n(unreachable ceiling)', xy=(3, vals[3]),
+                xytext=(3, r_in * 0.42), ha='center', fontsize=7, color='#4D4D4D')
+
+    # (b) rozkład przewagi: nieliniowość vs hamowanie
+    ax = axes[1]
+    import glob as _g
+    ek, reg, coal = [], [], None
+    for f in sorted(_g.glob(str(REPO / "experiments/e2_motif_attribution/results/lesion_grid_full_shard*.npz"))):
+        d = np.load(f, allow_pickle=True)
+        coal = [str(c) for c in d['coalitions']]
+        ek.append(d['dec_excess_kwta']); reg.append(d['task_regime'])
+    EK = np.concatenate(ek); R = np.concatenate(reg)
+    mm = (R == 'mc_active')
+    none_v = float(EK[mm, coal.index('')].mean())
+    full_v = float(EK[mm, coal.index('FF+FB+MC')].mean())
+
+    ax.bar(['spiking\nnonlinearity alone', 'full circuit\n(+ inhibition)'],
+           [none_v, full_v], color=[BLUE, VERM], width=0.55)
+    ax.bar(['full circuit\n(+ inhibition)'], [full_v - none_v], bottom=[none_v],
+           color=VERM, width=0.55, hatch='//', edgecolor='w')
+    ax.text(0, none_v / 2, f'{none_v:.3f}\n({none_v / full_v:.0%})', ha='center',
+            va='center', color='w', fontsize=9, fontweight='bold')
+    ax.text(1, none_v + (full_v - none_v) / 2, f'+{full_v - none_v:.3f}', ha='center',
+            va='center', color='w', fontsize=9, fontweight='bold')
+    ax.set_ylabel('advantage over the random sparse code')
+    ax.set_title('(b) Most of the advantage is the threshold,\n'
+                 'not the inhibitory circuit', fontsize=9.5)
+    ax.grid(axis='y', alpha=0.25, lw=0.6); ax.set_axisbelow(True)
+
+    fig.suptitle('Figure 5. What the circuit is actually compared against',
+                 fontsize=10, y=1.04)
+    fig.savefig(FIGS / "fig5-nulls.png")
+    plt.close(fig)
+    print(f"  fig5: r_in={r_in:.3f} kWTA={vals[1]:.3f} DG={vals[2]:.3f} perm={vals[3]:.3f}"
+          f" | nieliniowosc {none_v:+.3f} -> pelny {full_v:+.3f}")
 
 
 if __name__ == '__main__':
@@ -308,4 +375,5 @@ if __name__ == '__main__':
     fig2_circuit()
     fig3_operating_point()
     fig4_findings()
+    fig5_nulls()
     print(f"\nGotowe → {FIGS}")

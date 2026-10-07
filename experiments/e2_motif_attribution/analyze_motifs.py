@@ -40,6 +40,7 @@ from dg_core.viz import (  # noqa: E402
 )
 
 RESULTS = Path(__file__).parent / "results"
+FIG_SUFFIX = ''   # ustawiany w main() gdy --metric != dec
 
 # Poniżej tej dekorelacji „dominacja" jest szumem, nie zjawiskiem → pole '—'
 MIN_EFFECT = 0.01
@@ -55,9 +56,13 @@ def load(pattern: str) -> dict:
     print(f"Wczytano {len(paths)} plik(ów): {', '.join(Path(p).name for p in paths)}")
 
     merged = {}
+    optional = ['dec_null_shuffle', 'dec_excess_shuffle',
+                'dec_null_kwta', 'dec_excess_kwta']
     concat_keys = [k for k in parts[0] if k.startswith('task_')] + [
         'r_in_measured', 'dec', 'r_out', 'fr_gc', 'fr_gc_active',
         'sparseness', 'active_frac', 'fr_fs', 'fr_hmc']
+    # kolumny nullowe są opcjonalne — pliki sprzed 2026-10 ich nie mają
+    concat_keys += [k for k in optional if k in parts[0]]
     for k in concat_keys:
         merged[k] = np.concatenate([p[k] for p in parts], axis=0)
     for k in ['coalitions', 'motifs', 'grid_R_in', 'grid_P_active', 'grid_drive',
@@ -66,7 +71,7 @@ def load(pattern: str) -> dict:
     return merged
 
 
-def compute_shapley(d: dict) -> dict:
+def compute_shapley(d: dict, metric: str = 'dec') -> dict:
     """
     Dla każdego (reżim, R_in, P_active, drive) uśrednia po seedach:
       φ_FF, φ_FB, φ_MC, dekorelację pełnego obwodu, interakcję FF×FB, metryki kontrolne.
@@ -82,7 +87,7 @@ def compute_shapley(d: dict) -> dict:
     for i in range(len(d['task_seed'])):
         cell = (str(d['task_regime'][i]), float(d['task_r_in'][i]),
                 float(d['task_p_active'][i]), float(d['task_drive'][i]))
-        v = as_sets(d['dec'][i])
+        v = as_sets(d[metric][i])
 
         phi = shapley_values(v, MOTIFS)
         full = frozenset(MOTIFS)
@@ -180,7 +185,7 @@ def fig_dominance(S, d, drive_ref):
     fig.suptitle('Kierunek 4 — który motyw hamowania dominuje separację',
                  fontsize=13, fontweight='bold')
     fig.tight_layout(rect=[0, 0.035, 1, 0.97])
-    p = RESULTS / 'fig1_dominance_map.png'
+    p = RESULTS / f'fig1_dominance_map{FIG_SUFFIX}.png'
     fig.savefig(p); plt.close(fig)
     return p
 
@@ -232,7 +237,7 @@ def fig_profiles(S, d, drive_ref):
     fig.suptitle('Kierunek 4 — profile wkładu motywów (Σφ = cała separacja z hamowania)',
                  fontsize=12, fontweight='bold')
     fig.tight_layout(rect=[0, 0, 1, 0.955])
-    p = RESULTS / 'fig2_shapley_profiles.png'
+    p = RESULTS / f'fig2_shapley_profiles{FIG_SUFFIX}.png'
     fig.savefig(p); plt.close(fig)
     return p
 
@@ -266,7 +271,7 @@ def fig_interactions(S, d, drive_ref):
                  'niebieski = synergia (razem dają więcej niż osobno)',
                  fontsize=11, fontweight='bold')
     fig.tight_layout(rect=[0, 0, 1, 0.93])
-    p = RESULTS / 'fig3_interactions.png'
+    p = RESULTS / f'fig3_interactions{FIG_SUFFIX}.png'
     fig.savefig(p); plt.close(fig)
     return p
 
@@ -310,7 +315,7 @@ def fig_sanity(S, d, drive_ref):
                  '(dekorelacja przy FR→0 byłaby artefaktem, nie obliczeniem)',
                  fontsize=11, fontweight='bold')
     fig.tight_layout(rect=[0, 0, 1, 0.93])
-    p = RESULTS / 'fig4_sanity.png'
+    p = RESULTS / f'fig4_sanity{FIG_SUFFIX}.png'
     fig.savefig(p); plt.close(fig)
     return p
 
@@ -359,13 +364,26 @@ def main():
     ap.add_argument('--in', dest='inp', default='lesion_grid_quick.npz')
     ap.add_argument('--drive', type=float, default=1.0,
                     help='który poziom napędu pokazać na mapach (domyślnie 1.0 = kanon)')
+    ap.add_argument('--metric', default='dec',
+                    choices=['dec', 'dec_excess_shuffle', 'dec_excess_kwta'],
+                    help='na czym liczyć Shapleya. `dec` = surowa dekorelacja '
+                         '(UWAGA: confound rzadkości, STATUS §3.2b); '
+                         '`dec_excess_*` = nadwyżka ponad null o dopasowanej rzadkości')
     args = ap.parse_args()
+
+    global FIG_SUFFIX
+    if args.metric != 'dec':
+        FIG_SUFFIX = '_' + args.metric.replace('dec_excess_', 'excess_')
+        print(f"Shapley liczony na: {args.metric}  (figury z sufiksem {FIG_SUFFIX})")
 
     use_style()
     RESULTS.mkdir(exist_ok=True)
 
     d = load(args.inp)
-    S = compute_shapley(d)
+    if args.metric not in d:
+        sys.exit(f"Plik nie zawiera kolumny '{args.metric}'. Pliki sprzed 2026-10 "
+                 f"nie mają null-i — przelicz sweep run_lesion_grid.py.")
+    S = compute_shapley(d, args.metric)
     print(f"Punktów (reżim × R_in × P_active × drive): {len(S)}")
 
     drives = sorted({k[3] for k in S})

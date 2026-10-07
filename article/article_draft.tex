@@ -380,9 +380,10 @@ Section~\ref{sec:outlook}. Figure~\ref{fig:findings} summarises all four.
   \includegraphics[width=\textwidth]{fig4-findings.png}
   \caption{\textbf{Summary of experiments to date.} (a) Measured separation
   rises monotonically as the network falls silent; the apparent optimum sits at
-  whatever activity cut-off the analysis imposes. (b) With activity held fixed
-  by calibration, randomly shuffling which granule cell fires yields
-  \emph{more} decorrelation than the real circuit. (c) Shapley attribution of
+  whatever activity cut-off the analysis imposes. (b) With activity held fixed by
+  calibration, DG decorrelates more than a random sparse code of matched
+  sparsity, but less than a scrambled code --- the latter comparison being
+  degenerate (Eq.~\eqref{eq:degenerate}). (c) Shapley attribution of
   separation to the three inhibitory motifs. (d) A linear decoder does not read
   granule cell output more accurately than it reads the raw input.}
   \label{fig:findings}
@@ -421,17 +422,64 @@ of letting it vary, and (ii) compared each measurement against two null models:
 
 Over 810 grid points (6 activity targets $\times$ 9 phasic weights $\times$ 3
 input sparsities $\times$ 5 seeds), 733 of which could be tuned to the requested
-activity, the excess over the permutation null is
-$-0.389 \pm 0.245$ (SD), SEM $0.009$ --- that is, negative, and far from zero.
-Shuffling which granule cell fires \emph{increases} decorrelation relative to
-the intact circuit (Figure~\ref{fig:findings}b). With activity equalised, the
-phasic weight $\Wfsgc$ has no detectable effect anywhere in the range $0$--$5$
-(spread of means 0.024 against a per-cell SEM of 0.027).
+activity, two things emerge, and they point in opposite directions
+(Figure~\ref{fig:findings}b).
 
-The interpretation is mechanical rather than mysterious: which granule cells fire
-is dictated by which ones receive input, so overlapping patterns drive
-overlapping cells, and the circuit \emph{preserves} input correlation relative to
-a random assignment.
+Against the \textbf{random-projection null} the circuit is \emph{better}: DG
+output decorrelates by $0.358$ against $0.168$ for a random sparse code of the
+same sparsity, an excess of $+0.19$. Whatever else is true, the DG
+transformation is not equivalent to arbitrary sparse recoding.
+
+Against the \textbf{permutation null} the circuit is worse, by
+$-0.389 \pm 0.245$ (SD), SEM $0.009$. This comparison, however, turns out to be
+degenerate, and we flag it precisely because the permutation null is an obvious
+and tempting control. Permuting rates across cells destroys the pattern--cell
+correspondence completely, so the null's output correlation is driven to zero and
+its score collapses onto the input correlation itself:
+\begin{equation}
+  \mathrm{dec}^{\mathrm{perm}}_{\mathrm{null}} \;\approx\; r_{in}
+  \qquad\Longrightarrow\qquad
+  \mathrm{dec} - \mathrm{dec}^{\mathrm{perm}}_{\mathrm{null}} \;=\; -\,r_{out}.
+  \label{eq:degenerate}
+\end{equation}
+Measured over our grids, $\mathrm{dec}^{\mathrm{perm}}_{\mathrm{null}} = 0.5687$
+against $r_{in} = 0.5682$. The ``excess'' over this null therefore carries no
+information beyond the output correlation itself, and the ceiling it defines is
+reachable only by discarding the stimulus. It is a bound, not a chance level.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{fig5-nulls.png}
+  \caption{\textbf{What the circuit is actually compared against.} (a) The two
+  nulls do not bracket a chance level --- they bracket the circuit itself. The
+  permutation null drives output correlation to zero by destroying the
+  stimulus--cell correspondence; the random-projection null is close to an
+  isometry and so decorrelates little. (b) Decomposing the advantage over the
+  random sparse code across lesion coalitions: the circuit stripped of all
+  inhibition already accounts for most of it, so the margin is largely
+  attributable to the spiking threshold rather than to the inhibitory
+  architecture.}
+  \label{fig:nulls}
+\end{figure}
+
+\paragraph{Neither null is a chance level.} Taken together the two controls
+bracket the circuit rather than benchmark it (Figure~\ref{fig:nulls}a): at
+$r_{in}=0.748$ the permutation null leaves $r_{out}=0.001$, the random projection
+leaves $r_{out}=0.580$ (78\% of $r_{in}$, as expected of a near-isometry), and DG
+sits between at $0.390$. The $+0.19$ margin over the random sparse code should
+therefore be read with the bar it clears in mind. Decomposing that margin across
+lesion coalitions (Figure~\ref{fig:nulls}b), the circuit with \emph{all}
+inhibition removed already achieves $+0.094$ of the full circuit's $+0.152$ ---
+so roughly three fifths of the advantage is attributable to the spiking
+threshold, before any inhibitory motif is switched on. The remaining $+0.059$ is
+not activity-controlled, and the measurement that \emph{is} activity-controlled
+(below) finds no effect of the phasic axis at all.
+
+Separately, and unaffected by the above: with activity equalised, the phasic
+weight $\Wfsgc$ has no detectable effect anywhere in the range $0$--$5$ (spread
+of means 0.024 against a per-cell SEM of 0.027). In this model the apparent
+influence of that axis on separation is an effect of the accompanying change in
+activity level, not of the synapse.
 
 \subsection{E2 --- attributing separation to motifs}
 \label{sec:e2}
@@ -446,12 +494,18 @@ thus a conditional motif: on their own they re-excite granule cells and
 \emph{correlate} patterns; combined with inhibition they are associated with the
 largest gains.
 
-\todo{E2 computes Shapley values on raw decorrelation, i.e. on the metric that
-Section~\ref{sec:nulls} shows to be confounded. Re-run with
-\texttt{separation\_vs\_null} before these numbers are claimed. The machinery
-exists; the cost is minutes. Note also that the strongest apparent separation in
-this grid occurs where active granule cells fire at \SI{2.2}{\hertz}, well below
-the \SI{6}{\hertz} canon.}
+\paragraph{This attribution survives the null control.} Recomputing the Shapley
+values on excess over the sparsity-matched null leaves them essentially unchanged
+($\varphi_{FF}$: $+0.1998 \to +0.1999$; $\varphi_{MC}$: $-0.2257 \to -0.2245$;
+$FF\times MC$: $+0.2227 \to +0.2217$). The reason is structural: the null score
+depends on $r_{in}$, which a lesion does not change, so it is near-constant
+across coalitions (spread $0.0051$ against a \texttt{dec} spread of $0.3774$),
+and Shapley values are invariant to an additive constant. Motif attribution is
+therefore not an artefact of the sparsity confound.
+
+\todo{For Methods: the strongest apparent separation in this grid occurs where
+active granule cells fire at \SI{2.2}{\hertz}, well below the \SI{6}{\hertz}
+canon --- state this explicitly.}
 
 \subsection{1A --- does a downstream decoder benefit?}
 
@@ -472,23 +526,42 @@ consistent with Section~\ref{sec:nulls}.
 
 \subsection{What we take to be established}
 
-The methodological point is the one we would most like to see adopted:
-\textbf{decorrelation reported without a sparsity-matched null is not evidence of
-pattern separation.} The confound is not subtle --- in our grids it is larger
-than the effect --- and it is invisible to the usual guard of discarding
-low-activity points, because that guard simply relocates the apparent optimum to
-its own threshold. The permutation null is nearly free: it requires no additional
-simulation.
+The methodological point is the one we would most like to see adopted, and it has
+two halves.
+
+\textbf{First: decorrelation reported without a matched null is not evidence of
+pattern separation.} In our grids the confound is larger than the effect, and it
+is invisible to the usual guard of discarding low-activity points --- that guard
+simply relocates the apparent optimum onto its own threshold
+(Section~\ref{sec:experiments}).
+
+\textbf{Second, and less obvious: not every null will do.} The permutation null
+--- shuffle the output rates across cells, keep the rate distribution --- is the
+control most likely to be reached for, and it is nearly free to compute. It is
+also degenerate: by destroying the pattern--cell correspondence it drives the
+null's output correlation to zero, so its score collapses onto $r_{in}$ and the
+``excess'' reduces to $-r_{out}$ (Eq.~\eqref{eq:degenerate}). It defines a
+ceiling attainable only by discarding the stimulus, not a chance level. A null
+that preserves sparsity \emph{and} remains driven by the input --- the
+random-projection null used here --- gives a comparison that can be either won or
+lost. We report this because we used the degenerate control ourselves before
+noticing, and the error is easy to repeat.
 
 \subsection{What remains open}
 
-The framework has returned negative results for the specific separation
-hypotheses tested so far. Whether the right response is to report that as the
-finding, to move the question from separation to activity \emph{regulation}, or
-to find a measure that sparsity cannot counterfeit, is a decision we have not
-yet taken. Two candidate measures are already spent: mutual information
-retention proved to be an artefact of the estimator (its optimum tracks input
-sparsity rather than any circuit property), and decodability was closed by
+Results so far are mixed rather than uniformly negative. Against a
+sparsity-matched random code the DG transformation is better
+(Section~\ref{sec:nulls}), and the attribution of separation to circuit motifs
+survives the null control (Section~\ref{sec:e2}). Against that, the circuit does
+not help a downstream linear decoder (Section~\ref{sec:experiments}), its output
+retains a substantial share of the input correlation, and the phasic inhibitory
+axis has no effect once activity is equalised --- which removes the specific
+hypothesis that inhibition strength tunes separation.
+
+Which of these becomes the organising claim of the next paper is a decision we
+have not yet taken. Two candidate measures are already spent: mutual information
+retention proved to be an artefact of the estimator --- its optimum tracks input
+sparsity rather than any circuit property --- and decodability was closed by
 experiment 1A.
 
 \subsection{Planned extensions}

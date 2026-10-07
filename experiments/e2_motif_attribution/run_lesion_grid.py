@@ -69,7 +69,7 @@ from dg_core import (  # noqa: E402
     make_patterns, make_input_spikes, mean_pairwise_r,
     population_sparseness, active_fraction,
     activity_battery, BATTERY_KEYS, mean_pairwise_cosine, mean_pairwise_jaccard,
-    nan_mean,
+    nan_mean, separation_vs_null,
 )
 
 RESULTS = Path(__file__).parent / "results"
@@ -144,9 +144,14 @@ def run_cell(r_in: float, p_active: float, drive: float, regime: str,
         # + alternatywne miary separacji (kontrola dla dekorelacji Pearsona)
         **{k: {} for k in BATTERY_KEYS},
         'r_out_cos': {}, 'overlap_jac': {},
+        # Separacja PONAD null o dopasowanej rzadkości. Bez tego Shapley liczy się
+        # na `dec`, które rośnie przy wyciszaniu sieci — a E1′ pokazało, że ten
+        # confound jest tu większy niż mierzony efekt (STATUS §3.2b).
+        'dec_null_shuffle': {}, 'dec_excess_shuffle': {},
+        'dec_null_kwta': {}, 'dec_excess_kwta': {},
     }
 
-    for coal in ALL_COALITIONS:
+    for ci, coal in enumerate(ALL_COALITIONS):
         cfg = config_from_motif_set(base, coal)
         gc_vecs, fs_fr, hmc_fr, batteries = [], [], [], []
         for k, (idx, t) in enumerate(inputs):
@@ -174,6 +179,14 @@ def run_cell(r_in: float, p_active: float, drive: float, regime: str,
             out[m][key] = nan_mean(b[m] for b in batteries)
         out['r_out_cos'][key] = mean_pairwise_cosine(gc_vecs)
         out['overlap_jac'][key] = mean_pairwise_jaccard(gc_vecs)
+
+        # RNG zależy od (seed, indeks koalicji), więc wynik NIE zależy od tego,
+        # w jakiej kolejności koalicje zostały policzone.
+        nulls = separation_vs_null(gc_vecs, pats, r_in_meas,
+                                   np.random.default_rng(7000 + 100 * seed + ci))
+        for nk in ('dec_null_shuffle', 'dec_excess_shuffle',
+                   'dec_null_kwta', 'dec_excess_kwta'):
+            out[nk][key] = nulls[nk]
 
     return out
 
@@ -225,7 +238,9 @@ def main():
     coal_names = [coalition_key(c) for c in ALL_COALITIONS]
     metrics = ['dec', 'r_out', 'fr_gc', 'fr_gc_active', 'sparseness',
                'active_frac', 'fr_fs', 'fr_hmc',
-               *BATTERY_KEYS, 'r_out_cos', 'overlap_jac']
+               *BATTERY_KEYS, 'r_out_cos', 'overlap_jac',
+               'dec_null_shuffle', 'dec_excess_shuffle',
+               'dec_null_kwta', 'dec_excess_kwta']
 
     payload = {
         'task_r_in':     np.array([t[0] for t in tasks_shard]),
