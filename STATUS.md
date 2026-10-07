@@ -91,8 +91,11 @@ z przyczyny strukturalnej: FS nie miały żadnego hamowania synaptycznego. Dodan
 FS→FS obniża ją do ~28 Hz (sek. 3.9), ale jego siła wymaga zakotwiczenia w biologii.
 
 **B3. Do którego reżimu wejścia kalibrujemy — in vitro czy in vivo?** Pytanie
-najważniejsze. Waga dobrana protokołem pulsowym Madara (tło 40 Hz), użyta w sieci
-przy napędzie 400 Hz, daje GC **22 Hz zamiast 2–6 Hz**. Jedna waga nie obsłuży obu
+najważniejsze. Waga dobrana protokołem pulsowym Madara (tło 40 Hz, ~50% AP) wynosi
+6.98 mV zamiast 4; użyta w sieci przy napędzie 400 Hz daje GC **11.5 Hz zamiast
+2–6 Hz**. Pełna kalibracja (`python -m dg_core.calibrate`) daje 21.5 Hz, ale to
+łącznie z `K` = 0 wymuszonym przez cel V_rest = −70 mV — a dane Madara mają medianę
+−76 mV (sek. 3.8). Rozbicie: notatki pod mailem. Jedna waga nie obsłuży obu
 reżimów — trzeba wybrać warunek kontrolny.
 
 **B4. Jak silna jest pętla mossy cells → komórki ziarniste?** Od tego zależy, czy
