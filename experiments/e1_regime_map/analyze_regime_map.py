@@ -25,13 +25,18 @@ from __future__ import annotations
 
 import argparse
 import glob
+import sys
 from pathlib import Path
+
+# dg_core leży w experiments/ — ścieżkę trzeba dodać PRZED importem z dg_core
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import matplotlib
 matplotlib.use('Agg')                    # HPC: brak DISPLAY
 import matplotlib.pyplot as plt          # noqa: E402
 import numpy as np                       # noqa: E402
 
+from dg_core.viz import PCT_TICKS, pct_formatter, pct_log_axis   # noqa: E402
 from run_regime_map import (              # noqa: E402  — jedna definicja werdyktu
     MIN_ACTIVE_FRAC, MIN_FR_ACTIVE, MIN_RETENTION, diagnose,
 )
@@ -124,7 +129,7 @@ def make_figure(d: dict, a: dict, out_png: Path) -> None:
     ax.annotate(f"podłoga maski\n({MIN_ACTIVE_FRAC:.0%} aktywnych GC)",
                 xy=(MIN_ACTIVE_FRAC, ax.get_ylim()[1]), xytext=(6, -30),
                 textcoords='offset points', color='crimson', fontsize=8)
-    ax.set_xscale('log')
+    pct_log_axis(ax)
     ax.set_xlabel("frakcja aktywnych GC (zmierzona)")
     ax.set_ylabel("separacja  dec = r_in − r_out")
     ax.set_title("(a) separacja vs aktywność — twierdzenie dotyczy TEJ osi")
@@ -139,7 +144,7 @@ def make_figure(d: dict, a: dict, out_png: Path) -> None:
         ax.axhline(MIN_RETENTION, color='crimson', ls='--', lw=1.2,
                    label=f"próg informacyjny {MIN_RETENTION}")
         ax.axvline(MIN_ACTIVE_FRAC, color='crimson', ls=':', lw=1.0)
-        ax.set_xscale('log')
+        pct_log_axis(ax)
         ax.set_ylabel("retention (MI/H)")
         ax.legend(fontsize=8)
     else:
@@ -170,7 +175,12 @@ def make_figure(d: dict, a: dict, out_png: Path) -> None:
                          c=a['active_frac'][keep], cmap='cividis',
                          norm=matplotlib.colors.LogNorm(), s=34)
         ax.axvline(MIN_RETENTION, color='crimson', ls='--', lw=1.2)
-        fig.colorbar(sc2, ax=ax, label="frakcja aktywnych GC")
+        cb2 = fig.colorbar(sc2, ax=ax, label="frakcja aktywnych GC")
+        # LogNorm domyślnie stawia znaczniki tylko na dekadach — przy zakresie
+        # 0.02–0.97 zostawia to JEDNĄ etykietę. Wymuszamy te same progi co na osiach.
+        lo, hi = a['active_frac'][keep].min(), a['active_frac'][keep].max()
+        cb2.set_ticks([t for t in PCT_TICKS if lo <= t <= hi])
+        cb2.ax.yaxis.set_major_formatter(pct_formatter())
         ax.set_xlabel("retention (MI/H) — ile informacji o wejściu przeżyło")
         ax.set_ylabel("separacja  dec")
     else:

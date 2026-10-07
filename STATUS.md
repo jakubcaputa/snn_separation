@@ -1,412 +1,330 @@
-# Status — stan prac, wyniki, co dalej
+# Status — gdzie jesteśmy, wyniki, decyzje
 
-*Aktualizacja: 2026-10-08.*
+*Aktualizacja: 2026-10-07.*
 
-> ### Gdzie zacząć (2026-10-08)
->
-> **Trzy ekrany, w tej kolejności:**
-> 1. **§3.0** — wszystkie eksperymenty i wyniki w jednej tabeli, z indeksem figur.
-> 2. **§3.2c** — null-e. Metodologiczny rdzeń i najmocniejszy kandydat na wynik
->    publikowalny. Figura `article/figures/fig5-nulls.png`.
-> 3. **§4.1** — **jedyna decyzja blokująca**: czym jest teza pracy. Cztery
->    warianty w tabeli, z rekomendacją.
->
-> **Stan w jednym zdaniu.** Teza „separacja ma optimum przy pośredniej
-> aktywności, a hamowanie fazowe tym steruje" jest obalona i nie da się jej
-> uratować. Obraz NIE jest jednak czysto negatywny: podział zasług między
-> motywami jest realny i odporny na kontrolę (§3.1), a najciekawszy wynik jest
-> metodologiczny — **oba naturalne null-e zawodzą, w przeciwne strony** (§3.2c).
->
-> Obliczenia są skończone; nic nie czeka w kolejce i **nic nie zostało do
-> policzenia, co zmieniłoby obraz**. `PLAN_BADAWCZY.md` jest świadomie NIE
-> przepisany — czeka na decyzję z §4.1 i ma na wejściu ramkę mówiącą, że jest
-> dokumentem historycznym.
+Jedyne źródło prawdy dla **stanu prac** i **zmierzonych liczb**. Każda liczba ma tu
+jedno miejsce; inne dokumenty odsyłają tutaj. Hipotezy i plan:
+[PLAN_BADAWCZY.md](PLAN_BADAWCZY.md). Instalacja i uruchamianie: [README.md](README.md).
 
-**Ten plik odpowiada na jedno pytanie: gdzie jestem i co dalej.** Jest jedynym
-źródłem prawdy dla STANU prac i ZMIERZONYCH LICZB — wszędzie indziej są odnośniki
-tutaj, nie kopie. Hipotezy i plan eksperymentów: [PLAN_BADAWCZY.md](PLAN_BADAWCZY.md).
-Instalacja i uruchamianie: [README.md](README.md).
+> **Mapa.** `0` w dwóch minutach · `1` stan prac · `2` pytania do prof. Błasiak ·
+> **`3` wyniki** · **`4` decyzje** · `5` ustalenia o modelu · `6` zawartość `article/` ·
+> **`7` prezentacja slajd po slajdzie**
+>
+> **Kolejność czytania:** sek. 0 → tabela w sek. 3.2 → decyzja w sek. 4.1.
+> Pod prezentację: sek. 7.
 
 ---
 
-## 1. Gdzie jestem
+## 0. W dwóch minutach
 
-Model działa i daje powtarzalne wyniki. **Blokadą nie jest kod, tylko trzy decyzje
-biologiczne** (§2) — maszyneria kalibracyjna jest gotowa i czeka na te trzy liczby.
+**Co badaliśmy.** Zakręt zębaty (DG) ma „separować wzorce": z podobnych wejść robić
+mniej podobne wyjścia. Mierzy się to spadkiem korelacji, `dec = r_in − r_out`.
+Teza projektu: *separacja ma optimum przy pośrednim poziomie aktywności, a steruje
+nim siła hamowania* (H1 w planie).
+
+**Co wyszło.** Teza jest **obalona** i nie da się jej uratować większą siatką ani
+inną miarą. `dec` rośnie samo, gdy sieć cichnie — korelacja dwóch prawie pustych
+wektorów dąży do zera. Każde wzmocnienie hamowania wycisza sieć, więc „poprawia
+separację" z przyczyny niezwiązanej z obwodem. Przy wyrównanej aktywności hamowanie
+fazowe nie zmienia separacji wcale.
+
+**Najciekawszy wynik jest metodologiczny.** Żeby odróżnić separację od wyciszenia,
+porównuje się obwód z *nullem* — sztucznym kodem o tej samej rzadkości, ale bez
+obwodu (definicja: sek. 3.1). Oba naturalne null-e **zawodzą, w przeciwne strony**:
+jeden niszczy całą informację, drugi prawie nic nie zmienia. Zamiast wyznaczać
+poziom odniesienia, obejmują obwód z dwóch stron (sek. 3.5).
+
+**Co zostaje na plusie.** Podział zasług między motywami hamowania jest realny
+i przeżywa kontrolę nullem: mossy cells **same pogarszają** separację, a w parze
+z hamowaniem dają największy wkład (sek. 3.6).
+
+**Co dalej.** Jedna decyzja: **czym jest teza pracy** — cztery warianty
+z rekomendacją w sek. 4.1. Nic nie zostało do policzenia, co zmieniłoby ten obraz.
+
+---
+
+## 1. Stan prac
 
 | obszar | stan |
 |---|---|
-| Narzędzie `interactive_dg.py` | działa, rozbudowane o bilans hamowania i panel P(AP) |
-| Rdzeń `experiments/dg_core/` | działa; testy regresji 17/17, wyniki bit-w-bit jak przed zmianami |
-| **E1** — mapa reżimów (→ H1, H2) | **policzone, H1 OBALONA** (§3.2); figura + analiza gotowe |
-| **E1′** — separacja przy dopasowanej aktywności | **policzone, H1′ OBALONA** (§3.2b); nadwyżka ponad null ujemna |
-| **E2** — atrybucja motywów (Shapley) | pełna siatka **policzona**, czeka na `analyze_motifs.py` (§3.1) |
-| **E4/E5** — kontroler (→ H3, H4) | **niezbudowane** ← niosą ciężar publikacji |
-| Kalibracja punktu pracy | maszyneria gotowa, **specyfikacja niedomknięta** (§2) |
-| Właściwości błony z danych Madara | **wyciągnięte**, 91 komórek (§3.4) |
-| Odczyt downstream | 1A zamknięte (wynik negatywny), 1B odłożone (§3.3) |
-| **Draft artykułu** | `article/` — tekst + **5** figur objaśniających, **do przeczytania** (§6) |
-| **Pomysł na artykuł ML** | [`ml_paper.md`](ml_paper.md) — rzadkość jako trzeci czynnik; propozycja, zero wyników (§4.1b) |
+| Narzędzie `interactive_dg.py` | działa; bilans hamowania, panel P(AP) |
+| Rdzeń `experiments/dg_core/` | działa; testy regresji 17/17, domyślna konfiguracja bit w bit jak przed zmianami |
+| Eksperymenty E1, E1′, E2, 1A | **policzone i przeanalizowane** — wyniki w sek. 3.2 |
+| Kontroler adaptacyjny (E4/E5) | **niezbudowany**; to wariant (c) w sek. 4.1, nie domyślny kierunek |
+| Kalibracja punktu pracy | maszyneria gotowa, **specyfikacja czeka na odpowiedzi z sek. 2** |
+| Draft artykułu o narzędziu | `article/article_draft.tex` — gotowy do przeczytania, **nieskompilowany** (sek. 6) |
+| Prezentacja stanu prac | `article/prezentacja_stan_prac.pptx`, 13 + 3 zapasowe slajdy (sek. 7) |
+| Pomysł na artykuł ML | [`ml_paper.md`](ml_paper.md) — propozycja, zero wyników (sek. 4.2) |
 
 ---
 
-## 2. Co blokuje KALIBRACJĘ — czeka na prof. Błasiak
+## 2. Pytania do prof. Błasiak — blokują tylko kalibrację
 
-> Uwaga: to NIE jest blokada całej pracy. Blokadą jest decyzja z §4.1;
-> poniższe trzy pytania blokują domknięcie punktu pracy modelu.
+Nie blokują ani decyzji z sek. 4.1, ani pisania. Blokują domknięcie punktu pracy:
+bez tych liczb każda próba kalibracji trafia w jedno kryterium kosztem drugiego.
+Mail z 2026-09-11 bez odpowiedzi; draft ponowienia:
+[`korespondencja/2026-10-07_mail_blasiak.md`](korespondencja/2026-10-07_mail_blasiak.md).
 
-Mail wysłany **2026-09-11**, odpowiedź jeszcze nie przyszła. Bez tych trzech liczb
-kalibracja się nie domknie, bo każda próba trafia w jedno kryterium kosztem drugiego.
+**B1. Jaki jest realny udział hamowania tonicznego w GC?** W modelu (wkłady do
+`dv/dt`, te same jednostki):
 
-### B1. Jaki jest realny udział prądu tonicznego w hamowaniu GC?
-
-Zmierzone w modelu (wkłady do `dv/dt`, te same jednostki):
-
-| komórka | pobudzenie | hamowanie FAZOWE | hamowanie TONICZNE (K) | udział tonicznego |
+| komórka | pobudzenie | hamowanie fazowe | hamowanie toniczne (K) | udział tonicznego |
 |---|---|---|---|---|
 | **GC** | PP 2.43 | FS→GC **3.59** | **10.0** | **74%** |
-| **FS** | PP 7.32 + GC 1.85 | 0.0 (**kanał nie istniał**) | 5.0 | 100% |
+| **FS** | PP 7.32 + GC 1.85 | 0.0 (kanał nie istniał) | 5.0 | 100% |
 | **HMC** | GC 0.20 | 0.0 (`W_FS_HMC=0`) | 10.0 | 100% |
 
-74% to wartość **odziedziczona, nie wybrana**. Dotychczasowe zdania o „hamowaniu
-tworzącym separację" mogą w większości dotyczyć składnika tonicznego, a nie obwodu
-FS. Odpowiedź wymusza `K` — a przez jego potrójną rolę (pułapka 4) wymusza też próg
-i potencjał spoczynkowy, więc nie jest to wybór jednej liczby.
+74% jest **odziedziczone, nie wybrane**. Odpowiedź wymusza `K`, a przez jego potrójną
+rolę (PLAN sek. 3.5, pułapka 4) także próg i potencjał spoczynkowy.
 
-### B2. Czy ~46 Hz to fizjologiczna częstotliwość bazowa FS?
+**B2. Czy ~46 Hz to fizjologiczna częstotliwość bazowa FS?** Prawdopodobnie zawyżona
+z przyczyny strukturalnej: FS nie miały żadnego hamowania synaptycznego. Dodany kanał
+FS→FS obniża ją do ~28 Hz (sek. 3.9), ale jego siła wymaga zakotwiczenia w biologii.
 
-Prawdopodobnie zawyżona z przyczyny **strukturalnej**, nie doboru wag: FS nie miały
-w modelu żadnego hamowania synaptycznego. Dodany kanał FS→FS obniża je do 28 Hz
-(§3.5), ale jego siła wymaga zakotwiczenia w biologii.
+**B3. Do którego reżimu wejścia kalibrujemy — in vitro czy in vivo?** Pytanie
+najważniejsze. Waga dobrana protokołem pulsowym Madara (tło 40 Hz), użyta w sieci
+przy napędzie 400 Hz, daje GC **22 Hz zamiast 2–6 Hz**. Jedna waga nie obsłuży obu
+reżimów — trzeba wybrać warunek kontrolny.
 
-### B3. Do którego reżimu wejścia kalibrujemy — in vitro czy in vivo?
-
-**Pytanie najważniejsze i jedyne, którego wcześniej nie zadaliśmy wprost.** Waga
-dobrana protokołem pulsowym Madara (tło 40 Hz) użyta w sieci przy napędzie 400 Hz
-daje GC **22 Hz zamiast 2–6 Hz**. Dziesięciokrotna różnica reżimu — jedna waga nie
-obsłuży obu. Rzadka stymulacja w plastrze i gęsty napęd PP to dwa różne punkty pracy
-i trzeba wybrać, który jest warunkiem kontrolnym.
+**Drobne: τ_m.** Z danych Madara τ_m ≈ 3 ms dla GC, a nie 10–50 ms z korespondencji.
+Izhikevich nie ma jawnego τ_m, więc symulacji to nie zmienia, ale do Methods trzeba
+wiedzieć, czy to różnica definicji (opór wejściowy vs błonowy).
 
 ---
 
 ## 3. Wyniki
 
-### 3.0 Wszystko na jednym ekranie
+Sek. 3.3–3.7 to cztery eksperymenty **w kolejności powstawania** — każdy odpowiada
+na pytanie otwarte przez poprzedni. Sek. 3.1 definiuje miary, sek. 3.8–3.9 to
+materiał pomocniczy. Figury: proste (na slajdy) w `article/figures/`, analityczne
+w `experiments/*/results/`.
 
-| # | eksperyment | pytanie | odpowiedź | figura |
-|---|---|---|---|---|
-| **E1** | mapa reżimów (§3.2) | czy separacja ma optimum przy pośredniej aktywności? | **NIE.** `dec` rośnie monotonicznie ku ciszy; maksimum jedzie za progiem maski (0.02→0.025, 0.20→0.200) | `article/figures/fig4-findings.png` (a)<br>`e1_regime_map/results/regime_map_full.png` |
-| **E1′** | dopasowana aktywność (§3.2b) | czy hamowanie FAZOWE coś kupuje, gdy cisza jest wyrównana? | **NIE.** Płasko na całym `W_FS_GC` 0–5 (rozstęp 0.024 przy SEM 0.027) | `fig4-findings.png` (b)<br>`matched_activity_full.png` |
-| **—** | null-e (§3.2c) | z czym w ogóle porównujemy obwód? | **Oba null-e zawodzą, w przeciwne strony.** Permutacyjny = sufit (`r_out`→0), k-WTA = prawie-izometria (`r_out` = 78% `r_in`) | **`fig5-nulls.png`** ← kluczowa |
-| **E2** | atrybucja motywów (§3.1) | który motyw hamowania niesie separację? | **FF 152%, FB 120%, MC −172% z silnymi synergiami.** Odporne na null | `e2_motif_attribution/results/fig1..fig4*.png` |
-| **1A** | odczyt downstream (§3.3) | czy klasyfikator czyta DG lepiej niż wejście? | **NIE.** 0.885 vs 0.940; losowy kod rzadki remisuje z DG | `fig4-findings.png` (d) |
-| **—** | dane Madara (§3.4) | czy punkt pracy jest związany danymi? | **TAK.** `K_GC=10` → `V_rest` −78.7 mV, wewnątrz IQR [−81,−70] | `fig3-operating-point.png` |
+### 3.1 Słownik — co dokładnie mierzymy
 
-**Jedno zdanie podsumowania.** Obwód nie separuje w sensie absolutnym i nie pomaga
-odbiorcy; przewaga nad losowym kodem rzadkim istnieje (+0.19), ale w ~61% pochodzi
-z samego progu spajkowania, a nie z architektury hamowania. Natomiast **podział
-zasług między motywami jest realny i odporny na kontrolę** — i to jest jedyny
-kawałek, na którym da się budować wynik pozytywny.
+**`dec` — separacja.** `dec = r_in − r_out`: `r_in` to średnia korelacja Pearsona
+między parami wzorców wejściowych (binarnych: który GC dostaje silny napęd), `r_out`
+— to samo dla wektorów częstotliwości wyjściowych GC. Dodatnie = obwód oddalił
+wzorce. ⚠️ Rośnie samo, gdy sieć cichnie.
 
-**Figury „do tłumaczenia" vs „do analizy".** `article/figures/fig1`–`fig5` są
-proste, po angielsku, jedna myśl na panel — do pokazania komuś. Figury w
-`experiments/*/results/` są gęste i analityczne — do pracy własnej.
+**Frakcja aktywnych GC — rzadkość.** Odsetek komórek ziarnistych strzelających
+powyżej 0.5 Hz. Okazała się **zmienną dominującą**: separacja, retencja
+i dekodowalność są przede wszystkim jej funkcjami.
 
+**`retention` — retencja informacji.** `MI(X;Y) / H(X)` — jaki ułamek entropii
+wejścia przeżywa transformację. Liczona na poziomie pojedynczej komórki, binarnie:
+`X` = czy GC dostaje silny napęd, `Y` = czy GC strzela > 0.5 Hz; rozkład łączny
+estymowany po populacji 200 GC (plug-in, obciążenie ≈ 0.01 bita). `1` = z wyjścia
+da się odtworzyć, które komórki były napędzane; `0` = nic. Kod:
+`dg_core/metrics.py::binary_mi_io`. ⚠️ Binarna, więc nie widzi *jak szybko* komórka
+strzela, tylko *czy*; i jest maksymalna, gdy rzadkość wyjścia ≈ rzadkość wejścia
+(sek. 3.4) — użyteczna jako miara zachowania informacji, bezużyteczna jako
+kryterium punktu pracy.
 
-### 3.1 E2 — atrybucja motywów (preset `full`, 216 punktów × 5 seedów)
+**`null` — punkt odniesienia.** Sztuczny kod o tej samej rzadkości co wyjście DG,
+ale bez obwodu; odejmuje tę część dekorelacji, którą daje sama rzadkość.
+*Permutacyjny*: wektor częstotliwości przetasowany po komórkach. *k-WTA*: losowa
+projekcja wejścia, zostawione tyle najsilniejszych jednostek, ile aktywnych GC.
 
-Policzone na Athenie 2026-09-14 (job 3167904, 8 shardów po ~9 min). Figury:
-`e2_motif_attribution/results/fig1..fig4*.png`.
+**Dwie osie hamowania.** `K_GC` — **toniczne**: stały prąd w równaniu napięcia,
+zawsze włączony. `W_FS_GC` — **fazowe**: synaptyczne, wyzwalane spajkami
+interneuronów. W literaturze bywają zlewane w jedno „hamowanie".
 
-```
-[mc_inert]   FF  66.8%  FB  33.2%  MC    0.0%   dekorelacja +0.065 → +0.173
-             FF×FB +0.025 (synergia)
-[mc_active]  FF 152.1%  FB 119.7%  MC −171.8%   dekorelacja +0.065 → +0.197
-             FF×FB +0.126   FF×MC +0.223   FB×MC +0.210  (wszystkie synergie)
-             FR aktywnych GC 4.7 Hz | FR MC 5.9 Hz
-```
+**Motywy.** `FF` = PP→FS→GC (wyprzedzający), `FB` = GC→FS→GC (zwrotny),
+`MC` = GC→HMC→GC/FS (pobudzająca pętla mossy cells).
 
-✅ **Zweryfikowane nullem (2026-10-06, §3.2c):** Shapley policzony na nadwyżce
-ponad null daje te same wkłady co na surowej dekorelacji (φ_FF +0.1999 vs +0.1998,
-φ_MC −0.2245 vs −0.2257). Atrybucja motywów NIE jest artefaktem rzadkości —
-te liczby można cytować.
+### 3.2 Tabela zbiorcza
 
-⚠️ **Liczby różnią się od presetu `quick`, który tu wcześniej stał** (FF/FB było
-50/50, teraz 67/33 w `mc_inert`; `mc_active` dawało +0.244, daje +0.197). Wniosek
-JAKOŚCIOWY przeżył — φ_MC ujemne, MC w parach silnie synergiczne — ale **żadnej
-liczby z presetu `quick` nie cytować**, bo siatka `full` je przesuwa.
-
-φ_MC ujemne: mossy cells **same** korelują wzorce (re-ekscytują GC), ale w parze
-z hamowaniem podnoszą separację najmocniej ze wszystkich motywów. **MC to motyw
-warunkowy.** (Udziały >100% i ujemne są matematycznie poprawne — sumują się do 100%.)
-
-Pełna bateria metryk, średnie „brak hamowania → pełny obwód"
-(⚠️ ta tabela jest wciąż z presetu `quick` — `analyze_motifs.py` nie drukuje baterii
-dla siatki `full`; przeliczyć, zanim pójdzie do tekstu):
-
-| metryka | mc_inert | mc_active |
+| eksperyment | pytanie | odpowiedź |
 |---|---|---|
-| dekorelacja | +0.067 → +0.143 | +0.067 → +0.244 |
-| cosinus (podobieństwo) | 0.675 → 0.602 | 0.675 → 0.535 |
-| Jaccard (overlap) | 0.633 → 0.593 | 0.633 → 0.403 |
-| info retention | 1.000 → 0.915 | 1.000 → 0.733 |
-| synchronia χ | 0.206 → 0.222 | 0.206 → 0.336 |
-| Fano | 0.716 → 0.790 | 0.716 → 1.382 |
+| **E1** mapa reżimów (sek. 3.3) | czy separacja ma optimum przy pośredniej aktywności? | **Nie.** Maksimum jedzie za progiem odrzucania cichych punktów |
+| **E1′** wyrównana aktywność (sek. 3.4) | czy hamowanie fazowe zmienia separację przy tej samej aktywności? | **Nie.** Nachylenie −0.003, p = 0.60 |
+| **null-e** (sek. 3.5) | z czym w ogóle porównywać obwód? | **Oba naturalne zawodzą**, w przeciwne strony |
+| **E2** motywy (sek. 3.6) | który motyw hamowania niesie separację? | **Mossy cells warunkowo:** same −0.23, w parach +0.21…+0.22; odporne na null |
+| **1A** odczyt (sek. 3.7) | czy klasyfikator czyta DG lepiej niż wejście? | **Nie.** 0.885 vs 0.940 |
+| **dane Madara** (sek. 3.8) | czy punkt pracy jest związany danymi? | **Tak.** `K_GC=10` → `V_rest` −78.7 mV, wewnątrz IQR [−81, −70] |
 
-Trzy obserwacje (do potwierdzenia na pełnej siatce):
+### 3.3 E1 — mapa reżimów · wynik: H1 obalona
 
-1. **Wszystkie trzy miary separacji zgadzają się co do kierunku** — wniosek nie
-   wisi na Pearsonie.
-2. **Trade-off separacja↔informacja jest mierzalny:** bez hamowania retention = 1.0
-   (GC wiernie kopiują wejście, zero separacji); mc_inert kupuje +0.143 separacji za
-   ~8% informacji, mc_active +0.244 za ~27%. To właściwa oś: nie „czy DG separuje",
-   tylko **po jakim kursie wymienia informację na separację** (policzyć Shapleya na
-   retention, nie tylko na dekorelacji).
-3. **Aktywne MC przesuwają dynamikę ku synchronii i nadpoissonowskiej zmienności**
-   (χ 0.22→0.34, Fano 0.79→1.38) — ślad reżimu, który bez hamulca FS→HMC kończy się
-   runawayem.
+**Jak policzone.** Athena, job 3167903: 10 `K_GC` × 9 `W_FS_GC` × 5 seedów = 450
+punktów, 1800 symulacji, 3.7 min na 16 CPU; 419/450 przeszło próg ważności.
+Figury: `article/figures/slides/slide-e1.png`, `e1_regime_map/results/regime_map_full.png`.
 
-**Hamulec FS→HMC — najmocniejszy istniejący wynik.** Pętla GC→HMC→GC jest czysto
-pobudzająca i bez hamulca nie ma reżimu pośredniego:
+**Wynik.** Separacja **nie ma optimum** — rośnie monotonicznie ku ciszy. Maksimum
+`dec` siedzi zawsze na progu odrzucania cichych punktów albo tuż nad nim i przesuwa
+się razem z progiem:
 
-| `W_FS_HMC` | dekorelacja |
-|---|---|
-| 0 (model domyślny) | **−0.267** (runaway, FR_HMC → 98 Hz — obwód *koreluje* wzorce) |
-| **2** | **+0.247** ← najlepszy wynik w całym badaniu, o 66% lepiej niż obwód domyślny (+0.149) |
-| ≥ 5 | +0.15 (MC znów wyciszone) |
-
-**Separacja rośnie z rozmiarem sieci** (`DGConfig.scaled(N)`, stały in-degree,
-stała frakcja aktywnych GC): +0.149 → +0.231 → **+0.296** dla N_GC = 200 → 400 → 800.
-Zgodne z teorią kodowania ekspansyjnego; do policzenia porządnie na HPC (E6).
-
-### 3.2 E1 — mapa reżimów: ROZSTRZYGNIĘTE. H1 w obecnym brzmieniu jest FAŁSZYWA
-
-Pełna siatka policzona (Athena, job 3167903, 450 punktów = 10 `K_GC` × 9 `W_FS_GC`
-× 5 seedów, 1800 symulacji, 3.7 min na 16 CPU; 419/450 przeszło maskę).
-Figura: `e1_regime_map/results/regime_map_full.png`.
-
-**Separacja NIE ma optimum przy pośredniej aktywności — jest MONOTONICZNA.**
-Maksimum `dec` jedzie za progiem maski ważności przy każdym progu, jaki mu podstawić:
-
-| `MIN_ACTIVE_FRAC` | 0.02 | 0.03 | 0.05 | 0.08 | 0.10 | 0.15 | 0.20 |
+| próg odrzucania (frakcja aktywnych) | 2% | 3% | 5% | 8% | 10% | 15% | 20% |
 |---|---|---|---|---|---|---|---|
-| maksimum przy | 0.025 | 0.030 | 0.065 | 0.085 | 0.120 | 0.150 | 0.200 |
-| podłoga maski | 0.020 | 0.030 | 0.050 | 0.080 | 0.100 | 0.150 | 0.200 |
+| maksimum `dec` przy | 2.5% | 3.0% | 6.5% | 8.5% | 12.0% | 15.0% | 20.0% |
 
-Maksimum siedzi zawsze na podłodze albo koszyk nad nią — to podłoga je stawia, nie
-biologia. **Rozszerzanie siatki tego nie naprawi**: `dec = r_in − r_out` jest
-strukturalnie monotoniczna względem rzadkości i nie odróżnia separacji od ciszy.
-Warunkowanie na `retention` też nie ratuje H1 — maksimum dalej wędruje za progiem
-(0.04 przy `MIN_RETENTION` 0.10 → 0.18 przy 0.60).
+To podłoga analizy stawia maksimum, nie biologia. Szersza siatka tego nie naprawi.
+Warunkowanie na retencji też nie — maksimum dalej wędruje (4% przy progu retencji
+0.10 → 18% przy 0.60).
 
-⚠️ Poprzednia wersja `run_regime_map.py` **raportowała fałszywe potwierdzenie H1**:
-jej test krańca sprawdzał równość z minimum siatki, więc maksimum leżące jeden
-koszyk nad podłogą przechodziło test. Zastąpiony testem KSZTAŁTU (przesuwamy próg
-maski, patrzymy czy maksimum zostaje). Każda liczba z E1 sprzed 2026-09-21 jest
-podejrzana.
+**Kurs wymiany separacja↔informacja jest gładki, bez wyróżnionego punktu:**
 
-**Kurs wymiany separacja↔informacja jest gładki i monotoniczny — nie ma kolana,**
-czyli nie ma wyróżnionego punktu pracy (`retention` = MI/H, nowa kolumna w sweepie):
+| retencja ≥ | 0.00 | 0.20 | 0.40 | 0.60 | 0.80 | 0.90 |
+|---|---|---|---|---|---|---|
+| osiągalne max `dec` | 0.785 | 0.623 | 0.533 | 0.352 | 0.257 | 0.232 |
 
-| retention ≥ | 0.00 | 0.20 | 0.40 | 0.50 | 0.60 | 0.70 | 0.80 | 0.90 |
-|---|---|---|---|---|---|---|---|---|
-| osiągalne max `dec` | 0.785 | 0.623 | 0.533 | 0.417 | 0.352 | 0.330 | 0.257 | 0.232 |
+Najlepszy kurs (separacja na jednostkę utraconej informacji) wypada przy **słabym**
+hamowaniu: `dec` 0.173 za 1.3% utraconej informacji (`K_GC` 10, `W_FS_GC` 0.25).
 
-Najlepszy KURS (separacja na jednostkę utraconej informacji) wypada w reżimie
-prawie bezstratnym, przy SŁABYM hamowaniu: `dec` 0.173 za 1.3% utraconej
-informacji (`K_GC` 10, `W_FS_GC` 0.25). To jest wynik do sformułowania na nowo
-zamiast H1: nie „istnieje okno", tylko „DG wymienia informację na separację po
-kursie, który jest najkorzystniejszy przy słabym hamowaniu".
+⚠️ Wersja `run_regime_map.py` sprzed 2026-09-21 raportowała **fałszywe**
+potwierdzenie H1 (test krańca sprawdzał równość z minimum siatki). Zastąpiona
+testem kształtu; liczby z E1 sprzed tej daty są niewiarygodne.
 
-**`retention` MA maksimum wewnętrzne — przy ~25% aktywnych GC** (średnia po
-koszykach: 0.08 przy <4% → 0.95 przy 24–32% → 0.16 powyżej 45%). ⚠️ Ale to jest
-dokładnie `P_active` = 0.25 z siatki, więc **prawdopodobnie tautologia estymatora
-MI** (informacja przechodzi najlepiej, gdy rzadkość wyjścia = rzadkość wejścia),
-a nie własność obwodu. **Nie raportować tego jako wyniku, dopóki nie przejdzie
-testu z §4 pkt 1.**
+### 3.4 E1′ — wyrównana aktywność · wynik: hamowanie fazowe bez efektu
 
-### 3.2b E1′ — separacja przy DOPASOWANEJ aktywności
+**Po co.** W E1 aktywność była *wynikiem*, a separacja jest jej funkcją — oś sweepu
+pokrywała się z confounderem. Tu aktywność jest **zadana**.
 
-> **Co z tego zostaje (wersja po korekcie):** przy wyrównanej aktywności
-> **hamowanie fazowe `W_FS_GC` nie kupuje nic** na całym zakresie 0–5 — i to jest
-> trwały wynik tej sekcji. Natomiast liczba −0.389 „nadwyżki ponad null" NIE
-> znaczy tego, co pierwotnie napisałem: null permutacyjny okazał się równy `r_in`,
-> więc ta nadwyżka to po prostu `−r_out` (wyprowadzenie: §3.2c pkt 1).
-> Sformułowanie „obwód separuje gorzej niż null o dopasowanej rzadkości" jest
-> **wycofane**; poprzedni nagłówek sekcji brzmiał „Wynik negatywny, mocny" i był
-> nadinterpretacją.
+**Jak policzone.** `run_matched_activity.py`, job 3189473: aktywność ustawiona
+bisekcją po `K_GC` na 6 poziomach × 9 `W_FS_GC` × 3 rzadkości wejścia × 5 seedów =
+810 punktów; dostrojono 733 (reszta poza zasięgiem `K_GC` ∈ [0, 24]). Odtworzenie
+bez liczenia: `python analyze_matched_activity.py`. Figury:
+`article/figures/slides/slide-e1p.png`, `matched_activity_full.png`.
 
-`run_matched_activity.py`, Athena job 3189473, 810 punktów (6 celów aktywności ×
-9 `W_FS_GC` × 3 `P_active` × 5 seedów), 20.6 min. Dostrojono 733/810 — reszta
-to kombinacje, dla których cel leży poza zasięgiem `K_GC` ∈ [0, 24].
-Odtworzenie wszystkich liczb z tej sekcji **bez ponownego liczenia**:
-`python analyze_matched_activity.py`. Figura:
-`e1_regime_map/results/matched_activity_full.png`.
+**Wynik: przy stałej aktywności separacja nie zależy od hamowania fazowego.**
 
-Konstrukcja naprawia trzy wady starego E1: aktywność jest **zadana** (bisekcja po
-`K_GC`), mierzona jest **nadwyżka ponad null** o tej samej rzadkości, a `P_active`
-jest osią, nie stałą.
+| zadana aktywność | 2% | 5% | 10% | 15% | 20% | 30% |
+|---|---|---|---|---|---|---|
+| rozstęp `dec` po `W_FS_GC` 0–5 | 0.029 | 0.054 | 0.083 | 0.103 | 0.077 | 0.059 |
+| 2 × SEM komórki | 0.061 | 0.087 | 0.126 | 0.099 | 0.081 | 0.062 |
+| nachylenie (p) | −0.004 (0.48) | −0.011 (0.21) | −0.017 (0.17) | −0.021 (0.03) | −0.014 (0.13) | +0.001 (0.93) |
 
-**1. Obwód separuje GORZEJ niż przetasowanie własnego wyjścia.**
+Łącznie: nachylenie **−0.003, p = 0.60**. Nachylenia są lekko ujemne; jedyne
+nominalnie istotne (15%) nie przechodzi korekty na 6 porównań (próg 0.008). Brak
+jakiegokolwiek dodatniego efektu: **cały efekt hamowania z E1 był efektem
+wyciszania sieci**.
 
-| cel aktywności | 0.02 | 0.05 | 0.10 | 0.15 | 0.20 | 0.30 |
+**Wynik: maksimum retencji idzie za rzadkością wejścia — tautologia, zamknięte.**
+
+| rzadkość wejścia `P_active` | 0.10 | 0.25 | 0.40 |
+|---|---|---|---|
+| maksimum retencji przy frakcji aktywnych | 10% | 20% | 28% |
+
+Własność estymatora, nie punkt pracy obwodu. **Nie raportować „optimum przy 25%".**
+
+Separacja wobec nulli przy kolejnych poziomach aktywności — interpretacja w sek. 3.5:
+
+| zadana aktywność | 2% | 5% | 10% | 15% | 20% | 30% |
 |---|---|---|---|---|---|---|
 | `dec` | 0.632 | 0.495 | 0.333 | 0.257 | 0.188 | 0.113 |
-| nadwyżka − null permutacyjny | −0.116 | −0.252 | −0.413 | −0.490 | −0.561 | −0.633 |
+| nadwyżka nad null k-WTA | +0.324 | +0.274 | +0.172 | +0.133 | +0.100 | +0.078 |
 
-Średnio **−0.389 ± 0.245** (SD), SEM 0.009, n=733 → **43 SEM od zera**. Ujemna
-nadwyżka znaczy, że gdyby losowo poprzestawiać, KTÓRY GC strzela (zachowując
-rozkład częstotliwości co do wartości), dekorelacja by WZROSŁA. Czyli tożsamość
-strzelających GC jest dyktowana przez wejście: nakładające się wzorce pobudzają
-nakładające się GC, a obwód **zachowuje** korelację względem losowego przypisania.
-To jest mocniejszy wynik niż zero — DG tu nie „nie pomaga", tylko aktywnie trzyma
-korelację wejścia.
+> Korekta z 2026-10-06: pierwotnie odczytałem nadwyżkę nad nullem permutacyjnym
+> (−0.389 ± 0.245) jako „obwód separuje gorzej niż null". **Wycofane** — ta nadwyżka
+> to algebraicznie `−r_out` (sek. 3.5).
 
-**2. Hamowanie fazowe `W_FS_GC` nie kupuje NICZEGO przy wyrównanej aktywności.**
-Nadwyżka jest płaska na całym zakresie 0.0–5.0 (rozstęp średnich 0.024 przy SEM
-komórki 0.027). Sprawdzone też z osobna na każdym poziomie aktywności — płasko
-wszędzie (jedna komórka z sześciu ledwo przekracza 2·SEM, czyli tyle, ile wypada
-z przypadku przy sześciu porównaniach). **Cały efekt hamowania w starym E1 był
-efektem wyciszania, nie obwodu.**
+### 3.5 ⭐ Null-e — z czym porównujemy obwód · wynik: oba zawodzą
 
-**3. Maksimum `retention` IDZIE za `P_active` — to tautologia, zamknięte.**
+**Metodologiczny rdzeń pracy i najmocniejszy kandydat na wynik publikowalny.**
+Figura: `article/figures/fig5-nulls.png`.
 
-| `P_active` | 0.10 | 0.25 | 0.40 |
+**Wynik w jednej tabeli** (E1′, `r_in` = 0.748; niższe `r_out` = silniejsza dekorelacja):
+
+| | `r_out` | % `r_in` | czym jest |
 |---|---|---|---|
-| maksimum retention przy AF | 0.100 | 0.200 | 0.280 |
-
-Czyli własność estymatora MI (informacja przechodzi najlepiej, gdy rzadkość
-wyjścia ≈ rzadkość wejścia), nie punkt pracy obwodu. **Nie raportować tych 25%.**
-To domyka pytanie postawione w §4 pkt 1 — odpowiedź negatywna.
-
-⚠️ Null k-WTA daje nadwyżkę DODATNIĄ (+0.32 przy AF 2% → +0.08 przy 30%), czyli DG
-dekoreluje lepiej niż losowa projekcja o tej samej rzadkości. To NIE jest
-sprzeczność z pkt 1 — to inne pytanie (losowa projekcja gaussowska jest słabym
-dekorelatorem). Wniosek nośny opiera się na nullu permutacyjnym, bo tylko on
-trzyma rozkład częstotliwości prawdziwego wyjścia co do wartości.
-
-### 3.2c ⭐ NULL-E: z czym naprawdę porównujemy obwód
-
-**To jest metodologiczny rdzeń całej pracy i najmocniejszy kandydat na wynik
-publikowalny.** Figura: `article/figures/fig5-nulls.png`.
-
-Przeliczenie E2 z nullami (job 3334385, 4 shardy × ~17 min) wymusiło korektę
-interpretacji §3.2b. **Dec nie zmieniło się ani o jotę** względem przebiegu bez
-nulli (max |różnica| = 0.0e+00 na 1080 zadaniach mimo innego shardowania), więc
-zmienia się wyłącznie odczyt, nie liczby.
-
-**1. Null permutacyjny mierzy `r_in`, a nie poziom szansy dla danej rzadkości.**
-Przetasowanie wektora częstotliwości po komórkach niszczy CAŁĄ odpowiedniość
-wzorzec–komórka, więc korelacja wyjścia nulla dąży do zera, a zatem
-
-```
-dec_null_shuffle ≈ r_in                    (zmierzone: 0.5687 vs r_in 0.5682,
-                                            max |różnica| 0.045)
-nadwyżka = dec − dec_null = (r_in − r_out) − r_in = −r_out
-```
-
-Zmierzone: średnie `−r_out` = −0.4181, średnia nadwyżka = −0.4186. To ta sama
-liczba. **Nadwyżka ponad null permutacyjny nie niesie żadnej informacji ponad
-samo `r_out`.**
-
-⚠️ **Dlatego sformułowanie z §3.2b („obwód separuje gorzej niż null o dopasowanej
-rzadkości") jest za mocne i trzeba je wycofać.** Prawdziwa treść tamtego pomiaru
-jest słabsza: `r_out > 0`, czyli wyjście zachowuje część korelacji wejścia.
-Null permutacyjny osiąga `r_out = 0` przez **wyrzucenie całej informacji**
-o wzorcu, więc jest nieosiągalnym sufitem, a nie poziomem szansy. Liczba
-−0.389 ± 0.245 z §3.2b pozostaje poprawna; błędna była jej interpretacja.
-
-**2. Null k-WTA jest tym, który faktycznie coś porównuje** — buduje rzadki kod
-z tego samego wejścia, o dopasowanej liczbie aktywnych. Na nim nadwyżka jest
-**DODATNIA** (E1′: +0.32 przy 2% aktywnych → +0.08 przy 30%; E2: +0.118).
-Czyli DG dekoreluje **lepiej** niż ogólny losowy kod rzadki o tej samej rzadkości.
-
-**3. Atrybucja motywów (E2) przeżywa kontrolę — i to z dobrego powodu.**
-Null jest praktycznie STAŁY po koalicjach (rozstęp 0.0051 przy rozstępie `dec`
-0.3774), bo zależy od `r_in`, które lezja nie zmienia. Shapley jest niewrażliwy
-na stałą, więc wkłady są niemal identyczne:
-
-| | φ_FF | φ_FB | φ_MC | FF×MC | FB×MC |
-|---|---|---|---|---|---|
-| na `dec` | +0.1998 | +0.1572 | −0.2257 | +0.2227 | +0.2096 |
-| na nadwyżce | +0.1999 | +0.1555 | −0.2245 | +0.2217 | +0.2085 |
-
-**Wniosek: wyniki E2 z §3.1 NIE były obciążone tym confounderem** i można je
-cytować. Zastrzeżenie dopisane do §3.1 i do draftu artykułu jest zdjęte.
-
-**4. ⚠️ Drugi null też NIE jest poziomem szansy — i to osłabia jedyny wynik
-dodatni.** Skoro null permutacyjny okazał się zdegenerowany, ta sama ostrożność
-należy się k-WTA. Zmierzone (E1′, przy `r_in` = 0.748):
-
-| | `r_out` | % `r_in` | czym to jest |
-|---|---|---|---|
-| null permutacyjny | 0.001 | 0% | **sufit** — niszczy całą informację |
+| null permutacyjny | 0.001 | 0% | **sufit** — osiąga zero, niszcząc całą informację |
 | **DG** | **0.390** | **52%** | |
-| null k-WTA | 0.580 | 78% | **prawie-izometria** — projekcja losowa z definicji ZACHOWUJE korelację |
+| null k-WTA | 0.580 | 78% | **prawie-izometria** — losowa projekcja zachowuje korelację |
 
-Dwa null-e **obejmują** DG z obu stron, ale żaden nie jest poziomem szansy.
-„DG bije losowy kod rzadki o +0.19" jest prawdą, ale słabszą, niż brzmi: losowa
-projekcja gaussowska jest z konstrukcji kiepskim dekorelatorem (Johnson–
-Lindenstrauss), więc bicie jej nie jest wysoką poprzeczką. Przewaga maleje
-monotonicznie z aktywnością (+0.324 przy 2% aktywnych → +0.078 przy 30%),
-czyli w tę samą stronę co confound rzadkości.
+**Oba null-e obejmują obwód zamiast wyznaczać poziom odniesienia.**
 
-**5. Skąd bierze się ta przewaga: z nieliniowości, nie z obwodu hamowania.**
-Rozkład na koalicjach E2 (reżim `mc_active`, nadwyżka nad k-WTA):
-
-| obwód | nadwyżka nad k-WTA |
-|---|---|
-| **bez żadnego hamowania** | **+0.094** |
-| pełny obwód (FF+FB+MC) | +0.152 |
-| różnica = wkład hamowania | +0.059 |
-
-Czyli ~62% przewagi daje sam próg/spajkowanie, zanim w ogóle włączymy hamowanie.
-⚠️ I te +0.059 **nie jest kontrolowane aktywnością** (frakcja aktywnych GC spada
-0.149 → 0.129 między tymi warunkami), więc może być tym samym efektem rzadkości.
-Pomiar, który JEST kontrolowany aktywnością — §3.2b pkt 2 — mówi, że hamowanie
-fazowe nie daje nic. **Spójna lektura: DG dekoreluje lepiej niż losowy kod rzadki
-dzięki nieliniowości progowej, a nie dzięki charakterystycznej architekturze
-hamowania DG.** Zgodne z 1A, gdzie usunięcie hamowania POPRAWIAŁO odczyt
-(dg_noinh 0.935 vs dg 0.885).
-
-**Czego to NIE unieważnia.** Confound z §3.2 (maksimum `dec` jedzie za progiem
-maski) był pokazany niezależnie, testem przesuwania progu, i nadal obowiązuje.
-Płaskość `W_FS_GC` przy wyrównanej aktywności (§3.2b pkt 2) też — to pomiar na
-`dec`, nie na nadwyżce.
-
-### 3.3 Odczyt downstream — 1A zamknięte, 1B odłożone
-
-**1A: „DG poprawia klasyfikację liniową" — sprawdzone i OBALONE.** Cztery warunki
-(`raw`/`dg`/`dg_noinh`/`random` z dopasowaną rzadkością):
+**Dlaczego permutacyjny zawodzi.** Przetasowanie niszczy odpowiedniość
+wzorzec–komórka, więc jego `r_out` → 0 i wynik zbiega do `r_in`:
 
 ```
-raw 0.940  ·  dg 0.885  ·  dg_noinh 0.935  ·  random 0.885
-Δ acc (DG − raw) = −0.054
+dec_null_perm ≈ r_in        (zmierzone: 0.5687 vs r_in 0.5682)
+nadwyżka = (r_in − r_out) − r_in = −r_out
 ```
 
-Hipoteza ratunkowa (krótkie okno odczytu stworzy reżim, w którym DG wygrywa) też
-obalona: skracanie T pogarsza DG jeszcze bardziej (−0.181 → −0.300 dla T=600→60 ms
-przy R_in=0.90); przy R_in ≥ 0.95 wszystko siedzi na poziomie przypadku.
-**To uczciwy wynik negatywny, który uzasadnia przejście na miary informacyjne, nie
-porażka.** Nie inwestować więcej.
+Zmierzone: `−r_out` = −0.4181, nadwyżka = −0.4186. Nadwyżka nad tym nullem nie
+niesie nic ponad `r_out`, a sufit, który wyznacza, jest osiągalny tylko przez
+wyrzucenie bodźca.
 
-**1B: pojemność pamięci skojarzeniowej — ODŁOŻONE.** Sieć atraktorowa z regułą
-kowariancyjną Tsodyksa–Feigelmana + k-WTA; pojemność = największe P przy
-Jaccard ≥ 0.90; oś główna: siła hamowania `W FS→GC`. Przy N_GC = 200 pojemność
-kolapsuje do 2–4 wzorców dla **wszystkich warunków naraz** (podłoga) — prawdziwe
-DG→CA3 czerpie z ekspansji, więc potrzeba N_GC ≥ 2000 na HPC. **Nie traktować
-obecnych liczb jako wyniku.**
+**Dlaczego k-WTA zawodzi w drugą stronę.** Losowa projekcja gaussowska zachowuje
+iloczyny skalarne (Johnson–Lindenstrauss), więc z konstrukcji słabo dekoreluje.
+„DG bije losowy kod rzadki o +0.19" jest prawdą, ale to niska poprzeczka, a przewaga
+maleje z aktywnością (tabela w sek. 3.4) — w tę samą stronę co confound rzadkości.
 
-⚠️ Pułapka, w którą już raz wpadłem: binaryzacja top-k na niemal binarnym wektorze
-`raw` (400 Hz vs 40 Hz) wybiera spośród remisów rozstrzyganych jitterem Poissona →
-sztuczna dekorelacja baseline'u. Metryka główna używa progu w połowie zakresu;
-top-k został jako kontrola rzadkości.
+**Skąd ta przewaga: z progu spajkowania, nie z hamowania.** Na koalicjach E2
+(`mc_active`, nadwyżka nad k-WTA): obwód **bez żadnego hamowania** daje **+0.094**
+z +0.152 pełnego obwodu — ~61% przewagi to sam próg. Pozostałe +0.059 nie jest
+kontrolowane aktywnością (frakcja spada 0.149 → 0.129), a pomiar kontrolowany
+(sek. 3.4) nie wykrywa efektu hamowania fazowego. Zgodne z 1A, gdzie usunięcie
+hamowania poprawiało odczyt.
 
-### 3.4 Właściwości błony z danych Madara
+**Co przeżywa:** atrybucja motywów — szczegóły w sek. 3.6.
 
-`dg_core/madar_intrinsics.py` bierze pomiar eksperymentatora wprost z adnotacji
-MATLAB, zamiast odtwarzać go z sygnału. Po deduplikacji po ID (surowo 72 →
-faktycznie 42 komórki GC; **bez deduplikacji mediana wychodzi −70 zamiast −76**):
+### 3.6 E2 — atrybucja motywów · wynik: jedyny pozytywny, odporny na kontrolę
+
+**Jak policzone.** Trzy motywy można niezależnie wyłączać, więc wkład każdego to
+wartość Shapleya po 2³ = 8 koalicjach lezji. Siatka `full`: 6 `R_in` × 6 `P_active`
+× 3 poziomy napędu × 2 reżimy MC × 5 seedów (job 3167904; przeliczone z nullami jako
+3334385, `dec` odtworzone bit w bit). Liczby poniżej: **kanoniczny napęd ×1.0**,
+36 punktów × 5 seedów. Figury: `article/figures/slides/slide-e2.png`,
+`e2_motif_attribution/results/fig1..4*.png`.
+
+| reżim MC | φ_FF | φ_FB | φ_MC | interakcje | `dec`: bez hamowania → pełny obwód |
+|---|---|---|---|---|---|
+| `mc_inert` | +0.072 | +0.036 | 0.000 | FF×FB +0.025 | +0.065 → +0.173 |
+| `mc_active` | +0.200 | +0.157 | **−0.226** | FF×FB +0.126 · FF×MC +0.223 · FB×MC +0.210 | +0.065 → +0.197 |
+
+**Co znaczy.** Mossy cells **same** korelują wzorce (re-ekscytują GC), ale w parze
+z każdym motywem hamowania dają największy wkład ze wszystkich. **MC to motyw
+warunkowy.** W `mc_inert` są martwe (sek. 5), stąd φ_MC = 0.
+
+**Odporne na null.** Null jest praktycznie stały po koalicjach (rozstęp 0.0051 przy
+rozstępie `dec` 0.3774), bo zależy od `r_in`, którego lezja nie zmienia, a Shapley
+jest niewrażliwy na stałą: φ_FF +0.1998 → +0.1999, φ_FB +0.1572 → +0.1555,
+φ_MC −0.2257 → −0.2245, FF×MC +0.2227 → +0.2217, FB×MC +0.2096 → +0.2085.
+
+⚠️ **Zależność od napędu** (`mc_active`) — przy słabszym wejściu efekty są kilkukrotnie
+mniejsze:
+
+| napęd PP | φ_FF | φ_FB | φ_MC | FF×MC |
+|---|---|---|---|---|
+| ×0.5 | +0.024 | +0.034 | −0.058 | +0.053 |
+| **×1.0** | **+0.200** | **+0.157** | **−0.226** | **+0.223** |
+| ×2.0 | +0.185 | +0.098 | −0.237 | +0.285 |
+
+**Hamulec FS→HMC.** Pętla GC→HMC→GC jest czysto pobudzająca i bez hamulca ucieka:
+`W_FS_HMC` = 0 → `dec` −0.267 (FR_HMC → 98 Hz, obwód *koreluje* wzorce); = 2 →
++0.247; ≥ 5 → +0.15 (MC znów wyciszone). ⚠️ Z mniejszej, wcześniejszej siatki,
+bez nulla — do powtórzenia przed cytowaniem.
+
+**Skalowanie.** Separacja rośnie z rozmiarem sieci (`scaled(N)`, stały in-degree):
++0.149 → +0.231 → +0.296 dla N_GC = 200 → 400 → 800. ⚠️ Bez nulla — może być
+efektem samej rzadkości.
+
+### 3.7 1A — odczyt downstream · wynik: DG nie pomaga odbiorcy
+
+**Jak policzone.** Ten sam klasyfikator liniowy na czterech wejściach: surowe,
+przez DG, DG bez hamowania, losowy kod o dopasowanej rzadkości. Miara niezależna
+od korelacji, więc nie podlega pułapce z sek. 3.3. Figura:
+`article/figures/slides/slide-1a.png`.
+
+```
+surowe 0.940  ·  DG 0.885  ·  DG bez hamowania 0.935  ·  losowy rzadki 0.885
+```
+
+DG pogarsza odczyt o 0.054, losowy kod remisuje z DG, usunięcie hamowania poprawia
+wynik. Hipoteza ratunkowa (krótkie okno odczytu) też obalona: skracanie T pogarsza
+DG bardziej (−0.181 → −0.300 dla T = 600 → 60 ms przy R_in 0.90). Zamknięte.
+
+**1B (pojemność pamięci skojarzeniowej) — odłożone.** Przy N_GC = 200 pojemność
+kolapsuje do 2–4 wzorców we wszystkich warunkach naraz; prawdziwe DG→CA3 czerpie
+z ekspansji, potrzeba N_GC ≥ 2000. Obecnych liczb nie traktować jako wyniku.
+⚠️ Binaryzacja top-k na niemal binarnym wejściu wybiera spośród remisów i sztucznie
+dekoreluje baseline — metryka główna używa progu w połowie zakresu.
+
+### 3.8 Dane Madara — właściwości błony
+
+`dg_core/madar_intrinsics.py` czyta pomiar eksperymentatora z adnotacji MATLAB.
+Po deduplikacji po ID (72 rekordy → 42 komórki GC; **bez deduplikacji mediana
+wychodzi −70 zamiast −76**):
 
 | typ | n | V_rest [mV] mediana [IQR] | τ_m [ms] | Rm [MΩ] |
 |---|---|---|---|---|
@@ -415,21 +333,13 @@ faktycznie 42 komórki GC; **bez deduplikacji mediana wychodzi −70 zamiast −
 | HMC | 19 | −67 [−74…−60] | — | — |
 | CA3 | 15 | −72 [−76…−68] | — | — |
 
-**To rozstrzyga spór o K.** Model przy `K_GC=10` daje V_rest = −78.7 mV, czyli
-**wewnątrz IQR danych**; przy `K_GC=0` daje −70 mV, na górnej krawędzi. Wartość
-„około −70 mV" z maila odpowiada górnemu kwartylowi, nie medianie — **obecne
-`K_GC=10` jest przez dane wspierane, a nie podważane.** Zamyka wątek, który
-dwukrotnie zmieniał kierunek przy rozumowaniu bez danych.
+Model przy `K_GC = 10` ma V_rest = −78.7 mV — **wewnątrz IQR**; przy `K_GC = 0` ma
+−70 mV, na górnej krawędzi. **Obecne `K_GC = 10` jest wspierane przez dane.**
+Rozbieżność τ_m: pytanie w sek. 2.
 
-⚠️ Rozbieżność do opisania w Methods: **τ_m z danych to ~3 ms dla GC**, a nie
-10–50 ms jak w mailu. Izhikevich i tak nie ma jawnego τ_m (szybka składowa ~1 ms,
-całkowanie niosą stałe synaptyczne 5/8 ms). Zapytać, czy rozbieżność bierze się
-z definicji (Rm wejściowe vs błonowe).
+### 3.9 Kanał FS→FS (poboczne)
 
-### 3.5 Kanał FS→FS
-
-Wzajemne hamowanie interneuronów, którego w modelu w ogóle nie było
-(`W_FS_FS`, domyślnie 0.0 — obwód bez zmian). Działa zgodnie z oczekiwaniem:
+Wzajemne hamowanie interneuronów (`W_FS_FS`, domyślnie 0.0 — obwód bez zmian):
 
 | `W_FS_FS` | 0.0 | 0.5 | 1.0 | 2.0 | 4.0 |
 |---|---|---|---|---|---|
@@ -438,183 +348,222 @@ Wzajemne hamowanie interneuronów, którego w modelu w ogóle nie było
 
 ---
 
-## 4. Decyzje do podjęcia
+## 4. Decyzje
 
-Obliczenia są skończone. **Nie ma już nic do policzenia, co zmieniłoby obraz** —
-oba ostatnie wnioski (§3.2c pkt 4 i 5) wzięły się z ponownej analizy danych, które
-już leżą na dysku. Wąskim gardłem jest decyzja z §4.1.
+### 4.1 ⛔ Jedna decyzja blokująca: czym jest teza pracy
 
-### 4.1 ⛔ JEDNA decyzja blokująca: czym jest teza pracy
+Pierwotna teza („separacja ma optimum przy pośredniej aktywności, a hamowanie nią
+steruje") jest obalona (sek. 3.3, 3.4). Następcę trzeba wybrać z tego, co dane
+faktycznie podpierają.
 
-Projekt startował z tezą „DG separuje wzorce, a hamowanie tym steruje". Ta teza
-jest **obalona** (§3.2, §3.2b). Nie ma domyślnego następcy — trzeba go wybrać
-z tego, co dane faktycznie podpierają.
-
-| | teza | dowód, który JUŻ mamy | koszt | główne ryzyko |
+| | teza | dowód, który mamy | koszt | główne ryzyko |
 |---|---|---|---|---|
-| **(a)** | metodologiczna: dekorelacja bez kontroli jest zwodnicza, a oczywiste kontrole same są pułapkami | **komplet** (§3.2, §3.2c) | zero liczenia, samo pisanie | praca metodyczna — niższy prestiż, ale wynik jest nowy i nietrywialny |
-| **(b)** | mossy cells jako motyw warunkowy | Shapley odporny na null (§3.1) | niski | **osłabiony** — efekt mały, nie kontrolowany aktywnością; recenzent to wytknie |
-| **(c)** | regulacja zamiast separacji (kontroler E4/E5) | **brak** — nie zbudowane | najwyższy: nowy moduł `control.py` | wynik nieznany, miesiące pracy |
-| **(d)** ⭐ | **padaczka: utrata mossy cells** (K3) | maszyneria MC gotowa i przetestowana | **jeden sweep** | — |
+| **(a)** | metodologiczna: dekorelacja bez kontroli jest zwodnicza, a oczywiste kontrole same są pułapkami | **komplet** (sek. 3.3, 3.5) | samo pisanie | praca metodyczna — niższy prestiż, ale wynik nowy |
+| **(b)** | mossy cells jako motyw warunkowy | Shapley odporny na null (sek. 3.6) | niski | efekt **zależy od napędu** i nie jest kontrolowany aktywnością |
+| **(c)** | regulacja zamiast separacji (kontroler E4/E5) | brak | najwyższy: nowy moduł | wynik nieznany, miesiące pracy |
+| **(d)** ⭐ | **padaczka: utrata mossy cells** (K3) | maszyneria MC gotowa | **jeden sweep** | — |
 
-**Wariant (d) przepisuje sam plan.** `PLAN_BADAWCZY.md` §7.1, **bramka G2**:
-„H1 potwierdzona ORAZ H2 potwierdzona na pełnej siatce. **Jeśli nie — pivot na
-robustness/padaczkę z K3 jako wynikiem głównym.**" H1 jest obalona od 2026-09-21,
-więc **bramka G2 jest otwarta od trzech tygodni i nikt jej nie przeszedł
-formalnie.** K3 (`PLAN_BADAWCZY.md` §4): `N_HMC` × {1.0, 0.75, 0.5, 0.25, 0} przy
-stałym in-degree, rozstrzyga spór „dormant basket cell" vs „irritable mossy cell",
-mierząc jednocześnie napęd FS i separację.
+**Wariant (d) przepisuje sam plan.** PLAN sek. 7.1, **bramka G2**: „H1 potwierdzona
+ORAZ H2 potwierdzona na pełnej siatce. Jeśli nie — pivot na robustness/padaczkę z K3
+jako wynikiem głównym." H1 jest obalona od 2026-09-21, więc bramka jest otwarta. K3
+(PLAN sek. 4): `N_HMC` × {1.0, 0.75, 0.5, 0.25, 0} przy stałym in-degree; rozstrzyga
+spór „dormant basket cell" vs „irritable mossy cell", mierząc napęd FS i separację
+naraz. Mocny, bo nie zakłada, że DG dobrze separuje; MC to jedyny motyw o dużych
+efektach w naszych danych; spór jest kliniczny i otwarty, więc wynik jest publikowalny
+niezależnie od znaku.
 
-**Dlaczego (d) jest teraz najmocniejszy:** nie zakłada, że DG dobrze separuje —
-pyta, co się dzieje przy utracie MC; MC to **jedyny motyw o dużych efektach**
-w naszych danych (φ_MC −0.22, synergie +0.22), czyli jedyna oś, na której model
-faktycznie coś robi; pytanie jest kliniczne i ma żywy spór w literaturze, więc
-wynik jest publikowalny niezależnie od znaku.
+**Rekomendacja: (d) jako teza nośna + (a) jako osobny, krótszy artykuł.** Nie robić
+(c) przed (d). W każdym wariancie przy K3 mierzyć **przy wyrównanej aktywności**
+i w kilku napędach — to są dwie słabości (b), których (d) nie powinno odziedziczyć.
 
-**Rekomendacja:** **(d) jako teza nośna + (a) jako osobny, krótszy artykuł
-metodologiczny.** Materiał na (a) jest kompletny i leży odłogiem. Nie robić (c)
-przed (d) — kontroler to miesiące pod pytanie, którego nikt nie zadał.
+### 4.2 Osobna ścieżka: artykuł ML
 
-⚠️ Czego NIE da się już obronić w żadnym wariancie: „separacja ma optimum przy
-pośredniej aktywności" (§3.2) i „hamowanie fazowe steruje separacją" (§3.2b).
+[`ml_paper.md`](ml_paper.md): **rzadkość jako trzeci czynnik** uczenia oraz null-e
+o dopasowanej rzadkości jako protokół ewaluacji. Nie koliduje z sek. 4.1 — inna
+publikacja, inne repo wykonawcze (`snn_stdp_vs_surrogate_gradient`, ~80% harnessu
+gotowe). Zero wyników ML na dziś.
 
-### 4.1b Osobna, NIEZALEŻNA ścieżka: artykuł ML
+### 4.3 Po decyzji z 4.1
 
-[`ml_paper.md`](ml_paper.md) — propozycja wykorzystania mechanizmu DG
-w uczeniu maszynowym: **rzadkość jako trzeci czynnik** (zamiast modulacji tempa
-uczenia) oraz **null-e o dopasowanej rzadkości jako protokół ewaluacji**.
+1. Przepisać hipotezy w PLAN (świadomie nieprzepisane; oznaczone jako historyczne).
+2. Kolejność artykułów — (a) da się pisać od zaraz, (d) wymaga sweepu; można równolegle.
+3. Czy draft o narzędziu zostaje osobnym artykułem, czy wstępem do (d) — draft
+   pozwala na obie drogi.
 
-**Nie koliduje z decyzją z §4.1** — to inna publikacja, inna literatura i inne
-repo wykonawcze (`snn_stdp_vs_surrogate_gradient`, gdzie ~80% harnessu
-treningowego jest gotowe: R-STDP per-sample, k-WTA, IP, MNIST/CIFAR/N-MNIST).
-⚠️ Zero wyników ML na dziś — to propozycja, nie przepakowanie.
+### 4.4 Niezależne od decyzji — można robić od zaraz
 
-### 4.2 Decyzje drugiego rzędu — dopiero PO 4.1
-
-1. **Przeformułować H1 w `PLAN_BADAWCZY.md`.** Plik jest świadomie nieprzepisany,
-   oznaczony jako historyczny. Przepisywanie przed 4.1 to robota do wyrzucenia.
-2. **Który artykuł pierwszy** — (a) jest gotowy do pisania od zaraz, (d) wymaga
-   sweepu. Można równolegle.
-3. **Czy `article_draft.tex` zostaje osobnym artykułem o narzędziu**, czy wtapia
-   się we wstęp do (d). Draft jest napisany tak, że obie drogi są otwarte (§6).
-
-### 4.3 Zadania niezależne od decyzji — można robić od zaraz
-
-1. **Skompilować draft na Overleafie.** Nigdy nie był kompilowany — na Athenie nie
-   ma LaTeX-a. Sprawdzony tylko statycznie.
-2. **`io_madar.py`** — odczyt bodźców z `dataset/…/Protocols/` i podanie ich jako
-   wejścia PP do `dg_core.circuit.simulate()`. Jeden dzień pracy, a zmienia status
-   projektu z „model z syntetycznymi wzorcami" na „model napędzany tymi samymi
-   bodźcami, co eksperyment" — odblokowuje walidacje V2, V3 i V4 naraz.
-   **Wartościowe w KAŻDYM wariancie z 4.1.**
-3. **Krzywe f–I z CCIV.** Protokół prądowy JEST odzyskiwalny z adnotacji Axographu
-   (`Pulse #1 … -100, 20` → start −100 pA, krok 20 pA, 30 epizodów, onset 100 ms,
-   szerokość 500 ms). Dostępne: HMC 26 plików, GC+CA3 66. **FS nie mają ani jednego
-   CCIV** — ich parametry tylko z adnotacji (4 komórki, §3.4).
-4. **Przypomnieć się prof. Błasiakowi** (§2, mail z 2026-09-11, ~4 tygodnie bez
-   odpowiedzi). Konkretny pretekst: rozbieżność τ_m z §3.4 — dane dają ~3 ms dla
-   GC, nie 10–50 ms; pytanie, czy to różnica definicji (Rm wejściowe vs błonowe).
-5. **Kalibracja siły FS→FS** do docelowej częstotliwości FS — czeka na B2,
-   maszyneria bisekcji jest w `calibrate.py`.
-6. **Suwak `W FS→HMC` + panel obserwowalności w `interactive_dg.py`** — wisząca
-   rekomendacja; przy wariancie (d) staje się wprost demonstracją tezy.
+1. **Skompilować draft na Overleafie** — nigdy nie był kompilowany (na Athenie nie ma
+   LaTeX-a), sprawdzony tylko statycznie.
+2. **`io_madar.py`** — bodźce z `dataset/…/Protocols/` jako wejście PP do
+   `dg_core.circuit.simulate()`. Dzień pracy; zmienia „model z syntetycznymi
+   wzorcami" w „model napędzany bodźcami z eksperymentu". Wartościowe w każdym
+   wariancie.
+3. **Krzywe f–I z CCIV.** Protokół odzyskiwalny z adnotacji Axographu (start −100 pA,
+   krok 20 pA, 30 epizodów, onset 100 ms, szerokość 500 ms). HMC: 26 plików,
+   GC+CA3: 66; FS nie mają żadnego CCIV.
+4. **Kalibracja FS→FS** do docelowej częstotliwości FS — czeka na B2.
+5. **Suwak `W_FS_HMC` w `interactive_dg.py`** — przy wariancie (d) staje się
+   demonstracją tezy.
 
 ---
 
-## 5. Ustalenia o reżimie pracy modelu
+## 5. Ustalenia o modelu
 
-Zmierzone, nadal obowiązujące, cytowane przez pozostałe dokumenty.
+Zmierzone, nadal obowiązujące.
 
-**Wejście PP (skalibrowane, `dg_params.py` = jedyne źródło prawdy).**
-40 włókien × 10 Hz = **400 Hz aggregate** na aktywny GC. Przy 600 Hz GC dawały
-16.6 Hz (za gęsto); 400 Hz daje ~6 Hz, czyli rzadkie kodowanie DG. Tryb per-fiber
-i zagregowany są spójne.
+**Wejście PP** (`dg_params.py` = jedyne źródło prawdy): 40 włókien × 10 Hz =
+**400 Hz** na aktywny GC. Przy 600 Hz GC dawały 16.6 Hz (za gęsto); 400 Hz daje ~6 Hz.
 
-**K_tonic = hamowanie toniczne, próg `G_crit = 4 + K`.** Wyprowadzone analitycznie
-i potwierdzone symulacją co do 0.1 mV. GC/HMC (K=10, G_crit=14) trudniej pobudliwe
-niż FS (K=5, G_crit=9). Napęd 400 Hz daje g_ex ≈ 8 mV, czyli poniżej progu GC →
-reżim fluktuacyjny → separacja.
+**Próg `G_crit = 4 + K`.** Wyprowadzone analitycznie, potwierdzone symulacją co do
+0.1 mV. GC/HMC (K=10, próg 14 mV) trudniej pobudliwe niż FS (K=5, próg 9 mV). Napęd
+400 Hz daje g_ex ≈ 8 mV — poniżej progu GC, czyli reżim fluktuacyjny.
 
 **Mossy cells przy domyślnych wagach są martwe (0.00 Hz).** Napęd GC→HMC (1 mV) nie
-zbliża się do progu 14 mV; nawet zmuszone do strzelania dają 0.1 mV wobec 3.6 mV
-z FS→GC. **Każdy wniosek o roli MC przy domyślnych ustawieniach dotyczy obwodu BEZ
-nich** — stąd obowiązek dwóch reżimów `mc_inert`/`mc_active` w każdym sweepie
-([PLAN_BADAWCZY.md](PLAN_BADAWCZY.md) §3.3).
+zbliża się do progu 14 mV. Każdy wniosek o MC przy domyślnych ustawieniach dotyczy
+obwodu bez nich — stąd obowiązek dwóch reżimów `mc_inert`/`mc_active` w każdym
+sweepie (PLAN sek. 3.3).
 
-**`b` ustawia SUMĘ `V_rest + V_th_eff`, `K` ich ODSTĘP.** Przy `b = 0.2` suma jest
-zablokowana na −120 mV: para (−70, −50) wychodzi przy `K = 0`, a (−70, −45) jest
-nieosiągalna żadnym K — wymaga `b = 0.4`, i wtedy K rośnie do 14.
+**`b` ustawia sumę `V_rest + V_th_eff`, `K` ich odstęp.** Przy `b = 0.2` suma jest
+zablokowana na −120 mV: para (−70, −50) wychodzi przy `K = 0`, a (−70, −45) wymaga
+`b = 0.4` i wtedy K rośnie do 14.
 
-**P(AP|puls) nie jest sterowalne samą wagą.** Bez źródła zmienności krzywa jest
+**P(AP|puls) nie jest sterowalne samą wagą** — bez źródła zmienności krzywa jest
 skokowa (0.00 → 0.99). Stąd zawodność synaptyczna `P_REL_*`: przy kompensacji wagą
-`W/p` wariancja rośnie jak `1/p`, co daje stopniowane P(AP) przy niezmienionym
-średnim napędzie (zmierzone: FR 3.12 → 5.46 → 9.22 Hz dla p_rel 1.0 → 0.5 → 0.25).
-⚠️ `p_rel` i wagę kalibrować RAZEM.
+`W/p` wariancja rośnie jak `1/p` (FR 3.12 → 5.46 → 9.22 Hz dla p_rel 1.0 → 0.5 →
+0.25). `p_rel` i wagę kalibrować razem.
 
-> Cztery pułapki obowiązujące w każdym nowym sweepie (skalowanie, dwa reżimy MC,
-> maska ważności, potrójna rola `K_GC`) są opisane w
-> [PLAN_BADAWCZY.md](PLAN_BADAWCZY.md) §3.5 — jedno miejsce, żeby nie rozjechały
-> się dwie wersje.
+Cztery pułapki obowiązujące w każdym nowym sweepie (skalowanie, dwa reżimy MC, próg
+ważności, potrójna rola `K_GC`): PLAN sek. 3.5.
 
 ---
 
-## 6. Draft artykułu — co w nim jest i czego świadomie nie ma
+## 6. Zawartość `article/`
 
-`article/article_draft.tex` (ang., Overleaf-ready) + `article/figures/*.png`
-+ `article/make_article_figures.py` (figury są ODTWARZALNE, nie wklejone).
-
-**Zakres ustalony 2026-10-05:** artykuł opisuje **aplikację zbudowaną dla
-neurobiologów** i **mechanizm separacji wzorców**. NIE przesądza tezy pracy —
-§4 pkt 2 zostaje otwarte. Dlatego wyniki z §3 są tam podane jako demonstracje
-tego, co warsztat rozstrzyga, a nie jako teza nośna.
-
-| sekcja draftu | treść |
+| plik | co to jest |
 |---|---|
-| §1 Introduction | po co DG, po co model, czego brakuje (narzędzie dla eksperymentatora) |
-| §2 Mechanism | definicja operacyjna separacji + **pułapka pomiarowa** (Fig. 1) |
-| §3 Model | równania, parametry, kanon PP, `G_crit = 4 + K`, dane Madara (Fig. 2, 3) |
-| §4 Application | `interactive_dg.py`, warstwa headless, kalibracja przez bisekcję |
-| §5 Experiments | E1, E1′, E2, 1A jako demonstracje (Fig. 4) |
-| §6 Outlook | co ustalone, **co otwarte**, plany (kontroler, bodźce Madara, ekspansja) |
+| `article_draft.tex` | draft artykułu o **narzędziu i mechanizmie** (ang., Overleaf; bez bibtexa) |
+| `figures/fig1..fig5-*.png` | 5 figur artykułu |
+| `figures/slides/*.png` | te same figury bez nagłówków „Figure N." + 4 figury jednopanelowe pod slajdy |
+| `prezentacja_stan_prac.pptx` | prezentacja stanu prac (sek. 7) |
+| `make_article_figures.py`, `build_presentation.py` | generatory — wszystko jest odtwarzalne |
 
-**Pięć figur objaśniających** (`article/figures/`) — jedna figura = jedna myśl,
-po angielsku, do tłumaczenia komuś, a nie do analizy:
+**Przebudowa wszystkiego:**
 
-1. `fig1-concept` — czym JEST separacja wzorców (wejście → wyjście → spadek korelacji)
-2. `fig2-circuit` — obwód i dwie osie hamowania (toniczna vs fazowa)
-3. `fig3-operating-point` — dlaczego GC są rzadkie + jak dane Madara przypinają `K_GC`
-4. `fig4-findings` — po jednym panelu na eksperyment, jedna myśl na panel
-5. **`fig5-nulls`** — z czym naprawdę porównujemy obwód: oba null-e obejmują DG
-   zamiast go benchmarkować, a przewaga nad losowym kodem rzadkim w ~61% pochodzi
-   z progu spajkowania, nie z hamowania. **Najważniejsza figura w komplecie.**
+```bash
+python article/make_article_figures.py     # figury artykułu + figury slajdów
+python article/build_presentation.py       # deck .pptx
+```
 
-⚠️ **W drafcie są jawne `\todo{}`** — m.in. afiliacje, rozbieżność τ_m (§3.4)
-i brakujące pozycje bibliografii. To są miejsca do Twojej decyzji, nie
-przeoczenia. ✅ Zastrzeżenie o Shapleyu na surowej dekorelacji **zostało zdjęte**
-po przeliczeniu z nullami (§3.2c).
+**Draft** opisuje aplikację dla neurobiologów i mechanizm separacji; wyniki podaje
+jako demonstracje możliwości warsztatu, nie jako tezę — więc nie przesądza sek. 4.1.
+Ma jawne `\todo{}`: afiliacje, rozbieżność τ_m, brakująca bibliografia, uwaga do
+Methods o 2.2 Hz.
 
-⚠️ Na Athenie **nie ma LaTeX-a**, więc draft nie został skompilowany lokalnie —
-sprawdzony statycznie (balans środowisk i nawiasów, brak pustych jednostek
-`\SI`, nazwy figur bez podkreślników). Pierwsza kompilacja na Overleafie.
+**Prezentacja** jest w python-pptx (precedens repo). Na Athenie nie ma LaTeX-a ani
+LibreOffice, więc: draft sprawdzony statycznie (balans nawiasów i środowisk), deck —
+walidatorem struktury OOXML i podglądem renderowanym w PIL z konserwatywną czcionką.
+**Pierwsze otwarcie w PowerPoincie / pierwsza kompilacja na Overleafie są realną
+kontrolą.**
 
 ---
 
-## 7. Dziennik porządków
+## 7. Prezentacja — slajd po slajdzie
 
-**2026-09-14 — scalenie dokumentacji, cztery pliki .md → trzy.**
-`doktorat_plan.md` + `PLAN_PUBLIKACJI.md` → jeden
-[PLAN_BADAWCZY.md](PLAN_BADAWCZY.md) (hipotezy + plan eksperymentów).
-`README.md` przepisany na standardowy (instalacja, uruchamianie, struktura).
-`experiments/README.md` rozpuszczony: mapa folderów i opis `dg_core` do README,
-metodologia (E1 vs E2, historia numeracji) do PLAN_BADAWCZY, statusy i wyniki tutaj.
-Ten plik odchudzony do: gdzie jestem → co blokuje → wyniki → co dalej → ustalenia.
-Zasada: każda liczba i każdy fakt mają **jedno** miejsce, reszta odsyła.
+`article/prezentacja_stan_prac.pptx`: 13 slajdów głównych (~20 min) + 3 zapasowe na
+pytania. Każdy slajd ma notatki prelegenta. Figury na slajdach są po angielsku
+(spójnie z artykułem), tekst po polsku. Pointą jest slajd 8; reszta do niego prowadzi.
 
-**2026-09-14 — sprzątanie kodu.** Usunięto 16 plików z korzenia: `debug_*.py`
-(7 roboczych), `visualize_dg*.py` (4 generatory figur), jednorazowe eksploratory
-(`dataset_overview.py`, `explore_gc1_r090.py`) oraz warianty zastąpione przez
-`dg_core` (`dg_microcircuit_brian2.py`, `single_neuron_patsep_{brian2,nest}.py`).
-Wszystko zostaje w historii gita. Do `archive/` przeniesiono cztery skrypty, które
-wyprodukowały nadal obowiązujące wnioski (`bifurcation_K.py`, `freq_audit.py`,
-`dg_module3_inh_comparison.py`, `explore_data.py`) — mają naprawione ścieżki
-i uruchamiają się. Korzeń repo: z 25 plików do 5.
+**1. Tytuł.** Na slajdzie: tytuł i schemat obwodu. Do powiedzenia: model sieci
+spajkującej DG, związany danymi patch-clamp; będzie o tym, co ustaliliśmy, co okazało
+się pułapką pomiarową i jaka decyzja jest do podjęcia.
+
+**2. W skrócie.** Na slajdzie: trzy karty z liczbami. *obalona* — H1, separacja nie
+ma optimum (sek. 3.3–3.4). *2 z 2* — oba naturalne null-e zawodzą (sek. 3.5).
+*−0.23 / +0.22* — wkład mossy cells samych i w parze z hamowaniem (sek. 3.6). Na dole
+odsyłacz do decyzji. Do powiedzenia: trzy rzeczy do zapamiętania, reszta prezentacji
+je rozwija.
+
+**3. Czym jest separacja wzorców** (`fig1-concept`). Na slajdzie: lewo — dwa wzorce
+wejściowe, czarne paski to komórki z silnym napędem (pokazane 80 z 200); środek —
+częstotliwość każdej komórki na wyjściu; prawo — korelacja wejść 0.73 i wyjść 0.58,
+różnica +0.15. Jak policzone: jedna symulacja domyślnej konfiguracji (200 GC,
+podobieństwo wejść 0.75, 25% napędzanych, 600 ms). Do powiedzenia: to definicja
+operacyjna całej pracy — i ta liczba rośnie sama, gdy sieć cichnie.
+
+**4. Model** (`fig2-circuit`). Na slajdzie: PP napędza GC i równolegle FS
+(wyprzedzająco, FF); GC też pobudzają FS (zwrotnie, FB); FS hamują GC; HMC w pętli
+pobudzającej. Ramka: dwie osie hamowania. Do powiedzenia: rozdzielenie hamowania
+tonicznego (`K_GC`, stały prąd) i fazowego (`W_FS_GC`, synaptyczne) to sedno modelu;
+trzy motywy można wyłączać niezależnie.
+
+**5. Punkt pracy jest przypięty danymi** (`fig3-operating-point`). Na slajdzie:
+(a) próg odpalenia `G_crit = 4 + K` i realny napęd 8 mV; przy `K_GC = 10` napęd jest
+poniżej progu 14 mV. (b) `V_rest(K)` modelu na tle mediany i IQR z 42 komórek
+Madara. Jak policzone: analitycznie, z punktów stałych równania Izhikevicza,
+zweryfikowane symulacją. Do powiedzenia: komórki strzelają tylko na fluktuacjach —
+stąd rzadki kod; ten sam parametr trafia w środek danych. Model nie jest dostrojony
+pod wynik.
+
+**6. E1 — separacja rośnie, gdy sieć cichnie** (`slide-e1`). Na slajdzie: szare
+punkty to 450 punktów siatki (separacja wobec zmierzonej frakcji aktywnych, oś log
+w %). Przerywane linie to cztery progi odrzucania cichych punktów (2, 5, 10, 20%),
+gwiazdki — maksimum separacji przy każdym progu. Do powiedzenia: każda gwiazdka
+siedzi tuż przy swoim progu; gdyby istniało biologiczne optimum, stałyby w jednym
+miejscu. Liczby: sek. 3.3.
+
+**7. E1′ — hamowanie fazowe nic nie zmienia** (`slide-e1p`). Na slajdzie: separacja
+wobec siły hamowania fazowego, osobna linia dla każdego z 6 zadanych poziomów
+aktywności. Jak policzone: aktywność ustawiana bisekcją po hamowaniu tonicznym,
+733 dostrojone punkty. Do powiedzenia: linie leżą na różnych wysokościach (to robi
+aktywność), ale żadna nie rośnie z hamowaniem; łączne nachylenie −0.003 (p = 0.60).
+Efekt hamowania z E1 był efektem wyciszenia. Liczby: sek. 3.4.
+
+**8. ⭐ Z czym w ogóle porównujemy obwód** (`fig5-nulls`). Na slajdzie: (a) korelacja
+wyjścia dla: wejścia bez transformacji 0.75, nulla k-WTA 0.58, DG 0.39, nulla
+permutacyjnego 0.00. (b) przewaga DG nad losowym kodem rozbita na obwód bez hamowania
+(+0.094, 61%) i dodatek hamowania (+0.059). Jak policzone: (a) z E1′, `r_out` = `r_in`
+− `dec`; (b) z koalicji lezji E2. Do powiedzenia — **pointa**: żeby powiedzieć „DG
+separuje", trzeba punktu odniesienia o tej samej rzadkości. Oba naturalne zawodzą:
+permutacja osiąga zero, bo niszczy całą informację (sufit), losowa projekcja z
+definicji zachowuje korelację (trywialna podłoga). Obejmują obwód z dwóch stron.
+A przewaga nad losowym kodem to w większości sam próg spajkowania. Szczegóły: sek. 3.5.
+
+**9. E2 — mossy cells: motyw warunkowy** (`slide-e2`). Na slajdzie: wartości Shapleya
+trzech motywów i trzech par; pełne słupki — na surowej separacji, kreskowane — po
+korekcie nullem. Jak policzone: 8 koalicji lezji, 36 punktów statystyki wejścia
+× 5 seedów, kanoniczny napęd. Do powiedzenia: MC same szkodzą (−0.23), w parach
+pomagają najbardziej (+0.21…+0.22); korekta nullem nic nie zmienia, bo null nie
+zależy od lezji. Zastrzeżenie: przy napędzie ×0.5 efekty ~4× mniejsze. Sek. 3.6.
+
+**10. 1A — odbiorca nie korzysta** (`slide-1a`). Na slajdzie: dokładność klasyfikatora
+liniowego dla czterech wejść; linia przerywana = surowe wejście. Do powiedzenia: miara
+niezależna od korelacji, więc nie podlega pułapce z E1 — i też nic: DG 0.885 wobec
+0.940, losowy kod remisuje z DG, bez hamowania lepiej. Sek. 3.7.
+
+**11. Co upadło, co stoi, co jest nowe.** Na slajdzie: trzy kolumny. *Upadło* —
+optimum separacji, sterowanie hamowaniem fazowym, pomoc dla odbiorcy. *Stoi* — punkt
+pracy zgodny z danymi, MC jako motyw warunkowy, przewaga nad losowym kodem (głównie
+dzięki progowi). *Metodologia* — oba null-e zawodzą, próg odrzucania przesuwa
+maksimum, retencja idzie za rzadkością wejścia.
+
+**12. Decyzja: czym jest teza pracy.** Na slajdzie: cztery warianty (a)–(d),
+rekomendowany (d) wyróżniony. Do powiedzenia: (d) nie jest naszym pomysłem — plan
+przewidywał ten pivot, jeśli H1 nie przejdzie (bramka G2). Rekomendacja: (d) jako teza
+nośna + (a) jako osobny artykuł. Sek. 4.1.
+
+**13. Następne kroki.** Na slajdzie: pięć kroków; pierwszy (decyzja) blokuje resztę.
+Drugi to trzy pytania kalibracyjne do prof. Błasiak (sek. 2).
+
+**14–16. Zapas.** Gęste figury analityczne na pytania z sali: pełna mapa reżimów E1
+(panel c: separacja zmienia się prawie wyłącznie wzdłuż osi hamowania tonicznego),
+kontrola dostrojenia E1′ (panel d: czy bisekcja trafiła; panel c: tautologia retencji),
+profile wkładów motywów E2 w funkcji statystyki wejścia.
+
+**Trzy pytania, które padną:**
+
+1. *„Czemu nie odrzucić cichych punktów?"* — Próbowaliśmy; maksimum przenosi się
+   dokładnie na próg, przy każdym progu (slajd 6).
+2. *„Czemu permutacja nie jest dobrą kontrolą?"* — Jej wynik zbiega do `r_in`
+   (0.5687 vs 0.5682), więc nadwyżka nad nią to algebraicznie `−r_out` (slajd 8).
+3. *„To co zostaje na plusie?"* — Atrybucja motywów: odporna na null, bo null jest
+   stały po lezjach, a Shapley ignoruje stałą (slajd 9).

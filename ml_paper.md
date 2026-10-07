@@ -1,6 +1,6 @@
 # Artykuł ML na bazie mechanizmu DG — pomysły
 
-*Utworzono 2026-10-08. Status: **propozycja**, nie wyniki.*
+*Utworzono 2026-10-07. Status: **propozycja**, nie wyniki.*
 
 > ⚠️ **Czytaj to jako nową linię pracy, nie jako przepakowanie tego, co mamy.**
 > Z `snn_separation` nie ma ANI JEDNEGO wyniku uczenia maszynowego — to symulacja
@@ -17,9 +17,9 @@
 |---|---|---|
 | `K_GC` — hamowanie toniczne | globalny, skalarny, wewnątrzkomórkowy prąd wchodzący **wprost do równania napięcia**; próg odpalenia `G_crit = 4 + K` w formie zamkniętej | gotowy „pokrętło wzmocnienia": jeden skalar steruje tym, **kto** odpala |
 | `solve_k_gc_for_active_fraction()` | bisekcja po `K` do **zadanej frakcji aktywnych** | to jest już kontroler rzadkości w pętli zamkniętej |
-| wynik: aktywność dominuje wszystko | separacja, retencja informacji i dekodowalność są przede wszystkim funkcjami rzadkości, a nie obwodu (STATUS §3.2, §3.2b) | uzasadnia, dlaczego sterować rzadkością, a nie wagami |
-| wynik: ~61% przewagi to sam próg | obwód bez hamowania bije losowy kod rzadki o +0.094 z +0.152 (STATUS §3.2c pkt 5) | nieliniowość progowa jest głównym składnikiem — tanie w implementacji |
-| **null-e o dopasowanej rzadkości** | dwa naturalne null-e zawodzą w przeciwne strony (STATUS §3.2c) | **protokół ewaluacji, którego ML nie stosuje** |
+| wynik: aktywność dominuje wszystko | separacja, retencja informacji i dekodowalność są przede wszystkim funkcjami rzadkości, a nie obwodu (STATUS sek. 3.3, sek. 3.4) | uzasadnia, dlaczego sterować rzadkością, a nie wagami |
+| wynik: ~61% przewagi to sam próg | obwód bez hamowania bije losowy kod rzadki o +0.094 z +0.152 (STATUS sek. 3.5) | nieliniowość progowa jest głównym składnikiem — tanie w implementacji |
+| **null-e o dopasowanej rzadkości** | dwa naturalne null-e zawodzą w przeciwne strony (STATUS sek. 3.5) | **protokół ewaluacji, którego ML nie stosuje** |
 
 **Z `snn_stdp_vs_surrogate_gradient` — gotowa infrastruktura:**
 `paper_experiments/exp2_dead_neurons/run_stdp_3factor.py` (R-STDP z nagrodą
@@ -68,7 +68,7 @@ w najtańszej możliwej postaci.
 **Luka, którą zajmujemy:** nie „które jednostki maskować", tylko **jaki ma być
 poziom rzadkości — sterowany w pętli zamkniętej, sygnałem odgórnym, przez
 pobudliwość wewnątrzkomórkową, a nie przez maskę.** Plus protokół ewaluacji
-z §4, którego ta literatura nie stosuje.
+z sek. 4, którego ta literatura nie stosuje.
 
 ⚠️ **Uczciwie:** „zmienny próg w SNN" jest blisko mechanicznie. Nowość musi stać
 na **pętli sterowania + ramie trójczynnikowej + ewaluacji**, a nie na samym
@@ -100,11 +100,11 @@ ewaluacyjna** w artykule głównym.
 
 | | artykuł | koszt | ryzyko |
 |---|---|---|---|
-| **M1** ⭐ | **Rzadkość jako trzeci czynnik** — mechanizm (§2) + ewaluacja (§4) | średni: harness jest, trzeba dopisać kontroler `K` i pętlę | novelty vs „zmienny próg" — do sprawdzenia |
+| **M1** ⭐ | **Rzadkość jako trzeci czynnik** — mechanizm (sek. 2) + ewaluacja (sek. 4) | średni: harness jest, trzeba dopisać kontroler `K` i pętlę | novelty vs „zmienny próg" — do sprawdzenia |
 | **M2** | **Adaptacyjne kodowanie odgórne** — kontroler czyta kontekst, emituje docelową rzadkość; strumień NIESTACJONARNY | średni | trzeba zbudować benchmark niestacjonarny; mniej standardowy |
 | **M3** | **Null-e dla reprezentacji** — sam protokół ewaluacji | **najniższy**, materiał prawie gotowy | warsztat, nie konferencja główna |
 
-**Rekomendacja: M1 jako artykuł główny, z §4 jako jego sekcją ewaluacyjną.**
+**Rekomendacja: M1 jako artykuł główny, z sek. 4 jako jego sekcją ewaluacyjną.**
 M3 trzymać jako plan B — da się go napisać w tygodnie, gdyby M1 nie wyszedł.
 
 ---
@@ -142,21 +142,21 @@ wyróżnik wobec prac na ANN). Wszystkie trzy są w repo STDP.
 1. **„Rzadkość pomaga" nie jest nowe.** Nowość = pętla sterowania + rama
    trójczynnikowa + ewaluacja. Jeśli recenzent odczyta to jako „XdG ze zmiennym
    k", artykuł pada. **Pozycjonowanie trzeba rozstrzygnąć przed pisaniem.**
-2. **Może nie wygrać z `3f_lr`.** To realne. Wtedy wynik negatywny + §4 nadal
+2. **Może nie wygrać z `3f_lr`.** To realne. Wtedy wynik negatywny + sek. 4 nadal
    daje artykuł (M3), ale słabszy.
 3. **Nasze wyniki DG są w większości negatywne.** Nie wolno ich sprzedawać jako
    motywacji w stylu „DG świetnie separuje, więc skopiujmy DG". Uczciwa motywacja
    brzmi: *zmierzyliśmy, że w tym obwodzie rzadkość jest zmienną dominującą — więc
    uczyńmy ją zmienną sterowaną.* To jest mocniejsze, bo oparte na pomiarze.
-4. **Prior art do domknięcia.** Searche z 2026-10-08 nie wyczerpują tematu;
+4. **Prior art do domknięcia.** Searche z 2026-10-07 nie wyczerpują tematu;
    przed abstraktem przejrzeć: neuromodulacja pobudliwości w SNN, homeostatyczna
    regulacja rzadkości, meta-uczenie progów.
 
 ---
 
-## 8. Co zrobić najpierw (nie wymaga decyzji z STATUS §4.1)
+## 8. Co zrobić najpierw (nie wymaga decyzji z STATUS sek. 4.1)
 
-1. **Pół dnia:** przejrzeć prior art z §3 i §7 pkt 4 i rozstrzygnąć pozycjonowanie.
+1. **Pół dnia:** przejrzeć prior art z sek. 3 i sek. 7 i rozstrzygnąć pozycjonowanie.
    To jest brama go/no-go dla M1 — przed jakimkolwiek kodem.
 2. **Dzień:** prototyp `3f_sparsity` na Split-MNIST w repo STDP, jedno ziarno,
    bez tuningu. Pytanie: czy w ogóle się uczy i czy kontroler trafia w `a*`.

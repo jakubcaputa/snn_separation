@@ -6,7 +6,7 @@
 Zmierzone liczby, stan prac i blokady są w [STATUS.md](STATUS.md) — tutaj są do nich
 odnośniki, nie kopie.
 
-| § | zawartość |
+| rozdz. | zawartość |
 |---|---|
 | 1 | pytanie badawcze, luka, **hipotezy H1–H5** |
 | 2 | fundament — trzy wyniki, na których stoi plan |
@@ -71,34 +71,33 @@ Kierunek: przestać badać „czy DG separuje" (na to odpowiedziano), zacząć b
 
 ### 1.3 Hipotezy H1–H5 (falsyfikowalne, z warunkiem obalenia)
 
-> ⛔ **STAN NA 2026-09-28: H1 JEST OBALONA, a H2 nie została sprawdzona w tej formie.**
+> ⛔ **STAN NA 2026-10-07: H1 JEST OBALONA, a H2 nie została sprawdzona w tej formie.**
 > Ten rozdział jest zapisem hipotez **sprzed** eksperymentów i celowo NIE został
-> przepisany — bo decyzja, czym zastąpić H1, jeszcze nie zapadła
-> ([STATUS.md](STATUS.md) §4 pkt 2). Czytaj go jako dokument historyczny:
-> stan zmierzony jest w STATUS §3.2, §3.2b i §3.3, nie tutaj.
+> przepisany — decyzja, czym zastąpić H1, jeszcze nie zapadła
+> ([STATUS.md](STATUS.md) sek. 4.1). Stan zmierzony: STATUS sek. 3, nie tutaj.
 >
-> H1 spełniła **swój własny, zapisany niżej warunek obalenia**, łącznie
-> z zastrzeżeniem w nawiasie: separacja rośnie monotonicznie ku ciszy, a po
-> odrzuceniu artefaktu pustego wektora (null o dopasowanej rzadkości) nadwyżka
-> obwodu jest **ujemna** — −0.389 ± 0.245, 43 SEM poniżej zera, n=733. To działa
-> jak preregistracja: warunek był spisany przed pomiarem i został trafiony
-> dosłownie.
+> H1 spełniła **swój własny, zapisany niżej warunek obalenia**: separacja rośnie
+> monotonicznie ku ciszy, a maksimum przesuwa się razem z progiem odrzucania cichych
+> punktów (STATUS sek. 3.3). Zastrzeżenie w nawiasie też jest spełnione: przy
+> aktywności wyrównanej bisekcją — czyli po usunięciu artefaktu pustego wektora —
+> hamowanie fazowe nie zmienia separacji (STATUS sek. 3.4). Warunek był spisany przed
+> pomiarem, więc działa to jak preregistracja.
 
 | ID | hipoteza | obala ją |
 |---|---|---|
-| **H1** ⛔ **OBALONA** (STATUS §3.2b) | Separacja jest **niemonotoniczną** funkcją poziomu aktywności populacji GC — istnieje optimum przy pośredniej frakcji aktywnych komórek. | monotoniczny wzrost separacji przy spadku aktywności aż do reżimu ciszy (po odrzuceniu artefaktu pustego wektora) ← **warunek TRAFIONY** |
+| **H1** ⛔ **OBALONA** (STATUS sek. 3.3–3.4) | Separacja jest **niemonotoniczną** funkcją poziomu aktywności populacji GC — istnieje optimum przy pośredniej frakcji aktywnych komórek. | monotoniczny wzrost separacji przy spadku aktywności aż do reżimu ciszy (po odrzuceniu artefaktu pustego wektora) ← **warunek TRAFIONY** |
 | **H2** | Hamowanie MC (`FS→HMC`) **tworzy** reżim pośredni — bez niego okno funkcjonalne znika (bistabilność: cisza albo runaway). | istnienie szerokiego reżimu pośredniego przy `W_FS_HMC = 0` w pełnej siatce, nie tylko w punkcie domyślnym |
 | **H3** | Wielkością regulowaną, która najlepiej utrzymuje separację przy zmiennej statystyce wejścia, jest **frakcja aktywnych GC**, a nie średnia częstotliwość ani lokalny E/I. | kontroler na FR lub na E/I utrzymuje separację równie dobrze lub lepiej w teście uogólnienia poza reżim strojenia |
 | **H4** | Prosta reguła homeostatyczna (plastyczność wewnętrzna progu + iSTDP na `FS→GC`) samodzielnie odnajduje punkt pracy zidentyfikowany offline i przywraca separację po dezinhibicji oraz po utracie 50% MC. | kontroler zbiega do punktu istotnie różnego od optimum offline albo nie odzyskuje separacji w żadnym z warunków |
 | **H5** | Regulacja **przesuwa separację między kodami**: przy niskiej aktywności dominuje separacja wzorcowa (NDP), przy wysokiej częstotliwościowa (SF). | brak dysocjacji NDP/SF wzdłuż osi aktywności — w modelu I w danych Madara |
 
-~~**Podział ciężaru:** H1 i H2 mają wyniki wstępne (§2). **H3–H5 są nowe i to one
+~~**Podział ciężaru:** H1 i H2 mają wyniki wstępne (sek. 2). **H3–H5 są nowe i to one
 niosą publikację** — a ich eksperymenty (E4, E5) jeszcze nie istnieją.~~
 
 **Nieaktualne od 2026-09-28.** H1 nie ma „wyniku wstępnego", tylko wynik końcowy
 i negatywny. Ciężar pracy nie może już leżeć na H3–H5 „plus potwierdzone H1/H2",
 bo fundament pod nimi (że w tym modelu w ogóle istnieje okno funkcjonalne
-separacji) nie istnieje. Patrz STATUS §4 pkt 2 — to jest decyzja do podjęcia.
+separacji) nie istnieje. Patrz STATUS sek. 4.1 — to jest decyzja do podjęcia.
 
 | hipoteza | eksperyment | kod |
 |---|---|---|
@@ -106,35 +105,24 @@ separacji) nie istnieje. Patrz STATUS §4 pkt 2 — to jest decyzja do podjęcia
 | H1′ (następca H1) | E1′ — separacja przy dopasowanej aktywności | `run_matched_activity.py` ✅ policzone → **też obalona** |
 | „który motyw tworzy okno" | E2 — atrybucja | `experiments/e2_motif_attribution/` ✅ |
 | **H3, H4** | E4 — kontroler, E5 — uogólnienie | **niezbudowane** |
-| H5 | wymaga metryk NDP/SF (§5.2) | niezbudowane |
+| H5 | wymaga metryk NDP/SF (sek. 5.2) | niezbudowane |
 
 ---
 
-## 2. Fundament — trzy wyniki, na których stoi plan
+## 2. Fundament — wyniki wstępne, na których plan stał
 
-Liczby i warunki pomiaru: [STATUS.md](STATUS.md) §3. Tutaj tylko to, **co z nich
-wynika dla hipotez**.
-
-**2a. Hamulec FS→HMC tworzy reżim pośredni (→ H2).** Bez niego pętla GC→HMC→GC jest
-czysto pobudzająca: mossy cells albo nie robią nic, albo uciekają, a obwód zaczyna
-*korelować* wzorce zamiast je separować. Z hamulcem separacja przebija obwód
-domyślny o kilkadziesiąt procent. To jest dosłownie „regulacja hamująca utrzymuje
-sieć w funkcjonalnym reżimie, poza którym separacja się załamuje" — czyli teza
-nośna pracy, pokazana na jednym motywie. Stąd `W_FS_HMC` jest **zmienną hipotezy
-H2**, a nie parametrem technicznym.
-
-**2b. Wynik negatywny 1A uzasadnia zmianę metryk.** „DG poprawia klasyfikację
-liniową" zostało sprawdzone i obalone, razem z hipotezą ratunkową o krótkim oknie
-odczytu. Separacja nie poprawia liniowej rozróżnialności, gdy wejście i tak jest
-liniowo separowalne — DG kupuje coś innego (odporność odbiorcy o ograniczonej
-pojemności, odporność na interferencję). Stąd przejście z samej dekorelacji na
-baterię miar informacyjnych (§5) i oś **separacja↔informacja** jako właściwą
-przestrzeń wyników.
-
-**2c. Separacja rośnie z rozmiarem sieci.** Przy stałym in-degree i stałej frakcji
-aktywnych GC separacja rośnie monotonicznie z N_GC — zgodnie z teorią kodowania
-ekspansyjnego. Sam w sobie wynik nieodkrywczy, ale ustawia E6: pytanie brzmi nie
-„czy rośnie", tylko **czy okno funkcjonalne przesuwa się z rozmiarem sieci**.
+> ⚠️ **Nieaktualne od 2026-09-21.** Plan opierał się na trzech wynikach wstępnych
+> z małych siatek, bez kontroli nullem. Ich status po pełnych siatkach (liczby:
+> STATUS sek. 3):
+>
+> - **2a. Hamulec FS→HMC tworzy reżim pośredni (→ H2).** Bez hamulca pętla
+>   GC→HMC→GC ucieka i obwód *koreluje* wzorce. Wynik nadal z małej siatki i bez
+>   nulla — **do powtórzenia** przed cytowaniem (STATUS sek. 3.6). Wcześniejsze
+>   twierdzenie, że to „teza nośna pracy pokazana na jednym motywie", jest za mocne.
+> - **2b. Wynik negatywny 1A uzasadnia zmianę metryk.** **Potwierdzone** na pełnych
+>   danych (STATUS sek. 3.7).
+> - **2c. Separacja rośnie z rozmiarem sieci.** Bez nulla — **może być efektem samej
+>   rzadkości** (STATUS sek. 3.6).
 
 ---
 
@@ -146,11 +134,11 @@ ekspansyjnego. Sam w sobie wynik nieodkrywczy, ale ustawia E6: pytanie brzmi nie
 |---|---|---|---|---|---|
 | **E1** | **Mapa reżimów** — separacja vs poziom aktywności | osie: napęd PP (×0.25…×4), `W_FS_GC`, `K_GC`, `R_in` ∈ {0.5…0.975}, `W_FS_HMC` ∈ {0,1,2,5}, reżim MC; 10 seedów sieci × 10 zestawów wzorców | ~30–50 tys. sym. | **H1, H2** | `e1_regime_map/` ✅ |
 | **E2** | **Atrybucja motywów** — 2³ lezje FF/FB/MC + Shapley, pełna bateria metryk | ta sama sieć i te same wzorce we wszystkich lezjach | ~20 tys. | który motyw tworzy okno | `e2_motif_attribution/` ✅ |
-| **E3** | **Sobol/LHS dla surrogatu ML** | sekwencja Sobola, NIE gęsta siatka (§3.4 leakage) | 20 tys. + 5 tys. spoza hipersześcianu | indeksy Sobola, sloppiness | niezbudowane |
+| **E3** | **Sobol/LHS dla surrogatu ML** | sekwencja Sobola, NIE gęsta siatka (sek. 3.4 leakage) | 20 tys. + 5 tys. spoza hipersześcianu | indeksy Sobola, sloppiness | niezbudowane |
 | **E4** | **Kontroler** — 3 mechanizmy × 3 wielkości kontrolowane × ON/OFF | 60 s adaptacji → perturbacja → 60 s odzysku | ~3 tys. długich przebiegów | **H3, H4** ← nośne | niezbudowane |
 | **E5** | **Uogólnienie kontrolera** — strojony w jednym reżimie, testowany w innych | strojenie 10 Hz / R=0.75; test 30 Hz, burstiness, inne `R_in` | ~2 tys. | **H3** (kluczowy test) | niezbudowane |
 | **E6** | **Skalowanie** — `DGConfig.scaled(N)`, N_GC ∈ {200,400,800,2000,5000} | stały in-degree | ~1 tys. (drogie) | czy okno przesuwa się z rozmiarem | niezbudowane |
-| **E7** | **Walidacja na bodźcach Madara** — wejście = rzeczywiste protokoły | patrz §6 | ~5 tys. | ground truth | niezbudowane |
+| **E7** | **Walidacja na bodźcach Madara** — wejście = rzeczywiste protokoły | patrz sek. 6 | ~5 tys. | ground truth | niezbudowane |
 
 Koszt: ~80–100 tys. symulacji × ~1.3 s; z E4 (długie przebiegi) i E6 (duże sieci)
 realistycznie kilka tysięcy rdzenio-godzin. Na Aresie nieistotne — budżet
@@ -163,9 +151,9 @@ aktywności, a nie parametrów. E2 zmienia statystykę wejścia i nie ma **ani j
 osi hamowania**, więc nie może odpowiedzieć na pytanie, ile hamowania jest
 optymalne. Stąd osobne E1; wcześniej tej osi w repo w ogóle nie było.
 
-⚠️ E1 ma wynik wstępny, który **nie potwierdza H1** ([STATUS.md](STATUS.md) §3.2).
-Zanim ruszy reszta planu, trzeba rozstrzygnąć: artefakt maski, za wąska siatka, czy
-realne obalenie hipotezy nośnej.
+✅ **Rozstrzygnięte 2026-09-21: realne obalenie H1**, nie artefakt maski ani za wąska
+siatka ([STATUS.md](STATUS.md) sek. 3.3–3.4). Kontynuacja: E1′ z aktywnością zadaną
+bisekcją (`run_matched_activity.py`).
 
 ### 3.2 Architektura obliczeniowa — cztery poziomy
 
@@ -212,7 +200,7 @@ mieć znaczenie.
 ### 3.3 Dwa reżimy mossy cells — obowiązkowe w każdym sweepie
 
 Przy domyślnych wagach MC są sparametryzowane do nieistotności i nie strzelają
-([STATUS.md](STATUS.md) §5), więc sweep przeprowadzony tylko w tym punkcie
+([STATUS.md](STATUS.md) sek. 5), więc sweep przeprowadzony tylko w tym punkcie
 odpowiada na pytanie postawione z góry. Każdy sweep leci w dwóch reżimach:
 
 | reżim | drive (`W_GC_HMC`) | gain | brake (`W_FS_HMC`) | co reprezentuje |
@@ -222,7 +210,7 @@ odpowiada na pytanie postawione z góry. Każdy sweep leci w dwóch reżimach:
 
 **Różnica map dominacji między reżimami sama jest wynikiem:** ile „dominacji FF/FB"
 bierze się z biologii, a ile z doboru wag. Wartości `drive`/`gain` w `mc_active` są
-dziś arbitralne — procedura ich zakotwiczenia: §6.2 V5.
+dziś arbitralne — procedura ich zakotwiczenia: sek. 6.2 V5.
 
 ### 3.4 Walidacja wewnętrzna i statystyka
 
@@ -237,7 +225,7 @@ Sekcja, na której recenzenci PLOS CB koncentrują ogień.
 3. **Maska ważności.** Punkt siatki wchodzi do analizy tylko gdy frakcja aktywnych
    GC ∈ [0.005, 0.5] ORAZ `std(rates) > 0`. Poza maską `R_out` jest *nieokreślone*,
    nie zerowe. Każdy panel figury nosi obok panel z FR/aktywnością. To operacyjna
-   postać pułapki 3 (§3.5).
+   postać pułapki 3 (sek. 3.5).
 4. **Statystyka:** wielkości efektu z **95% CI z bootstrapu po seedach**, nie same
    p-wartości; model mieszany (seed sieci i zestaw wzorców jako efekty losowe), bo
    próby nie są niezależne; korekcja **BH-FDR** przy porównaniach po siatce.
@@ -262,14 +250,14 @@ design zoptymalizuje pod artefakt.
    do rozmiaru populacji źródłowej (stały in-degree). `scaled()` robi jedno i drugie.
    Do CI: linter wykrywający gołe `N_GC=` w skryptach sweepów.
 2. **MC przy domyślnych wagach są martwe** — każdy sweep w dwóch reżimach
-   `mc_inert`/`mc_active` (§3.3), inaczej wniosek o roli MC dotyczy obwodu bez nich.
+   `mc_inert`/`mc_active` (sek. 3.3), inaczej wniosek o roli MC dotyczy obwodu bez nich.
 3. **Separacja czy wyciszenie?** Dekorelacja przy FR→0 jest artefaktem, nie
    obliczeniem. Każda analiza ma maskę ważności i panel kontrolny FR / frakcji
-   aktywnych GC (progi: §3.4 pkt 3).
+   aktywnych GC (progi: sek. 3.4 pkt 3).
 4. **`K_GC` pełni TRZY role naraz** — ustala próg efektywny, potencjał spoczynkowy
    **i** cały budżet hamowania tonicznego. Nie da się ich wybrać niezależnie, bo
    `b` ustawia sumę `V_rest + V_th_eff`, a `K` ich odstęp ([STATUS.md](STATUS.md)
-   §5). Każde zdanie „zwiększyliśmy hamowanie, podnosząc K" jest jednocześnie
+   sek. 5). Każde zdanie „zwiększyliśmy hamowanie, podnosząc K" jest jednocześnie
    zdaniem „zmieniliśmy właściwości błony", i recenzent to zobaczy. Przy
    raportowaniu manipulacji na K **zawsze podawać wynikowe (V_rest, V_th_eff)**.
 
@@ -284,7 +272,7 @@ Standard PLOS: perturbacja pokazuje mechanizm, nie tylko korelację.
 | **K1** | lezje motywów FF/FB/MC (pełny 2³) | `cfg.with_motifs()` ✅ | Shapley: FB dominuje w `mc_inert`, MC warunkowo dominujący w `mc_active` (wstępnie potwierdzone) |
 | **K2** | **utrata hamulca MC:** `W_FS_HMC → 0` | ✅ | zanik reżimu pośredniego → bistabilność (H2) |
 | **K3** | **stopniowa utrata mossy cells** (padaczka skroniowa) | `N_HMC` × {1.0, 0.75, 0.5, 0.25, 0}, stały in-degree | rozstrzyga „dormant basket cell" vs „irritable mossy cell": mierzymy napęd FS (`g_ex3`) i separację równocześnie |
-| **K4** | **symulowana gabazyna:** (a) tylko fazowa `W_FS_GC×(1−α)`, (b) tylko toniczna `K_GC×(1−α)`, (c) obie | nowy parametr `gaba_block` | dysocjacja toniczne/fazowe GABA-A; wersja (c) porównywana z danymi przed/po GZN (§6.2 V4) |
+| **K4** | **symulowana gabazyna:** (a) tylko fazowa `W_FS_GC×(1−α)`, (b) tylko toniczna `K_GC×(1−α)`, (c) obie | nowy parametr `gaba_block` | dysocjacja toniczne/fazowe GABA-A; wersja (c) porównywana z danymi przed/po GZN (sek. 6.2 V4) |
 | **K5** | **pobudliwość GC** (proxy neurogenezy): obniżone `K_GC` dla 5–20% GC | `K_GC` per-neuron | młode, pobudliwe GC: poprawiają czy pogarszają separację? (spór w literaturze) |
 | **K6** | **knockouty kontrolera:** IP/iSTDP/SS off | L2 | czy któryś mechanizm sam wystarcza (H4) |
 | **K7** | **perturbacje wejścia:** skok tempa ×3, powolny dryf, utrata 30% włókien PP | tryb bodźca | odporność: czas odzysku, przeregulowanie, błąd ustalony |
@@ -335,7 +323,7 @@ danych" nie udaje wyniku; agregacja przez `nan_mean()`.
 
 - **MI wejście→wyjście** [bity/jednostkę] między bitem wejścia (czy GC dostaje
   silny napęd PP) a bitem wyjścia (czy GC strzela > 0.5 Hz). Kwantyfikuje wprost
-  „DG jest transformacją stratną" — mechanizm stojący za wynikiem negatywnym 1A (§2b).
+  „DG jest transformacją stratną" — mechanizm stojący za wynikiem negatywnym 1A (STATUS sek. 3.7).
 - **Info retention** = MI/H(wejścia) ∈ [0,1]; information loss = 1 − retention.
   **To jest właściwa oś trade-offu:** separacja zwykle KOSZTUJE informację; pytanie
   brzmi, które motywy kupują dużo separacji za mało informacji.
@@ -418,7 +406,7 @@ i FR; (4) porównanie z „after". Predykcję rejestrujemy przed odsłonięciem 
 
 **V5 — kotwica in vivo i literaturowa.** Punkt nastawy ρ₀ z E1 vs obserwowana
 rzadkość GC in vivo (Senzai & Buzsáki) — zgodność = mocny argument, niezgodność =
-też wynik (DG optymalizuje coś innego niż separacja). Reżim `mc_active` (§3.3)
+też wynik (DG optymalizuje coś innego niż separacja). Reżim `mc_active` (sek. 3.3)
 zakotwiczony w Scharfman 2016: kalibrujemy `drive`/`gain`/`brake` tak, by **netto
 wpływ MC na GC był hamujący w spoczynku**. Częstotliwości FS w paśmie gamma vs
 literatura.
@@ -441,7 +429,7 @@ literatura.
 **Q1 (m. 1–3) — dane, metryki, kalibracja neuronów**
 - M1.1 `io_madar.py`: Axograph → Neo → NWB; detekcja spajków; **eksport bodźców
   z `Protocols/`** jako wejście modelu.
-- M1.2 `metrics.py`: R / NDP / SF / SPIKE + burstiness (§5.2); **test zgodności
+- M1.2 `metrics.py`: R / NDP / SF / SPIKE + burstiness (sek. 5.2); **test zgodności
   z MATLABem** Madara na 20 nagraniach (tolerancja < 1%).
 - M1.3 `fit_neurons.py`: dopasowanie Izhikevicza do CCIV per typ, z rozkładami (L0).
 - M1.4 `analysis_plan.md` — preregistracja H1–H5 i metryki pierwszorzędowej.
@@ -468,7 +456,7 @@ literatura.
 
 **Q4 (m. 10–12) — walidacja, figury, manuskrypt**
 - M4.1 V2/V3. M4.2 V5. M4.3 zamrożenie wyników (Zenodo, ModelDB, kontener).
-- M4.4 figury (§7.2) + manuskrypt; preprint na bioRxiv **przed** submisją.
+- M4.4 figury (sek. 7.2) + manuskrypt; preprint na bioRxiv **przed** submisją.
 - M4.5 submisja + gotowy plan odpowiedzi na trzy najbardziej prawdopodobne zarzuty.
 
 *Bufor:* Q1 i Q3 są najbardziej ryzykowne. 12 miesięcy wystarcza tylko przy
@@ -534,7 +522,7 @@ spajków bit-w-bit) jest w [README.md](README.md). Do artykułu dochodzi:
 | **H1 nie potwierdzona** (wynik wstępny E1 jej nie potwierdza) | **realizuje się** | szersza siatka + zaostrzona maska; jeśli obalona — pivot na robustness/padaczkę (bramka G2) |
 | H4 „za łatwa" (homeostaza oczywiście stabilizuje) | wysokie | ciężar dowodu przenieść na **H3** (co jest regulowane) i na E5 (uogólnienie) |
 | Predykcja gabazynowa nie trafi | średnie | to nadal wynik, o ile preregistrowany: mówi, że fazowe hamowanie GC nie tłumaczy efektu → wskazuje na toniczne/na sieć |
-| Zbyt duży zakres na 12 miesięcy | wysokie | plan figur (§7.2) jest kontraktem; E6 i K5 pierwsze do wycięcia |
+| Zbyt duży zakres na 12 miesięcy | wysokie | plan figur (sek. 7.2) jest kontraktem; E6 i K5 pierwsze do wycięcia |
 
 **Co uśmiercamy jawnie:** odczyt liniowy 1A — zamknięty, wchodzi do artykułu jako
 jedno zdanie w Discussion („decorrelation does not imply linear decodability"),
@@ -560,28 +548,24 @@ three-factor learning (semestr 6).
 
 ### 9.1 Blokujące — wysłane do prof. Błasiak 2026-09-11
 
-Pełne brzmienie pytań i zmierzone liczby, które je motywują: [STATUS.md](STATUS.md) §2.
-W skrócie: (B1) realny udział prądu tonicznego w hamowaniu GC — wymusza `K`, a przez
-pułapkę §3.5.4 także próg i spoczynek; (B2) czy bazowa częstotliwość FS jest
-fizjologiczna — kotwiczy siłę nowego kanału FS→FS; (B3) **do którego reżimu wejścia
-kalibrujemy** — in vitro Madara czy gęsty napęd PP; jedna waga nie obsłuży obu.
-
-B3 jest pytaniem badawczym, nie usterką: rzadka stymulacja w plastrze i gęsty napęd
-PP to dwa różne punkty pracy, a wybór między nimi rzutuje na całą pracę —
-w szczególności na to, czy predykcja gabazynowa (§6.2 V4) jest porównywalna z danymi.
+Pytania B1–B3 i liczby, które je motywują: [STATUS.md](STATUS.md) sek. 2 (jedno
+miejsce). Najważniejsze z nich, B3 — kalibracja in vitro czy in vivo — jest pytaniem
+badawczym, nie usterką: rzutuje m.in. na porównywalność predykcji gabazynowej
+(sek. 6.2 V4) z danymi.
 
 ### 9.2 Do decyzji po naszej stronie
 
-1. **Wynik wstępny E1 nie potwierdza H1** — rozstrzygnąć, czy to artefakt maski, za
-   wąska siatka, czy realne obalenie hipotezy nośnej. **Kwestia priorytetowa.**
+1. ~~Wynik wstępny E1 nie potwierdza H1 — rozstrzygnąć, czy to artefakt.~~
+   **Rozstrzygnięte:** realne obalenie (STATUS sek. 3.3–3.4). Otwarta jest teraz
+   decyzja o następcy H1 — STATUS sek. 4.1.
 2. Czy rozdzielić w modelu prąd toniczny od offsetu pobudliwości? Dziś to jeden
-   parametr w trzech rolach (§3.5.4). Rozdzielenie usuwa pułapkę, ale jest zmianą
+   parametr w trzech rolach (sek. 3.5.4). Rozdzielenie usuwa pułapkę, ale jest zmianą
    modelu neuronu i wymaga opisu w Methods.
-3. Kalibracja reżimu `mc_active` — §6.2 V5 daje procedurę, ale trzeba potwierdzić,
+3. Kalibracja reżimu `mc_active` — sek. 6.2 V5 daje procedurę, ale trzeba potwierdzić,
    czy „netto hamujący wpływ MC na GC w spoczynku" to właściwe kryterium
    (Scharfman 2016).
 4. **Metryka pierwszorzędowa:** NDP przy 100 ms czy MI(klasa; kod)? Propozycja: NDP
-   (porównywalna z Madarem), MI jako współrzędna druga. Do preregistracji (§3.4 pkt 6).
+   (porównywalna z Madarem), MI jako współrzędna druga. Do preregistracji (sek. 3.4 pkt 6).
 5. **Punkt nastawy ρ₀:** strojony jako wolny parametr czy wzięty z danych in vivo?
    Mocniejsza wersja: wzięty z danych i pokazany, że pokrywa się z optimum offline.
 6. **Czy CA3 wchodzi do modelu?** Dane są. Za: zamyka łuk separacja→completion.

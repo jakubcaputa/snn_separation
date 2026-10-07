@@ -18,7 +18,7 @@ miejsce, pozostałe odsyłają:
 | [STATUS.md](STATUS.md) | gdzie jestem, co blokuje, jakie są zmierzone wyniki |
 | [PLAN_BADAWCZY.md](PLAN_BADAWCZY.md) | hipotezy H1–H5 i plan eksperymentów E1–E7 ⚠️ historyczny, czeka na decyzję |
 | [ml_paper.md](ml_paper.md) | pomysł na OSOBNY artykuł ML — rzadkość jako trzeci czynnik |
-| [article/](article/) | draft artykułu (Overleaf) + 5 figur objaśniających |
+| [article/](article/) | draft artykułu (Overleaf), figury i prezentacja stanu prac |
 
 ---
 
@@ -71,7 +71,7 @@ Na HPC (Athena/PLGrid) — skrypty `hpc/athena_*.sbatch`:
 ```bash
 cd experiments/hpc
 sbatch athena_e1_matched_activity.sbatch        # E1′ — aktualny, ~40 min
-sbatch athena_e1_regime_map.sbatch              # E1 stary (wynik negatywny, §3.2)
+sbatch athena_e1_regime_map.sbatch              # E1 stary (wynik negatywny, sek. 3.2)
 sbatch --array=0-7 athena_e2_attribution.sbatch
 sbatch --array=0-7 athena_readout.sbatch classification
 ```
@@ -135,7 +135,7 @@ experiments/               łańcuch eksperymentalny bez GUI — z linii polece�
 separation_parameters_sweep/   linia LIF pojedynczego neuronu
 single_neuron_patsep.py        (jej zależność)
 
-article/                   draft artykułu (Overleaf) + figury objaśniające
+article/                   draft artykułu (Overleaf), figury, prezentacja .pptx
                            article_draft.tex · figures/ · make_article_figures.py
 
 tests/                     regresja modelu i kalibracji
@@ -184,27 +184,31 @@ było tłumaczyć numeracji. **Każdy folder odpowiada na jedno pytanie.**
 | `readout_deferred/` | czy DG pomaga odbiorcy downstream | 1A zamknięte, 1B odłożone |
 | `hpc/` | skrypty SLURM na Ares/PLGrid | — |
 
-Statusy i wyniki: [STATUS.md](STATUS.md) §3. Eksperymenty jeszcze niezbudowane
+Statusy i wyniki: [STATUS.md](STATUS.md) sek. 3. Eksperymenty jeszcze niezbudowane
 (E3–E7) i pełne brzmienie hipotez: [PLAN_BADAWCZY.md](PLAN_BADAWCZY.md).
 
 ---
 
-## Artykuł
+## Artykuł i prezentacja
 
 ```bash
-python article/make_article_figures.py     # przelicza 4 figury do article/figures/
+python article/make_article_figures.py   # figury artykułu + figury slajdów (article/figures/slides/)
+python article/build_presentation.py     # article/prezentacja_stan_prac.pptx
 ```
 
-`article/article_draft.tex` kompiluje się na Overleafie (`pdflatex`, dwa
-przebiegi, bez bibtexa — bibliografia jest inline). Zakres: **aplikacja dla
-neurobiologów + mechanizm separacji**; draft świadomie NIE przesądza tezy pracy,
-bo ta decyzja jest otwarta ([STATUS.md](STATUS.md) §4.1). Co dokładnie jest
-w drafcie i czego w nim nie ma: [STATUS.md](STATUS.md) §6.
+`article/article_draft.tex` kompiluje się na Overleafie (`pdflatex`, dwa przebiegi,
+bez bibtexa — bibliografia jest inline). Zakres: **aplikacja dla neurobiologów
++ mechanizm separacji**; draft nie przesądza tezy pracy, bo ta decyzja jest otwarta
+([STATUS.md](STATUS.md) sek. 4.1). Zawartość `article/`: [STATUS.md](STATUS.md)
+sek. 6; objaśnienie prezentacji slajd po slajdzie: sek. 7.
 
-Figury są **generowane, nie wklejane** — liczby biorą się z `experiments/*/results/*.npz`
-albo z jawnie oznaczonych wartości zapisanych w STATUS. Po przeliczeniu sweepów
-wystarczy uruchomić skrypt ponownie. ⚠️ Figury artykułu są wyjątkiem w
-`.gitignore` (reszta `*.png` jest ignorowana), bo Overleaf bierze je z repo.
+Figury i deck są **generowane, nie wklejane** — liczby biorą się z
+`experiments/*/results/*.npz` albo z jawnie oznaczonych wartości zapisanych w STATUS.
+Po przeliczeniu sweepów wystarczy uruchomić oba skrypty ponownie.
+
+⚠️ `.gitignore`: figury artykułu (`article/figures/*.png`) są wyjątkiem i trafiają do
+repo, bo Overleaf bierze je z gita. Figury slajdów i plik `.pptx` są ignorowane jak
+reszta `*.png`/`*.pptx` — odtwarza się je dwoma poleceniami wyżej.
 
 ---
 
@@ -212,7 +216,7 @@ wystarczy uruchomić skrypt ponownie. ⚠️ Figury artykułu są wyjątkiem w
 
 Cztery pułapki, z których **każda już raz cicho zepsuła wynik**: skalowanie sieci
 przez `scaled(N)` · dwa reżimy mossy cells · separacja czy wyciszenie · potrójna
-rola `K_GC`. Opis i konsekwencje: [PLAN_BADAWCZY.md](PLAN_BADAWCZY.md) §3.5.
+rola `K_GC`. Opis i konsekwencje: [PLAN_BADAWCZY.md](PLAN_BADAWCZY.md) sek. 3.5.
 Przeczytaj, zanim dopiszesz nową siatkę — nie po tym, jak wyniki wyjdą dziwne.
 
 ---
@@ -227,7 +231,7 @@ wynik nie wymaga przeliczenia.** Pilnują tego testy w [tests/](tests/).
 
 Standard odtwarzalności docelowy dla publikacji (determinizm przebiegów, YAML-e
 konfiguracji, warstwy danych na Zenodo, kontener):
-[PLAN_BADAWCZY.md](PLAN_BADAWCZY.md) §7.3.
+[PLAN_BADAWCZY.md](PLAN_BADAWCZY.md) sek. 7.3.
 
 ---
 

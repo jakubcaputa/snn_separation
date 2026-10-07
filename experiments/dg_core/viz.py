@@ -82,3 +82,30 @@ def use_style():
 def grid(ax, axis='y'):
     ax.grid(True, axis=axis, alpha=0.7, zorder=0)
     ax.set_axisbelow(True)
+
+
+# ── Oś rzadkości: log, ale z etykietami w procentach ──────────────────────────
+# Skala logarytmiczna jest tu konieczna (frakcja aktywnych GC rozciąga się od ~2%
+# do ~97%, liniowa zgniata cały ciekawy zakres przy zerze), ale domyślne etykiety
+# `10^-1` są nieczytelne. Dajemy log + jawne znaczniki procentowe.
+PCT_TICKS = (0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0)
+
+
+def pct_log_axis(ax, axis: str = 'x', ticks=PCT_TICKS):
+    """Skala log z etykietami typu 2%, 10%, 50% zamiast notacji wykładniczej."""
+    import matplotlib.ticker as mticker
+
+    a = ax.xaxis if axis == 'x' else ax.yaxis
+    (ax.set_xscale if axis == 'x' else ax.set_yscale)('log')
+    a.set_major_locator(mticker.FixedLocator(ticks))
+    a.set_major_formatter(mticker.FixedFormatter(
+        [f'{t:.0%}' if t >= 0.01 else f'{t:.1%}' for t in ticks]))
+    # bez tego matplotlib dorysowuje nieopisane znaczniki pomocnicze co 2,3,4...
+    a.set_minor_locator(mticker.NullLocator())
+    return ax
+
+
+def pct_formatter():
+    """Formatter procentowy do colorbarów (np. przy LogNorm)."""
+    import matplotlib.ticker as mticker
+    return mticker.FuncFormatter(lambda v, _: f'{v:.0%}' if v >= 0.01 else f'{v:.1%}')

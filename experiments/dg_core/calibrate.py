@@ -348,7 +348,7 @@ def solve_k_gc_for_active_fraction(cfg: DGConfig, conn, pattern, target: float,
 
     Po co: w sweepie po parametrach aktywność jest WYNIKIEM, a mierzona separacja
     jest monotoniczna względem aktywności — więc oś sweepu pokrywa się z
-    confounderem i niczego nie da się przypisać obwodowi (STATUS §3.2). Tutaj
+    confounderem i niczego nie da się przypisać obwodowi (STATUS sek. 3.3). Tutaj
     odwracamy zależność: aktywność jest ZADANA i wyrównana między warunkami,
     więc różnice wolno przypisać temu, co faktycznie zmieniamy.
 

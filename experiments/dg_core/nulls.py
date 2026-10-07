@@ -12,7 +12,7 @@ Po co to istnieje
 Dopóki mierzy się samo `dec`, składnik 2 rośnie przy wyciszaniu sieci i udaje
 wynik. E1 w wersji z siatką `K_GC × W_FS_GC` przewrócił się dokładnie na tym:
 maksimum separacji jechało za progiem maski ważności przy każdym progu, jaki mu
-podstawić (STATUS §3.2). Maska tego nie leczy — tylko ucina zdegenerowany obszar,
+podstawić (STATUS sek. 3.3). Maska tego nie leczy — tylko ucina zdegenerowany obszar,
 a maksimum siada na linii cięcia.
 
 Lekarstwo: policzyć, ile dekorelacji miałby kod o TEJ SAMEJ rzadkości, ale bez
@@ -29,7 +29,7 @@ Dwa null-e, bo odpowiadają na różne pytania
 `kwta`     — losowa rzadka projekcja wejścia z liczbą aktywnych dopasowaną do
              wyjścia DG. Pyta mocniej: „czy DOWOLNY rzadki kod o tej rzadkości
              nie zrobiłby tego samego?" To ta sama kontrola, którą kierunek 1A
-             nazywa `random` i na której DG tam przegrało (STATUS §3.3).
+             nazywa `random` i na której DG tam przegrało (STATUS sek. 3.7).
 """
 
 from __future__ import annotations

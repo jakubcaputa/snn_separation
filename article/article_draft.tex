@@ -3,7 +3,7 @@
 %
 % Zakres ustalony 2026-10-05: artykuł opisuje APLIKACJĘ zbudowaną dla
 % neurobiologów oraz sam MECHANIZM separacji wzorców. NIE przesądza tezy pracy
-% — decyzja o niej jest otwarta (STATUS.md §4 pkt 2). Dlatego §6 raportuje
+% — decyzja o niej jest otwarta (STATUS.md sek. 4.1). Dlatego sek. 6 raportuje
 % wyniki jako demonstracje możliwości warsztatu, a nie jako tezę nośną.
 %
 % Kompilacja: pdflatex article_draft.tex  (dwa przebiegi, bez bibtexa —
@@ -476,8 +476,11 @@ not activity-controlled, and the measurement that \emph{is} activity-controlled
 (below) finds no effect of the phasic axis at all.
 
 Separately, and unaffected by the above: with activity equalised, the phasic
-weight $\Wfsgc$ has no detectable effect anywhere in the range $0$--$5$ (spread
-of means 0.024 against a per-cell SEM of 0.027). In this model the apparent
+weight $\Wfsgc$ has no detectable positive effect anywhere in the range $0$--$5$.
+At each of the six activity levels the spread of separation across $\Wfsgc$ stays
+within about two standard errors; the per-level slopes are slightly negative, none
+survives correction for six comparisons (smallest $p = 0.033$ against a threshold of
+$0.008$), and the pooled slope is $-0.003$ ($p = 0.60$). In this model the apparent
 influence of that axis on separation is an effect of the accompanying change in
 activity level, not of the synapse.
 
@@ -486,7 +489,9 @@ activity level, not of the synapse.
 
 With three motifs that can be independently lesioned, the contribution of each
 is well defined as a Shapley value over the $2^3$ lesion coalitions. Over a grid
-of input statistics (216 points $\times$ 5 seeds), the feedforward and feedback
+of input statistics at the canonical perforant path drive (36 points $\times$ 5
+seeds; the full grid also spans $\times0.5$ and $\times2$ drive), the feedforward
+and feedback
 motifs contribute positively, while mossy cells contribute
 \emph{negatively in isolation} yet show strong positive interaction with both
 inhibitory motifs (Figure~\ref{fig:findings}c). Mossy cells in this model are
@@ -501,7 +506,11 @@ $FF\times MC$: $+0.2227 \to +0.2217$). The reason is structural: the null score
 depends on $r_{in}$, which a lesion does not change, so it is near-constant
 across coalitions (spread $0.0051$ against a \texttt{dec} spread of $0.3774$),
 and Shapley values are invariant to an additive constant. Motif attribution is
-therefore not an artefact of the sparsity confound.
+therefore not an artefact of the sparsity confound. It does, however, depend on
+input drive: at half the canonical drive all contributions shrink roughly
+four-fold ($\varphi_{MC}$: $-0.058$ instead of $-0.226$), and the lesion
+coalitions are not matched in activity, so the attribution should be re-measured
+at equalised activity before being used as a mechanistic claim.
 
 \todo{For Methods: the strongest apparent separation in this grid occurs where
 active granule cells fire at \SI{2.2}{\hertz}, well below the \SI{6}{\hertz}

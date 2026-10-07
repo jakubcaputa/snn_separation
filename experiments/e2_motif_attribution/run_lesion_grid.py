@@ -140,13 +140,13 @@ def run_cell(r_in: float, p_active: float, drive: float, regime: str,
         'r_in': r_in_meas,
         'dec': {}, 'r_out': {}, 'fr_gc': {}, 'fr_gc_active': {},
         'sparseness': {}, 'active_frac': {}, 'fr_fs': {}, 'fr_hmc': {},
-        # bateria metryk aktywności/informacji (definicje: PLAN_BADAWCZY.md §5.1)
+        # bateria metryk aktywności/informacji (definicje: PLAN_BADAWCZY.md sek. 5.1)
         # + alternatywne miary separacji (kontrola dla dekorelacji Pearsona)
         **{k: {} for k in BATTERY_KEYS},
         'r_out_cos': {}, 'overlap_jac': {},
         # Separacja PONAD null o dopasowanej rzadkości. Bez tego Shapley liczy się
         # na `dec`, które rośnie przy wyciszaniu sieci — a E1′ pokazało, że ten
-        # confound jest tu większy niż mierzony efekt (STATUS §3.2b).
+        # confound jest tu większy niż mierzony efekt (STATUS sek. 3.4).
         'dec_null_shuffle': {}, 'dec_excess_shuffle': {},
         'dec_null_kwta': {}, 'dec_excess_kwta': {},
     }

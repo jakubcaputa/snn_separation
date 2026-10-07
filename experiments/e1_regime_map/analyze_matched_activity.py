@@ -75,7 +75,7 @@ def make_figure(p: dict, out_png: Path) -> None:
     ax.axhline(0, color='k', lw=1, ls='--')
     ax.set_xlabel("zadana frakcja aktywnych GC")
     ax.set_ylabel("separacja")
-    ax.set_title("(a) surowe `dec` spada z aktywnością, nadwyżka jest UJEMNA")
+    ax.set_title("(a) surowe `dec` i nadwyżki nad dwoma nullami\n(permutacyjny jest zdegenerowany: nadwyżka = −r_out, STATUS sek. 3.5)")
     ax.legend(fontsize=8)
 
     # (b) Test H1': czy hamowanie fazowe cokolwiek kupuje przy wyrównanej ciszy.

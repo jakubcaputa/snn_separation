@@ -367,7 +367,7 @@ def main():
     ap.add_argument('--metric', default='dec',
                     choices=['dec', 'dec_excess_shuffle', 'dec_excess_kwta'],
                     help='na czym liczyć Shapleya. `dec` = surowa dekorelacja '
-                         '(UWAGA: confound rzadkości, STATUS §3.2b); '
+                         '(UWAGA: confound rzadkości, STATUS sek. 3.4); '
                          '`dec_excess_*` = nadwyżka ponad null o dopasowanej rzadkości')
     args = ap.parse_args()
 

@@ -9,7 +9,7 @@ Czym to się różni od `run_regime_map.py` i dlaczego tamten nie wystarczył
 jako wynik — i mierzy `dec = r_in − r_out`, które jest monotoniczne względem tej
 frakcji. Oś sweepu pokrywa się więc z confounderem i nic nie da się przypisać
 obwodowi. Widać to wprost: maksimum separacji jedzie za progiem maski ważności
-przy KAŻDYM progu (STATUS §3.2). Szersza siatka tego nie naprawia, bo to nie jest
+przy KAŻDYM progu (STATUS sek. 3.3). Szersza siatka tego nie naprawia, bo to nie jest
 problem zasięgu, tylko konstrukcji.
 
 Tutaj naprawiamy trzy rzeczy naraz:
@@ -35,7 +35,7 @@ Hipoteza, którą to testuje (następca obalonego H1)
          pośredniej sile hamowania fazowego.
 
 ⚠️ Wynik zerowy jest tu możliwy i jest wynikiem: kierunek 1A pokazał już, że przy
-dopasowanej rzadkości DG przegrywa z `random` w klasyfikacji (STATUS §3.3). Jeśli
+dopasowanej rzadkości DG przegrywa z `random` w klasyfikacji (STATUS sek. 3.7). Jeśli
 nadwyżka wyjdzie ≈0 na całej siatce, to razem z 1A jest to spójna teza
 („separacja przypisywana DG jest w większości rzadkością"), a nie porażka.
 
@@ -230,10 +230,10 @@ def report(p: dict) -> None:
         print("   niż prawdziwy obwód. To znaczy, że o tym, KTÓRY GC strzela, decyduje")
         print("   wejście: nakładające się wzorce pobudzają nakładające się GC, więc")
         print("   obwód ZACHOWUJE korelację względem losowego przypisania.")
-        print("   H1′ OBALONA — i to mocniej niż wynikiem zerowym. Spójne z 1A (§3.3).")
+        print("   H1′ OBALONA — i to mocniej niż wynikiem zerowym. Spójne z 1A (sek. 3.7).")
     else:
         print("WYNIK: nadwyżka nieodróżnialna od zera. Separacja siedzi w RZADKOŚCI,")
-        print("   nie w tym, który neuron strzela — spójne z 1A (STATUS §3.3).")
+        print("   nie w tym, który neuron strzela — spójne z 1A (STATUS sek. 3.7).")
         print("   H1′ NIE potwierdzona.")
 
     # Tautologia P_active: czy maksimum retention idzie za rzadkością wejścia?

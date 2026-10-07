@@ -2,7 +2,7 @@
 
 Nic tutaj nie jest częścią bieżącego łańcucha eksperymentów. Te skrypty
 wyprodukowały wnioski, na których **nadal stoi model**, więc zostają — żeby dało
-się pokazać wyprowadzenie, gdy ktoś o nie zapyta. Same wnioski są w `../STATUS.md` §2.
+się pokazać wyprowadzenie, gdy ktoś o nie zapyta. Same wnioski są w `../STATUS.md` sek. 2.
 
 | plik | co udowodnił | gdzie wynik żyje dzisiaj |
 |---|---|---|
