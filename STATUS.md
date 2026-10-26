@@ -1,6 +1,6 @@
 # Status — gdzie jesteśmy, wyniki, decyzje
 
-*Aktualizacja: 2026-10-07.*
+*Aktualizacja: 2026-10-14 (analiza E3).*
 
 Jedyne źródło prawdy dla **stanu prac** i **zmierzonych liczb**. Każda liczba ma tu
 jedno miejsce; inne dokumenty odsyłają tutaj. Hipotezy i plan:
@@ -61,13 +61,22 @@ potwierdzający dla E1″ jest zrobiony (E1‴, sek. 3.4) i osłabia wariant (d)
 | Eksperymenty E1, E1′, E1″, E1‴, E2, 1A | **policzone i przeanalizowane** — wyniki w sek. 3.2 |
 | Kontroler adaptacyjny (E4/E5) | **niezbudowany**; to wariant (c) w sek. 4.1, nie domyślny kierunek |
 | Kalibracja punktu pracy | maszyneria gotowa, **specyfikacja czeka na odpowiedzi z sek. 2** |
-| Draft artykułu o narzędziu | `article/article_draft.tex` — gotowy do przeczytania, **nieskompilowany** (sek. 6) |
+| Draft artykułu o narzędziu | `article/article_draft.tex` — gotowy do przeczytania, **nieskompilowany** (sek. 6); 2026-10-12: dopisana literatura (Chavlis 2017, Danielson 2017, Engin 2015, Bird 2024 i in.), akapit „Related tools”, porównanie MC z modelem Chavlisa; kopia sprzed zmian `article_draft.backup-2026-10-12.tex` |
 | Prezentacja stanu prac | `article/prezentacja_stan_prac.pptx`, 14 + 3 zapasowe slajdy (sek. 7) |
 | Pomysł na artykuł ML | [`ml_paper.md`](ml_paper.md) — propozycja, zero wyników (sek. 4.2) |
+| **E3 — rzadkość jako trzeci czynnik** | **policzone i przeanalizowane (2026-10-14)** — podsumowanie z figurami i dalszymi krokami: [`experiments/e3_sparsity_third_factor/README.md`](experiments/e3_sparsity_third_factor/README.md) sek. 0. H-E3a ✅ (optimum f dla uczenia, dekorelacja go nie widzi); H-E3b ❌ (hamowanie fazowe przy stałym f szkodzi); H-E3c ❌ w przeciwnym kierunku (nowość → rzadziej zapomina więcej); H-E3e ⚠️ niepotwierdzona; E3.4: o zapominaniu decyduje reguła czytnika, a globalny próg nie wyrównuje aktywności między wzorcami | **2026-10-24 (E3.5, E3.6):** obalenie H-E3c NIE jest ogólne — przy czytniku bez osłabiania (rgate) „nowość → rzadziej” zmniejsza zapominanie we wszystkich 6 architekturach i na zadaniu separacji wzorców; kierunek wyznacza reguła uczenia | **2026-10-25 (E3.6x, model ex vivo):** kierunek zależy też od podobieństwa wzorców — przy R_in 0.5 „nowość → rzadziej” pomaga, przy 0.9 pomaga „nowość → gęściej” (zgodnie z Pérez-Montoyo 2026) |
+| **Kalibracja ex vivo + R_w** (po odpowiedzi prof. Błasiak) | [`experiments/calib_exvivo/README.md`](experiments/calib_exvivo/README.md) — dane Madara pobrane (S-BSST219 + repo analiz), `dg_core/io_madar.py` (R_in/R_w/R_b jak u Madara), `dg_core/exvivo.py` (sieć napędzana salwami z protokołu), cele z danych policzone; siatka kalibracyjna (144 punkty) w kolejce | **2026-10-24:** kontrola trafiona (GC 3.0 Hz, R_w 0.37, R_b 0.28, FS 9.6 Hz, FS przed GC); efekt gabazyny za słaby (×1.25 vs ×1.6) — otwarte |
 
 ---
 
 ## 2. Pytania do prof. Błasiak — kalibracja i warunek dla wariantu (d)
+
+> **2026-10-22: odpowiedź na B1–B3** — [`korespondencja/2026-10-22_odpowiedz_blasiak.md`](korespondencja/2026-10-22_odpowiedz_blasiak.md).
+> B1: hamowanie toniczne ma w modelu za dużą wagę (−30% FS→GC ma dawać ~2× częstotliwość GC).
+> B2: FS 10–28 Hz (28 Hz z FS→FS w zakresie, 46 Hz nie). B3: **kalibrować do ex vivo**;
+> 50% AP u Madara dotyczy zsumowanego EPSC salwy, nie pojedynczej synapsy — wejściem ma być
+> protokół stymulacji (salwy), nie tło 400 Hz. Nowy postulat: obok dekorelacji mierzyć
+> **R_w** (korelacja odpowiedzi na powtórzenia tego samego wzorca). B4 i τ_m — bez odpowiedzi.
 
 B1–B3 nie blokują decyzji z sek. 4.1 ani pisania, tylko domknięcie punktu pracy:
 bez tych liczb każda próba kalibracji trafia w jedno kryterium kosztem drugiego.
@@ -516,8 +525,23 @@ to lekcja z E1″.
 
 [`ml_paper.md`](ml_paper.md): **rzadkość jako trzeci czynnik** uczenia oraz null-e
 o dopasowanej rzadkości jako protokół ewaluacji. Nie koliduje z sek. 4.1 — inna
-publikacja, inne repo wykonawcze (`snn_stdp_vs_surrogate_gradient`, ~80% harnessu
-gotowe). Zero wyników ML na dziś.
+publikacja. Zero wyników ML na dziś.
+
+**2026-10-12: wariant M1 rozpisany jako eksperyment E3**
+([`experiments/e3_sparsity_third_factor/README.md`](experiments/e3_sparsity_third_factor/README.md)).
+Ustalenia:
+- **Kod E3 powstaje w `snn_separation`** (osobna baza kodu). Repo
+  `snn_stdp_vs_surrogate_gradient` jest co najwyżej źródłem importu albo danych
+  i nie jest modyfikowane — to zmienia wcześniejszy zapis „inne repo wykonawcze”.
+- Architektura jak ciało grzybkowate: **stała** losowa warstwa DG z tonicznym `K`,
+  czytnik uczony R-STDP z nagrodą (czynnik B), regulator nowość → `f` → `K`
+  (czynnik A). Plastyczna warstwa DG dopiero w następnym etapie.
+- Hipotezy H-E3a…d; nośna H-E3c: `f` sterowane nowością zapomina mniej niż stałe `f`
+  równe jego średniej (`fixed_matched` — null o dopasowanej rzadkości).
+- **H-E3a łączy się z wariantem (a):** jeśli dokładność ma maksimum przy pośrednim
+  `f`, a `dec` rośnie do ciszy, to jest to funkcjonalny argument artykułu
+  metodologicznego.
+- Q1–Q9 rozstrzygnięte (plan E3 sek. 9). Przegląd literatury zrobiony (sek. 10): dokładnego odpowiednika nie ma; najbliżej FlyModel (stałe k-WTA) i Nm-SNN (progi per-neuron, backprop). Dodane warunki `kwta_fly` i `mod_novelty_inv` (kierunek modulacji — Pérez-Montoyo 2026).
 
 ### 4.3 Po decyzji z 4.1
 

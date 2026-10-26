@@ -2,6 +2,14 @@
 
 *Utworzono 2026-10-07. Status: **propozycja**, nie wyniki.*
 
+> **2026-10-12:** wariant M1 jest rozpisany jako eksperyment E3 w
+> [`experiments/e3_sparsity_third_factor/README.md`](experiments/e3_sparsity_third_factor/README.md).
+> Dwie zmiany względem tego pliku: (1) **kod powstaje w `snn_separation`**, a repo
+> `snn_stdp_vs_surrogate_gradient` służy co najwyżej jako źródło importu lub danych
+> i nie jest modyfikowane (sek. 1 i 8 poniżej są w tym punkcie nieaktualne);
+> (2) w pierwszym etapie warstwa DG jest **stała**, a uczy się tylko czytnik —
+> R-STDP w warstwie ekspansji (sek. 6) to etap późniejszy.
+
 > ⚠️ **Czytaj to jako nową linię pracy, nie jako przepakowanie tego, co mamy.**
 > Z `snn_separation` nie ma ANI JEDNEGO wyniku uczenia maszynowego — to symulacja
 > 200 neuronów w Brian2, bez zadania, bez uczenia, bez baseline'ów. Przenosimy

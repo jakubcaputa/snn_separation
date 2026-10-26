@@ -135,6 +135,7 @@ experiments/               łańcuch eksperymentalny bez GUI — z linii polece�
   dg_core/                 z shardingiem pod HPC
   e1_regime_map/
   e2_motif_attribution/
+  e3_sparsity_third_factor/   (plan; PyTorch, nie Brian2)
   readout_deferred/
   hpc/
 
@@ -187,11 +188,14 @@ było tłumaczyć numeracji. **Każdy folder odpowiada na jedno pytanie.**
 |---|---|---|
 | `e1_regime_map/` | **ile** hamowania jest optymalne — czy istnieje okno funkcjonalne | H1, H2 |
 | `e2_motif_attribution/` | **który** motyw hamowania niesie separację | który motyw tworzy okno |
+| `e3_sparsity_third_factor/` | czy sterowanie rzadkością sygnałem nowości zmniejsza zapominanie (MNIST, Split-MNIST) — **plan, bez kodu** | H-E3a…d |
 | `readout_deferred/` | czy DG pomaga odbiorcy downstream | 1A zamknięte, 1B odłożone |
 | `hpc/` | skrypty SLURM na Ares/PLGrid | — |
 
 Statusy i wyniki: [STATUS.md](STATUS.md) sek. 3. Eksperymenty jeszcze niezbudowane
-(E3–E7) i pełne brzmienie hipotez: [PLAN_BADAWCZY.md](PLAN_BADAWCZY.md).
+(E3-S, E4–E7) i pełne brzmienie hipotez: [PLAN_BADAWCZY.md](PLAN_BADAWCZY.md).
+E3 ma własny plan w folderze; to osobna baza kodu od `snn_stdp_vs_surrogate_gradient`
+(to repo najwyżej importujemy, nie modyfikujemy).
 
 ---
 

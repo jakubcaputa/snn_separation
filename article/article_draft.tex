@@ -45,7 +45,8 @@ gyrus for studying pattern separation}}
 The dentate gyrus (DG) is thought to perform pattern separation: it turns similar
 inputs into less similar outputs. The standard measure of this --- the drop in
 correlation between output population vectors --- also rises whenever the network
-simply fires less, so it is easy to mistake silence for separation. We present an
+simply fires less, so it is easy to mistake silence for separation. This confound
+is known, but it is rarely controlled when the role of a circuit motif is assessed. We present an
 open spiking model of the DG microcircuit (granule cells, fast-spiking
 interneurons, mossy cells) whose operating point is consistent with patch-clamp data,
 together with two interfaces: a browser application in which an experimentalist
@@ -71,13 +72,33 @@ features are usually invoked: a large, sparsely active granule cell population;
 strong feedforward and feedback inhibition from fast-spiking basket cells; and
 an excitatory loop through hilar mossy cells whose net effect is debated.
 
+Network models of the DG have tested each of these features
+\cite{santhakumar2005,myers2009,myers2011,yim2015,chavlis2017,braganza2020,guzman2021,saini2025},
+and a recurring conclusion is that most manipulations act on separation through
+one quantity: the sparsity of granule cell activity. In the model of Chavlis et
+al., networks with different granule cell dendrites separated equally well once
+calibrated to the same sparsity \cite{chavlis2017}, which led to the proposal that
+network, cellular and dendritic mechanisms all converge on controlling sparsity
+\cite{chavlis2017review}. The same dependence is a problem for measurement:
+classical separation scores keep improving as activity falls, even past the point
+where the output carries almost no information about the input
+\cite{bird2024}. Experimentally, the two forms of inhibition dissociate: reducing
+tonic inhibition of granule cells ($\alpha5$-GABA$_\mathrm{A}$ receptors) increases
+memory interference, whereas reducing their fast phasic inhibition
+($\alpha2$-GABA$_\mathrm{A}$ receptors) does not \cite{engin2015}.
+
 Which of these carries the effect, and how much of each is needed, are
 quantitative questions. Answering them needs a model that is constrained by data,
 cheap enough to sweep, and transparent enough for experimentalists to question
 directly. This paper describes such a model and the tools built around it
 (Sections~\ref{sec:mechanism}--\ref{sec:app}), and the first experiments run with
-it (Section~\ref{sec:experiments}). It does not yet argue for a single mechanistic
-claim; open questions are listed in Section~\ref{sec:outlook}.
+it (Section~\ref{sec:experiments}). Its main methodological choice is to treat
+activity as a controlled variable rather than an outcome: the fraction of active
+granule cells is set by calibration, and only then is a motif varied. With
+activity held fixed, phasic inhibition has no effect on separation, in line with
+the dissociation of tonic and phasic inhibition reported by Engin et al.\
+\cite{engin2015}. The paper does not yet argue for a single mechanistic claim;
+open questions are listed in Section~\ref{sec:outlook}.
 
 % =============================================================================
 \section{Pattern separation and how it is measured}
@@ -108,8 +129,15 @@ separates the patterns when
 vectors tends to zero. A network that stops firing therefore scores high on
 Eq.~\eqref{eq:dec} while computing nothing. Any manipulation that lowers activity
 --- including any increase in inhibition --- raises $\mathrm{dec}$ for reasons
-unrelated to the circuit. Section~\ref{sec:experiments} is largely about getting
-around this.
+unrelated to the circuit. The problem is not new. In an early DG model, lesioning
+HIPP cells raised granule cell activity and \emph{improved} separation, against
+the expectation that sparser codes separate better; this was attributed to a
+measure that did not account for sparsity \cite{myers2009,chavlis2017review}, and
+the follow-up model used a sparsity-sensitive one \cite{myers2011}. Chavlis et al.\ normalise the Hamming distance by the
+number of active cells for the same reason \cite{chavlis2017}; and Bird et al.\
+show that classical measures reward sparsity even when information is lost
+\cite{bird2024}. Section~\ref{sec:experiments} is largely about getting around
+this by fixing activity before comparing circuits.
 
 \paragraph{Two kinds of inhibition, three motifs.} The model separates
 \emph{tonic} inhibition $\Kgc$, a constant hyperpolarising current that is always
@@ -223,6 +251,27 @@ slightly more hyperpolarised than three quarters of the recorded cells.
   \label{fig:opoint}
 \end{figure}
 
+\paragraph{How sparsity is set, and the mossy cells.} The closest existing model
+is that of Chavlis et al.\ \cite{chavlis2017}, also used by Danielson et al.\
+\cite{danielson2017}: 2000 granule cells, 100 basket cells, 80 mossy cells and 40
+HIPP cells, integrate-and-fire neurons, simulated in Brian. It reaches about 5\%
+active granule cells through its architecture: one basket cell per cluster of 20
+granule cells acts as a winner-take-all. In our model sparsity is set by tonic
+inhibition instead, which is what allows us to separate the two kinds of
+inhibition. Our cell ratios are similar (5 mossy cells per 100 granule cells,
+against 4), and so is the strength of the mossy cell input relative to the
+perforant path: $0.5/4.0=0.125$ here, against an AMPA conductance ratio of
+$0.107/0.807\approx0.13$ in their Table~3 \todo{check the table layout in the
+original}. The models differ in what mossy cells do. There, mossy cells contact
+every basket cell, their net effect on granule cells is inhibitory, and removing
+them raises activity (from 5 to 9\% active granule cells) and lowers separation;
+removing only the direct mossy cell to granule cell synapse has little effect
+\cite{chavlis2017,danielson2017}. This agrees with mossy cell loss causing
+granule cell hyperexcitability in vivo \cite{jinde2012}. In our model the mossy
+cell loop is net excitatory, and at default weights mossy cells are silent,
+although in behaving mice they are more active than granule cells
+\cite{danielson2017}. We return to this in Section~\ref{sec:outlook}.
+
 \todo{Methods: membrane time constant from the data is
 $\approx\SI{3}{\milli\second}$ for granule cells, not 10--50\,ms. Irrelevant for
 the Izhikevich model, but the definition (input vs membrane resistance) needs
@@ -260,6 +309,23 @@ into a controlled variable, which Section~\ref{sec:matched} relies on.
 \paragraph{Reproducibility.} Regression tests (17) check that default behaviour
 stays bit-for-bit identical as features are added.
 \todo{container, configuration files, Zenodo deposit}
+
+\paragraph{Related tools.} Several DG network models are openly available, most
+of them in ModelDB \cite{mcdougal2017}: the conductance-based models of
+Santhakumar et al.\ \cite{santhakumar2005}, Tejada et al.\ \cite{tejada2014} and
+Yim et al.\ \cite{yim2015} in NEURON; a full-scale model of more than a million
+neurons \cite{schneider2012}; the NEURON/Python model of Braganza et al.\
+\cite{braganza2020}; the EC--DG--CA3 model of Guzman et al.\ \cite{guzman2021};
+and the Brian models of Chavlis et al.\ and Danielson et al.\
+\cite{chavlis2017,danielson2017}. These are research code, driven from scripts.
+General interactive environments exist as well: NEST Desktop builds and runs
+spiking networks in the browser without programming \cite{spreizer2021}, and
+Hippocampome.org provides Izhikevich parameters and synaptic data for
+hippocampal neuron types, linked to the underlying evidence \cite{wheeler2024}.
+What we did not find is a combination of the two: a DG model constrained by
+recordings, interactive enough for an experimentalist, that reports separation
+measures and shares its implementation with a batch layer able to fix activity
+by calibration. \todo{verify with a systematic search before submission}
 
 % =============================================================================
 \section{Experiments so far}
@@ -305,6 +371,15 @@ At fixed activity, phasic inhibition does not change separation. Per-level slope
 are slightly negative and none survives correction for six comparisons (smallest
 $p=0.033$ against a threshold of $0.008$); the pooled slope is $-0.003$
 ($p=0.60$). The effect of inhibition seen in E1 was an effect of activity.
+
+This extends the result of Chavlis et al., who found equal separation across
+dendritic morphologies at matched sparsity \cite{chavlis2017}, from cellular
+properties to the type of inhibition. It also matches the experimental
+dissociation: in mice, reducing tonic inhibition of granule cells impairs
+discrimination under high interference, while reducing their fast phasic
+inhibition does not \cite{engin2015}. In the model, tonic inhibition sets how
+many cells fire; once that is fixed, phasic inhibition adds nothing measurable
+to separation.
 
 \subsection{Choosing a control code}
 \label{sec:nulls}
@@ -365,7 +440,11 @@ them. Lesions change the fraction of active granule cells from 13\% to 94\%, and
 across lesion combinations separation correlates with activity at $r=-0.97$. With
 both inhibitory motifs removed, mossy cells drive 94\% of granule cells to fire
 --- an ignition state that the inhibitory motifs prevent. The ``conditional'' role of mossy cells is
-therefore primarily about keeping activity in check. Subtracting the
+therefore primarily about keeping activity in check. The same caveat applies to
+lesion results in other models: removing mossy cells in the model of Danielson et
+al.\ lowers separation but also raises the fraction of active granule cells
+\cite{danielson2017}, so the two effects cannot be told apart without matching
+activity. Subtracting the
 random-projection null, which does depend on activity, shrinks the contributions
 by 15--27\% (mossy cells $-0.16$) but does not remove them. At half the drive all
 contributions are several times smaller (mossy cells $-0.06$). Section~\ref{sec:wide} repeats the test with activity held fixed.
@@ -457,8 +536,15 @@ how often this happens depends on a mossy cell weight we have not anchored in da
 
 \paragraph{Next steps.}
 \begin{itemize}
-  \item Anchoring the mossy cell to granule cell strength in data, which decides
-        whether network ignition is a realistic regime of the model.
+  \item Anchoring the mossy cell pathways in data, which decides whether network
+        ignition is a realistic regime of the model: the mossy cell to basket
+        cell connection that makes the loop net inhibitory in other models
+        \cite{chavlis2017,danielson2017,jinde2012}, synaptic parameters from
+        Hippocampome.org \cite{wheeler2024}, and mossy cell rates above granule
+        cell rates, as observed in vivo \cite{danielson2017}.
+  \item Repeating the activity-matched experiments with the information-theoretic
+        measures of Bird et al.\ \cite{bird2024}, so that the null result for
+        phasic inhibition does not rest on a single measure.
   \item Using the stimulation protocols of Madar et al.\ as model input.
   \item Since activity, not separation, is what the circuit visibly controls:
         progressive mossy cell loss as a model of temporal lobe epilepsy, and
@@ -478,7 +564,7 @@ Recordings: \cite{madar2019}, BioStudies \texttt{S-BSST219}; not redistributed.
 \todo{funding; PLGrid/ACK Cyfronet AGH computational grant; collaborators}
 
 % =============================================================================
-\begin{thebibliography}{9}
+\begin{thebibliography}{99}
 \small
 
 \bibitem{marr1971} Marr, D. (1971). Simple memory: a theory for archicortex.
@@ -501,8 +587,86 @@ Pattern separation of spiketrains in hippocampal neurons.
 \bibitem{stimberg2019} Stimberg, M., Brette, R. \& Goodman, D. F. M. (2019).
 Brian 2, an intuitive and efficient neural simulator. \emph{eLife} 8, e47314.
 
-\todo{add: tonic GABA in DG; mossy cell function; sparse coding in DG; Shapley
-attribution in neuroscience}
+\bibitem{chavlis2017} Chavlis, S., Petrantonakis, P. C. \& Poirazi, P. (2017).
+Dendrites of dentate gyrus granule cells contribute to pattern separation by
+controlling sparsity. \emph{Hippocampus} 27, 89--110. doi:10.1002/hipo.22675.
+Model: ModelDB 206372.
+
+\bibitem{chavlis2017review} Chavlis, S. \& Poirazi, P. (2017). Pattern separation
+in the hippocampus through the eyes of computational modeling. \emph{Synapse}
+71, e21972. doi:10.1002/syn.21972.
+
+\bibitem{danielson2017} Danielson, N. B., Turi, G. F., Ladow, M., Chavlis, S.,
+Petrantonakis, P. C., Poirazi, P. \& Losonczy, A. (2017). In vivo imaging of
+dentate gyrus mossy cells in behaving mice. \emph{Neuron} 93, 552--559.e4.
+Model: ModelDB 206397.
+
+\bibitem{myers2009} Myers, C. E. \& Scharfman, H. E. (2009). A role for hilar
+cells in pattern separation in the dentate gyrus: a computational approach.
+\emph{Hippocampus} 19, 321--337.
+
+\bibitem{myers2011} Myers, C. E. \& Scharfman, H. E. (2011). Pattern separation
+in the dentate gyrus: a role for the CA3 backprojection. \emph{Hippocampus} 21,
+1190--1215.
+
+\bibitem{jinde2012} Jinde, S., Zsiros, V., Jiang, Z., Nakao, K., Pickel, J.,
+Kohno, K., Belforte, J. E. \& Nakazawa, K. (2012). Hilar mossy cell degeneration
+causes transient dentate granule cell hyperexcitability and impaired pattern
+separation. \emph{Neuron} 76, 1189--1200.
+
+\bibitem{engin2015} Engin, E., Zarnowska, E. D., Benke, D., Tsvetkov, E., Sigal,
+M., Keist, R., Bolshakov, V. Y., Pearce, R. A. \& Rudolph, U. (2015). Tonic
+inhibitory control of dentate gyrus granule cells by $\alpha5$-containing
+GABA$_\mathrm{A}$ receptors reduces memory interference. \emph{J. Neurosci.} 35,
+13698--13712.
+
+\bibitem{bird2024} Bird, A. D. et al.\ (2024). Robust and consistent measures of
+pattern separation based on information theory and demonstrated in the dentate
+gyrus. \emph{PLoS Comput. Biol.} 20, e1010706. \todo{full author list}
+
+\bibitem{santhakumar2005} Santhakumar, V., Aradi, I. \& Soltesz, I. (2005). Role
+of mossy fiber sprouting and mossy cell loss in hyperexcitability: a network
+model of the dentate gyrus incorporating cell types and axonal topography.
+\emph{J. Neurophysiol.} 93, 437--453. Model: ModelDB 51781.
+
+\bibitem{tejada2014} Tejada, J. et al.\ (2014). Dentate gyrus network model.
+ModelDB 155568. \todo{full reference}
+
+\bibitem{yim2015} Yim, M. Y., Hanuschkin, A. \& Wolfart, J. (2015). Intrinsic
+rescaling of granule cells restores pattern separation ability of a dentate gyrus
+network model during epileptic hyperexcitability. \emph{Hippocampus} 25, 297--308.
+Model: ModelDB 185355. \todo{check}
+
+\bibitem{schneider2012} Schneider, C. J., Bezaire, M. \& Soltesz, I. (2012).
+Toward a full-scale computational model of the rat dentate gyrus. \emph{Front.
+Neural Circuits} 6, 83.
+
+\bibitem{braganza2020} Braganza, O., Mueller-Komorowska, D., Kelly, T. \& Beck,
+H. (2020). Quantitative properties of a feedback circuit predict
+frequency-dependent pattern separation. \emph{eLife} 9, e53148.
+
+\bibitem{guzman2021} Guzman, S. J., Schl\"ogl, A., Espinoza, C., Zhang, X.,
+Suter, B. A. \& Jonas, P. (2021). How connectivity rules and synaptic properties
+shape the efficacy of pattern separation in the entorhinal cortex--dentate
+gyrus--CA3 network. \emph{Nat. Comput. Sci.} 1. Code: doi:10.15479/AT:ISTA:10110.
+\todo{pages}
+
+\bibitem{saini2025} Saini, S. \& Narayanan, R. (2025). Degeneracy explains
+diversity in interneuronal regulation of pattern separation in heterogeneous
+dentate gyrus networks. bioRxiv 2025.02.14.638282. \todo{journal version}
+
+\bibitem{mcdougal2017} McDougal, R. A. et al.\ (2017). Twenty years of ModelDB
+and beyond. \emph{J. Comput. Neurosci.} 42, 1--10.
+
+\bibitem{spreizer2021} Spreizer, S., Senk, J., Rotter, S., Diesmann, M. \&
+Weyers, B. (2021). NEST Desktop, an educational application for neuroscience.
+\emph{eNeuro} 8. \todo{issue/article number}
+
+\bibitem{wheeler2024} Wheeler, D. W. et al.\ (2024). Hippocampome.org 2.0 is a
+knowledge base enabling data-driven spiking neural network simulations of rodent
+hippocampal circuits. \emph{eLife} 12, RP90597. \todo{check}
+
+\todo{add: sparse coding in DG; Shapley attribution in neuroscience}
 \end{thebibliography}
 
 \end{document}

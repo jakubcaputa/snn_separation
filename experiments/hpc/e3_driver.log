@@ -1,0 +1,186 @@
+18:34:25 submitted 3361546: python precompute_codes.py --neuron izh --seed 99 --batch 1000;python precompute_codes.py --neuron lif --seed 99 --batch 1000;python run_static.py --exp tune --neuron izh --seed 99 --jobs 16;python run_static.py --exp tune --neuron lif --seed 99 --jobs 16;python make_hparams.py 1;python run_split.py --neuron izh --seed 99 --rule rstdp --pilot;python run_split.py --neuron izh --seed 99 --rule delta --pilot;python run_split.py --neuron lif --seed 99 --rule rstdp --pilot;python run_split.py --neuron lif --seed 99 --rule delta --pilot;python make_hparams.py 2
+18:53:35 finished 3361546:  COMPLETED   00:17:40 
+18:53:36 submitted 3361570: python precompute_codes.py --neuron izh --seed 0 --batch 1000;python precompute_codes.py --neuron izh --seed 1 --batch 1000;python precompute_codes.py --neuron izh --seed 2 --batch 1000;python precompute_codes.py --neuron izh --seed 3 --batch 1000
+19:32:20 finished 3361570:  COMPLETED   00:37:04 
+19:32:21 submitted 3361665: python precompute_codes.py --neuron izh --seed 4 --batch 1000;python precompute_codes.py --neuron lif --seed 0 --batch 1000;python precompute_codes.py --neuron lif --seed 1 --batch 1000;python precompute_codes.py --neuron lif --seed 2 --batch 1000
+20:01:28 finished 3361665:  COMPLETED   00:25:15 
+20:01:28 submitted 3361675: python precompute_codes.py --neuron lif --seed 3 --batch 1000;python precompute_codes.py --neuron lif --seed 4 --batch 1000
+20:12:08 finished 3361675:  COMPLETED   00:10:18 
+20:12:08 queue empty
+22:08:29 submitted 3361916: for s in 0 1 2 3 4; do python run_static.py --exp e31 --neuron izh --seed $s --order-seed 0 --jobs 16; done
+22:10:29 finished 3361916:     FAILED   00:00:00 
+22:10:30 submitted 3361918: for s in 0 1 2 3 4; do python run_static.py --exp e31 --neuron lif --seed $s --order-seed 0 --jobs 16; done
+22:13:02 finished 3361918:     FAILED   00:00:01 
+22:13:02 submitted 3361920: ./run_e33_all.sh 16
+22:14:03 finished 3361920:     FAILED   00:00:31 
+22:14:03 submitted 3361921: python precompute_codes.py --neuron izh --seed 0 --phasic --batch 1000;python precompute_codes.py --neuron izh --seed 1 --phasic --batch 1000;python precompute_codes.py --neuron izh --seed 2 --phasic --batch 1000
+22:42:32 finished 3361921:  COMPLETED   00:28:22 
+22:42:32 submitted 3362017: python precompute_codes.py --neuron izh --seed 3 --phasic --batch 1000;python precompute_codes.py --neuron izh --seed 4 --phasic --batch 1000;python precompute_codes.py --neuron lif --seed 0 --phasic --batch 1000
+23:08:51 finished 3362017:  COMPLETED   00:25:53 
+23:08:51 submitted 3362032: python precompute_codes.py --neuron lif --seed 1 --phasic --batch 1000;python precompute_codes.py --neuron lif --seed 2 --phasic --batch 1000;python precompute_codes.py --neuron lif --seed 3 --phasic --batch 1000
+23:30:52 finished 3362032:  COMPLETED   00:21:51 
+23:30:52 submitted 3362048: python precompute_codes.py --neuron lif --seed 4 --phasic --batch 1000;for n in izh lif; do for s in 0 1 2 3 4; do python run_static.py --exp e32 --neuron $n --seed $s --order-seed 0 --jobs 10; done; done;python analyze.py
+23:38:22 finished 3362048:     FAILED   00:07:18 
+23:38:22 queue empty
+08:10:13 submitted 3362221: ./run_e31_all.sh izh
+08:16:13 finished 3362221:  COMPLETED   00:05:49 
+08:16:13 submitted 3362229: ./run_e31_all.sh lif
+08:22:13 finished 3362229:  COMPLETED   00:05:32 
+08:22:14 submitted 3362251: ./run_e32_all.sh
+08:26:14 finished 3362251:  COMPLETED   00:03:53 
+08:26:14 submitted 3362254: ./run_e33_all.sh 16 izh
+08:30:14 finished 3362254:  COMPLETED   00:03:48 
+08:30:14 submitted 3362258: ./run_e33_all.sh 16 lif
+08:34:14 finished 3362258:  COMPLETED   00:03:43 
+08:34:14 submitted 3362259: python analyze.py
+08:34:44 finished 3362259:  COMPLETED   00:00:06 
+08:34:44 queue empty
+16:27:46 submitted 3363405: python precompute_codes.py --neuron izh --seed 5 --batch 1000;python precompute_codes.py --neuron izh --seed 6 --batch 1000;python precompute_codes.py --neuron izh --seed 7 --batch 1000;python precompute_codes.py --neuron izh --seed 8 --batch 1000
+17:10:47 finished 3363405:  COMPLETED   00:37:24 
+17:10:47 submitted 3363469: python precompute_codes.py --neuron izh --seed 9 --batch 1000;python precompute_codes.py --neuron lif --seed 5 --batch 1000;python precompute_codes.py --neuron lif --seed 6 --batch 1000;python precompute_codes.py --neuron lif --seed 7 --batch 1000
+17:36:17 finished 3363469:  COMPLETED   00:25:01 
+17:36:18 submitted 3363500: python precompute_codes.py --neuron lif --seed 8 --batch 1000;python precompute_codes.py --neuron lif --seed 9 --batch 1000;./run_e33_all.sh 16 izh
+17:50:48 finished 3363500:  COMPLETED   00:14:09 
+17:50:48 submitted 3363517: ./run_e33_all.sh 16 lif
+17:56:18 finished 3363517:  COMPLETED   00:05:14 
+17:56:18 submitted 3363521: ./run_e33_all.sh 16 izh '5 6 7 8 9'
+18:01:48 finished 3363521:  COMPLETED   00:05:10 
+18:01:49 submitted 3363531: ./run_e33_all.sh 16 lif '5 6 7 8 9'
+18:07:19 finished 3363531:  COMPLETED   00:05:25 
+18:07:19 submitted 3363546: python analyze.py
+18:07:49 finished 3363546:  COMPLETED   00:00:10 
+18:07:49 queue empty
+21:28:18 submitted 3364098: ./run_e34_all.sh 16
+21:30:18 finished 3364098:  COMPLETED   00:01:47 
+21:30:18 submitted 3364101: python analyze.py
+21:30:48 finished 3364101:  COMPLETED   00:00:09 
+21:30:48 queue empty
+08:21:57 submitted 3387258: ./run_e34_all.sh 16
+08:31:59 finished 3387258:  COMPLETED   00:02:21 
+08:31:59 submitted 3387265: python analyze.py;python make_summary_figures.py
+08:38:32 finished 3387265:  COMPLETED   00:00:15 
+08:38:32 submitted 3387274: python run_static.py --exp tune --neuron izh --seed 99 --jobs 16;python run_static.py --exp tune --neuron lif --seed 99 --jobs 16;python make_hparams.py 1;python run_split.py --neuron izh --seed 99 --rule rgate --pilot;python run_split.py --neuron lif --seed 99 --rule rgate --pilot;python make_hparams.py 2
+08:50:07 finished 3387274:  COMPLETED   00:02:33 
+08:50:07 submitted 3387282: ./run_e35_all.sh 16 2000 30 "0 1 2 3 4"
+09:02:11 finished 3387282:  COMPLETED   00:05:58 
+09:02:11 submitted 3387294: python precompute_codes.py --batch 1000 --neuron izh --seed 0 --n-dg 500;python precompute_codes.py --batch 1000 --neuron izh --seed 1 --n-dg 500;python precompute_codes.py --batch 1000 --neuron izh --seed 2 --n-dg 500;python precompute_codes.py --batch 1000 --neuron lif --seed 0 --n-dg 500;python precompute_codes.py --batch 1000 --neuron lif --seed 1 --n-dg 500;python precompute_codes.py --batch 1000 --neuron lif --seed 2 --n-dg 500;python precompute_codes.py --batch 1000 --neuron izh --seed 0 --n-dg 1000;python precompute_codes.py --batch 1000 --neuron izh --seed 1 --n-dg 1000
+09:27:20 finished 3387294:  COMPLETED   00:21:17 
+09:27:20 submitted 3387334: cd .. && python -m calib_exvivo.grid --chunk 0 --n-chunks 3 --jobs 16
+10:17:41 finished 3387334:  COMPLETED   00:38:43 
+10:17:41 submitted 3387370: cd .. && python -m calib_exvivo.grid --chunk 1 --n-chunks 3 --jobs 16
+10:33:20 finished 3387370: CANCELLED+   00:02:00 
+10:33:20 submitted 3387372: python precompute_codes.py --batch 1000 --neuron izh --seed 2 --n-dg 1000;python precompute_codes.py --batch 1000 --neuron lif --seed 0 --n-dg 1000;python precompute_codes.py --batch 1000 --neuron lif --seed 1 --n-dg 1000;python precompute_codes.py --batch 1000 --neuron lif --seed 2 --n-dg 1000;./run_e35_all.sh 16 500 30 "0 1 2";./run_e35_all.sh 16 1000 30 "0 1 2"
+10:59:52 finished 3387372:  COMPLETED   00:17:14 
+10:59:52 submitted 3387387: cd .. && python -m calib_exvivo.grid --chunk 0 --n-chunks 4 --jobs 16
+11:38:53 finished 3387387:  COMPLETED   00:38:37 
+11:38:53 submitted 3387403: cd .. && python -m calib_exvivo.grid --chunk 1 --n-chunks 4 --jobs 16
+12:19:02 finished 3387403:  COMPLETED   00:38:51 
+12:19:02 submitted 3387449: cd .. && python -m calib_exvivo.grid --chunk 2 --n-chunks 4 --jobs 16
+12:58:48 finished 3387449:  COMPLETED   00:38:09 
+12:58:49 submitted 3387486: cd .. && python -m calib_exvivo.grid --chunk 3 --n-chunks 4 --jobs 16 && python -m calib_exvivo.grid --collect
+13:39:53 finished 3387486:  COMPLETED   00:39:40 
+13:39:53 submitted 3387494: python precompute_codes.py --batch 1000 --neuron izh --seed 0 --n-dg 2000 --fan-in 10;python precompute_codes.py --batch 1000 --neuron izh --seed 1 --n-dg 2000 --fan-in 10;python precompute_codes.py --batch 1000 --neuron izh --seed 2 --n-dg 2000 --fan-in 10;python precompute_codes.py --batch 1000 --neuron lif --seed 0 --n-dg 2000 --fan-in 10;python precompute_codes.py --batch 1000 --neuron lif --seed 1 --n-dg 2000 --fan-in 10
+14:22:24 finished 3387494:  COMPLETED   00:38:13 
+14:22:25 submitted 3387502: python precompute_codes.py --batch 1000 --neuron lif --seed 2 --n-dg 2000 --fan-in 10;python precompute_codes.py --batch 1000 --neuron izh --seed 0 --n-dg 2000 --fan-in 100;python precompute_codes.py --batch 1000 --neuron izh --seed 1 --n-dg 2000 --fan-in 100;python precompute_codes.py --batch 1000 --neuron izh --seed 2 --n-dg 2000 --fan-in 100;python precompute_codes.py --batch 1000 --neuron lif --seed 0 --n-dg 2000 --fan-in 100
+15:02:30 finished 3387502:  COMPLETED   00:38:02 
+15:02:30 submitted 3387512: python precompute_codes.py --batch 1000 --neuron lif --seed 1 --n-dg 2000 --fan-in 100;python precompute_codes.py --batch 1000 --neuron lif --seed 2 --n-dg 2000 --fan-in 100;./run_e35_all.sh 16 2000 10 "0 1 2";./run_e35_all.sh 16 2000 100 "0 1 2"
+15:24:36 finished 3387512:  COMPLETED   00:18:45 
+15:24:36 submitted 3387522: python precompute_codes.py --batch 1000 --neuron izh --seed 0 --n-dg 5000;python precompute_codes.py --batch 1000 --neuron izh --seed 1 --n-dg 5000
+16:17:22 finished 3387522:  COMPLETED   00:45:16 
+16:17:22 submitted 3387535: python precompute_codes.py --batch 1000 --neuron izh --seed 2 --n-dg 5000;python precompute_codes.py --batch 1000 --neuron lif --seed 0 --n-dg 5000
+16:56:23 finished 3387535:  COMPLETED   00:35:02 
+16:56:23 submitted 3387654: python precompute_codes.py --batch 1000 --neuron lif --seed 1 --n-dg 5000;python precompute_codes.py --batch 1000 --neuron lif --seed 2 --n-dg 5000
+17:33:27 finished 3387654:  COMPLETED   00:25:11 
+17:33:27 submitted 3387717: ./run_e35_all.sh 16 5000 30 "0 1 2"
+17:46:33 finished 3387717:  COMPLETED   00:11:12 
+17:46:33 submitted 3387742: python analyze.py;python make_summary_figures.py
+17:47:34 finished 3387742:  COMPLETED   00:00:15 
+17:47:34 submitted 3387744: python run_dgtask.py --phase codes --jobs 16 --r-in 0.5 --seed 99;python run_dgtask.py --phase codes --jobs 16 --r-in 0.75 --seed 99
+18:48:39 finished 3387744:    TIMEOUT   01:00:12 
+18:48:39 submitted 3387923: python run_dgtask.py --phase codes --jobs 16 --r-in 0.9 --seed 99;python run_dgtask.py --phase pilot --r-in 0.5 --rule rstdp;python run_dgtask.py --phase pilot --r-in 0.5 --rule delta;python run_dgtask.py --phase pilot --r-in 0.5 --rule rgate;python run_dgtask.py --phase pilot --r-in 0.75 --rule rstdp;python run_dgtask.py --phase pilot --r-in 0.75 --rule delta;python run_dgtask.py --phase pilot --r-in 0.75 --rule rgate;python run_dgtask.py --phase pilot --r-in 0.9 --rule rstdp;python run_dgtask.py --phase pilot --r-in 0.9 --rule delta;python run_dgtask.py --phase pilot --r-in 0.9 --rule rgate
+19:21:27 finished 3387923:     FAILED   00:32:40 
+19:21:27 submitted 3387978: python run_dgtask.py --phase codes --jobs 16 --r-in 0.5 --seed 0;python run_dgtask.py --phase codes --jobs 16 --r-in 0.5 --seed 1
+20:22:00 finished 3387978:    TIMEOUT   01:00:19 
+20:22:00 submitted 3388047: python run_dgtask.py --phase codes --jobs 16 --r-in 0.5 --seed 2;python run_dgtask.py --phase codes --jobs 16 --r-in 0.75 --seed 0
+21:22:57 finished 3388047:    TIMEOUT   01:00:00 
+21:22:57 submitted 3388093: python run_dgtask.py --phase codes --jobs 16 --r-in 0.75 --seed 1;python run_dgtask.py --phase codes --jobs 16 --r-in 0.75 --seed 2
+22:26:00 finished 3388093:    TIMEOUT   01:00:12 
+22:26:00 submitted 3388127: python run_dgtask.py --phase codes --jobs 16 --r-in 0.9 --seed 0;python run_dgtask.py --phase codes --jobs 16 --r-in 0.9 --seed 1
+23:30:12 finished 3388127:    TIMEOUT   01:00:12 
+23:30:13 submitted 3388272: python run_dgtask.py --phase codes --jobs 16 --r-in 0.9 --seed 2;./run_e36_all.sh 16
+00:03:39 finished 3388272:     FAILED   00:32:58 
+00:03:39 submitted 3388298: python analyze.py;python make_summary_figures.py
+00:04:40 finished 3388298:  COMPLETED   00:00:16 
+00:04:40 queue empty
+08:04:45 submitted 3388742: python run_dgtask.py --phase codes --jobs 16 --r-in 0.75 --seed 99
+08:37:46 finished 3388742:  COMPLETED   00:32:45 
+08:37:46 submitted 3388765: cd .. && python -m calib_exvivo.grid --chunk 0 --n-chunks 3 --jobs 16
+09:22:29 finished 3388765:  COMPLETED   00:43:53 
+09:22:29 submitted 3388823: cd .. && python -m calib_exvivo.grid --chunk 1 --n-chunks 3 --jobs 16
+10:07:26 finished 3388823:  COMPLETED   00:44:42 
+10:07:26 submitted 3388839: cd .. && python -m calib_exvivo.grid --chunk 2 --n-chunks 3 --jobs 16 && python -m calib_exvivo.grid --collect
+10:51:57 finished 3388839:  COMPLETED   00:44:18 
+10:51:57 submitted 3388854: python run_dgtask.py --phase codes --jobs 16 --r-in 0.75 --seed 0
+11:24:42 finished 3388854:  COMPLETED   00:31:43 
+11:24:42 submitted 3388903: python run_dgtask.py --phase codes --jobs 16 --r-in 0.75 --seed 2
+12:01:56 finished 3388903:  COMPLETED   00:30:25 
+12:01:56 submitted 3388924: python run_dgtask.py --phase codes --jobs 16 --r-in 0.5 --seed 1
+12:32:57 finished 3388924:  COMPLETED   00:30:31 
+12:32:57 submitted 3388948: python run_dgtask.py --phase codes --jobs 16 --r-in 0.9 --seed 1
+13:03:58 finished 3388948:  COMPLETED   00:30:30 
+13:03:58 submitted 3388966: python run_dgtask.py --phase pilot --r-in 0.75 --rule rstdp;python run_dgtask.py --phase pilot --r-in 0.75 --rule delta;python run_dgtask.py --phase pilot --r-in 0.75 --rule rgate;python run_dgtask.py --phase pilot --r-in 0.9 --rule rstdp;python run_dgtask.py --phase pilot --r-in 0.9 --rule delta;python run_dgtask.py --phase pilot --r-in 0.9 --rule rgate;./run_e36_all.sh 16;python analyze.py;python make_summary_figures.py
+13:05:28 finished 3388966:  COMPLETED   00:01:11 
+13:05:28 queue empty
+18:11:49 submitted 3392688: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.5 --seed 99
+18:35:50 finished 3392688:  COMPLETED   00:20:43 
+18:35:50 submitted 3392713: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.5 --seed 99
+18:36:20 finished 3392713:  COMPLETED   00:00:09 
+18:36:20 submitted 3392714: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.75 --seed 99
+18:57:24 finished 3392714:  COMPLETED   00:20:41 
+18:57:24 submitted 3392722: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.75 --seed 99
+19:05:59 finished 3392722:  COMPLETED   00:00:08 
+19:05:59 submitted 3392734: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.9 --seed 99
+19:27:01 finished 3392734:  COMPLETED   00:20:12 
+19:27:01 submitted 3392756: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.9 --seed 99
+19:29:31 finished 3392756:  COMPLETED   00:00:07 
+19:29:31 submitted 3392757: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.5 --seed 0
+19:50:32 finished 3392757:  COMPLETED   00:20:33 
+19:50:32 submitted 3392785: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.5 --seed 0
+20:04:03 finished 3392785:  COMPLETED   00:00:04 
+20:04:03 submitted 3392793: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.75 --seed 0
+20:26:45 finished 3392793:  COMPLETED   00:20:39 
+20:26:45 submitted 3392817: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.75 --seed 0
+20:33:18 finished 3392817:  COMPLETED   00:00:09 
+20:33:19 submitted 3392826: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.9 --seed 0
+20:53:59 finished 3392826:  COMPLETED   00:20:09 
+20:53:59 submitted 3392838: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.9 --seed 0
+20:54:29 finished 3392838:  COMPLETED   00:00:08 
+20:54:29 submitted 3392839: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.5 --seed 1
+21:15:10 finished 3392839:  COMPLETED   00:20:27 
+21:15:10 submitted 3392861: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.5 --seed 1
+21:15:40 finished 3392861:  COMPLETED   00:00:03 
+21:15:40 submitted 3392862: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.75 --seed 1
+21:36:51 finished 3392862:  COMPLETED   00:20:37 
+21:36:51 submitted 3392884: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.75 --seed 1
+21:38:22 finished 3392884:  COMPLETED   00:00:04 
+21:38:22 submitted 3392887: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.9 --seed 1
+22:00:00 finished 3392887:  COMPLETED   00:21:03 
+22:00:00 submitted 3392901: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.9 --seed 1
+22:00:30 finished 3392901:  COMPLETED   00:00:05 
+22:00:30 submitted 3392902: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.5 --seed 2
+22:21:01 finished 3392902:  COMPLETED   00:20:25 
+22:21:01 submitted 3392931: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.5 --seed 2
+22:21:31 finished 3392931:  COMPLETED   00:00:04 
+22:21:31 submitted 3392932: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.75 --seed 2
+22:42:32 finished 3392932:  COMPLETED   00:20:33 
+22:42:33 submitted 3392953: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.75 --seed 2
+22:45:33 finished 3392953:  COMPLETED   00:00:05 
+22:45:33 submitted 3392955: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.9 --seed 2
+23:06:04 finished 3392955:  COMPLETED   00:20:27 
+23:06:04 submitted 3392968: python run_dgtask.py --phase codes --regime exvivo --jobs 16 --r-in 0.9 --seed 2
+23:06:34 finished 3392968:  COMPLETED   00:00:08 
+23:06:34 submitted 3392971: python run_dgtask.py --phase pilot --regime exvivo --r-in 0.5 --rule rstdp;python run_dgtask.py --phase pilot --regime exvivo --r-in 0.5 --rule delta;python run_dgtask.py --phase pilot --regime exvivo --r-in 0.5 --rule rgate;python run_dgtask.py --phase pilot --regime exvivo --r-in 0.75 --rule rstdp;python run_dgtask.py --phase pilot --regime exvivo --r-in 0.75 --rule delta;python run_dgtask.py --phase pilot --regime exvivo --r-in 0.75 --rule rgate;python run_dgtask.py --phase pilot --regime exvivo --r-in 0.9 --rule rstdp;python run_dgtask.py --phase pilot --regime exvivo --r-in 0.9 --rule delta;python run_dgtask.py --phase pilot --regime exvivo --r-in 0.9 --rule rgate
+23:10:04 finished 3392971:  COMPLETED   00:00:36 
+23:10:04 submitted 3392978: REGIME=exvivo ./run_e36_all.sh 16;python analyze.py;python make_summary_figures.py
+23:14:34 finished 3392978:  COMPLETED   00:00:34 
+23:14:34 queue empty

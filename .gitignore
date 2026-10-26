@@ -17,3 +17,8 @@ experiments/hpc/logs/
 # a reguła *.png wyżej by je wycięła.
 !article/figures/
 !article/figures/*.png
+
+# Figury podsumowujące E3 — README odwołuje się do nich, więc muszą być w repo
+# (reguły *.png i experiments/**/results/ wyżej by je wycięły).
+!experiments/e3_sparsity_third_factor/figures/
+!experiments/e3_sparsity_third_factor/figures/*.png

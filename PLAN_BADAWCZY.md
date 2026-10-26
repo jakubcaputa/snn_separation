@@ -134,7 +134,8 @@ separacji) nie istnieje. Patrz STATUS sek. 4.1 — to jest decyzja do podjęcia.
 |---|---|---|---|---|---|
 | **E1** | **Mapa reżimów** — separacja vs poziom aktywności | osie: napęd PP (×0.25…×4), `W_FS_GC`, `K_GC`, `R_in` ∈ {0.5…0.975}, `W_FS_HMC` ∈ {0,1,2,5}, reżim MC; 10 seedów sieci × 10 zestawów wzorców | ~30–50 tys. sym. | **H1, H2** | `e1_regime_map/` ✅ |
 | **E2** | **Atrybucja motywów** — 2³ lezje FF/FB/MC + Shapley, pełna bateria metryk | ta sama sieć i te same wzorce we wszystkich lezjach | ~20 tys. | który motyw tworzy okno | `e2_motif_attribution/` ✅ |
-| **E3** | **Sobol/LHS dla surrogatu ML** | sekwencja Sobola, NIE gęsta siatka (sek. 3.4 leakage) | 20 tys. + 5 tys. spoza hipersześcianu | indeksy Sobola, sloppiness | niezbudowane |
+| **E3-S** | **Sobol/LHS dla surrogatu ML** (dawne „E3”, przemianowane 2026-10-12) | sekwencja Sobola, NIE gęsta siatka (sek. 3.4 leakage) | 20 tys. + 5 tys. spoza hipersześcianu | indeksy Sobola, sloppiness | niezbudowane |
+| **E3** | **Rzadkość jako trzeci czynnik uczenia** — stała warstwa DG z tonicznym `K`, czytnik R-STDP, `K` sterowane nowością; MNIST i Split-MNIST | plan w folderze | patrz plan | H-E3a…d (własne hipotezy E3) | `e3_sparsity_third_factor/` 📝 plan |
 | **E4** | **Kontroler** — 3 mechanizmy × 3 wielkości kontrolowane × ON/OFF | 60 s adaptacji → perturbacja → 60 s odzysku | ~3 tys. długich przebiegów | **H3, H4** ← nośne | niezbudowane |
 | **E5** | **Uogólnienie kontrolera** — strojony w jednym reżimie, testowany w innych | strojenie 10 Hz / R=0.75; test 30 Hz, burstiness, inne `R_in` | ~2 tys. | **H3** (kluczowy test) | niezbudowane |
 | **E6** | **Skalowanie** — `DGConfig.scaled(N)`, N_GC ∈ {200,400,800,2000,5000} | stały in-degree | ~1 tys. (drogie) | czy okno przesuwa się z rozmiarem | niezbudowane |
@@ -240,7 +241,7 @@ Sekcja, na której recenzenci PLOS CB koncentrują ogień.
 ### 3.5 ⚠️ Cztery pułapki modelu (obowiązują w KAŻDYM nowym sweepie)
 
 Każda z nich już raz cicho zepsuła wynik. Podwójnie ważne przy generowaniu datasetu
-dla ML (E3): model wytrenowany na artefaktach nauczy się artefaktów, a potem inverse
+dla ML (E3-S): model wytrenowany na artefaktach nauczy się artefaktów, a potem inverse
 design zoptymalizuje pod artefakt.
 
 1. **Skalowanie: `DGConfig.scaled(N)`, nigdy `N_GC=` wprost.** `DGConfig(N_GC=800)`
@@ -445,7 +446,7 @@ literatura.
 - M2.1 E1 na Aresie z pełną baterią metryk + maska ważności.
 - M2.2 E2 (Shapley dla wszystkich metryk).
 - M2.3 E6 (skalowanie N_GC do 2000–5000).
-- M2.4 E3 + surrogat L3: Sobol, blokowe CV, sloppiness.
+- M2.4 E3-S + surrogat L3: Sobol, blokowe CV, sloppiness.
 - M2.5 Suwak `W FS→HMC` + panel obserwowalności w `interactive_dg.py`.
 - **Bramka G2:** H1 potwierdzona (niemonotoniczność z CI, poza maską artefaktów)
   ORAZ H2 potwierdzona na pełnej siatce. **Jeśli nie — pivot na robustness/padaczkę
@@ -465,7 +466,7 @@ literatura.
 - M4.5 submisja + gotowy plan odpowiedzi na trzy najbardziej prawdopodobne zarzuty.
 
 *Bufor:* Q1 i Q3 są najbardziej ryzykowne. 12 miesięcy wystarcza tylko przy
-założeniu, że E1–E3 lecą na HPC bez babysittingu — sharding i kontener muszą
+założeniu, że E1–E3-S lecą na HPC bez babysittingu — sharding i kontener muszą
 działać do końca Q1.
 
 ### 7.2 Plan figur — kontrakt na zakres
