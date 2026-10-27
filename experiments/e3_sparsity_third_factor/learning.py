@@ -25,15 +25,21 @@ import numpy as np
 
 
 class Readout:
-    def __init__(self, n_in: int, rule: str, eta: float, seed: int, eps: float = 0.02):
+    def __init__(self, n_in: int, rule: str, eta: float, seed: int, eps: float = 0.02,
+                 scale: float = 1.0, lam: float = 0.0):
         self.rule = rule
         self.eta = eta
         self.eps = eps
+        # E3.8 (2026-10-27): `scale` — stała skala wejścia dla reguł bez normalizacji per obraz
+        # (rstdp_raw: 1/średnia ‖c‖, delta_raw: 1/średnia ‖c‖², liczone przy f_c); `lam` — udział
+        # osłabiania w regule rmix (0 = rgate, 1 = pełne osłabianie wybranego, błędnego wyjścia)
+        self.scale = scale
+        self.lam = lam
         self.rng = np.random.default_rng(50_000 + seed)
         self.W = np.zeros((n_in, 10), np.float32)
         self.Rbar = 0.0
         self.beta = 1.0
-        if rule == 'rgate':
+        if rule in ('rgate', 'rmix'):
             # start: małe losowe wagi o jednostkowej normie każdej kolumny; ostrzejszy
             # wybór (wyniki to kosinusy w [0, 1]) i eksploracja ε
             W = self.rng.uniform(0.0, 1.0, (n_in, 10)).astype(np.float32)
@@ -42,7 +48,9 @@ class Readout:
             self.eps = max(eps, 0.1)
 
     def scores(self, X: np.ndarray) -> np.ndarray:
-        if self.rule in ('rstdp', 'rgate'):
+        if self.rule == 'rstdp_raw':
+            return (X * self.scale) @ self.W
+        if self.rule in ('rstdp', 'rgate', 'rmix'):
             n = np.linalg.norm(X, axis=-1, keepdims=True)
             return (X / np.maximum(n, 1e-9)) @ self.W
         return X @ self.W
@@ -52,6 +60,36 @@ class Readout:
 
     def step(self, x: np.ndarray, y: int, eta_mult: float = 1.0):
         """Jedna prezentacja. Zwraca (odpowiedź, nagroda R, wyniki s)."""
+        if self.rule == 'rmix':
+            # E3.8: rgate z regulowanym osłabianiem — przy pomyłce wagi aktywnych neuronów DG do
+            # wybranego (błędnego) wyjścia maleją o λ·η·ĉ; potem ta sama normalizacja kolumny
+            nrm = float(np.linalg.norm(x))
+            xh = x / nrm if nrm > 0 else x
+            s = xh @ self.W
+            z = self.beta * s
+            p = np.exp(z - z.max())
+            p /= p.sum()
+            win = int(self.rng.integers(10)) if self.rng.random() < self.eps else int(self.rng.choice(10, p=p))
+            R = 1.0 if win == y else -1.0
+            if R > 0 or self.lam > 0:
+                step = (self.eta * eta_mult) * (1.0 if R > 0 else -self.lam)
+                col = np.maximum(self.W[:, win] + step * xh, 0.0)
+                self.W[:, win] = col / max(float(np.linalg.norm(col)), 1e-9)
+            return win, R, p
+        if self.rule == 'rstdp_raw':
+            # E3.8: jak rstdp, ale bez normalizacji per obraz (ĉ = c · stała skala)
+            xh = x * self.scale
+            s = xh @ self.W
+            z = self.beta * s
+            p = np.exp(z - z.max())
+            p /= p.sum()
+            win = int(self.rng.choice(10, p=p))
+            R = 1.0 if win == y else -1.0
+            post = -p
+            post[win] += 1.0
+            self.W += (self.eta * eta_mult * (R - self.Rbar)) * np.outer(xh, post)
+            self.Rbar += (R - self.Rbar) / 100.0
+            return win, R, p
         if self.rule == 'rgate':
             # trójczynnikowa BEZ osłabiania (dodane 2026-10-22, E3.5): odpowiedź losowana
             # z softmax jak w rstdp, ale nagroda bramkuje wyłącznie wzmacnianie synaps
@@ -99,6 +137,11 @@ class Readout:
             nrm = float(x @ x)
             if nrm > 0:
                 self.W += (self.eta * eta_mult / (nrm + 1e-6)) * np.outer(x, t - s)
+        elif self.rule == 'delta_raw':
+            # E3.8: reguła delta bez normalizacji per obraz (stała skala zamiast 1/‖x‖²)
+            t = np.zeros(10, np.float32)
+            t[y] = 1.0
+            self.W += (self.eta * eta_mult * self.scale) * np.outer(x, t - s)
         elif self.rule == 'fly':
             self.W[:, y] += self.eta * eta_mult * x
         else:

@@ -67,15 +67,20 @@ def _no_autapse(st):
 # Równania
 # ══════════════════════════════════════════════════════════════════════════════
 
-def _gc_eqs(K: float, b: float = B_GC) -> str:
+def _gc_eqs(K: float, b: float = B_GC, tau_in: float = TAU_IN_GC, hetero: bool = False) -> str:
     # g_ex = PP→GC, g_ex2 = HMC→GC (re-ekscytacja), g_in = FS→GC
+    # hetero=True (2026-10-27, kalibracja ex vivo): K per neuron (parametr Kc) zamiast stałej —
+    # GC różnią się pobudliwością (w danych Madara V_rest −81…−70 mV). Domyślnie False, więc
+    # równanie jest identyczne jak wcześniej (testy regresji).
+    k_term = "Kc*mV/ms" if hetero else f"{K}*mV/ms"
     return (
         f"dv/dt = (0.04/mV/ms*v**2 + 5/ms*v + 140*mV/ms - u/ms"
-        f" + g_ex/ms + g_ex2/ms - g_in/ms - {K}*mV/ms) : volt (unless refractory)\n"
+        f" + g_ex/ms + g_ex2/ms - g_in/ms - {k_term}) : volt (unless refractory)\n"
         f"dg_ex/dt  = -g_ex /({TAU_EX_GC}*ms) : volt\n"
         f"dg_ex2/dt = -g_ex2/({TAU_EX_GC}*ms) : volt\n"
-        f"dg_in/dt  = -g_in /({TAU_IN_GC}*ms) : volt\n"
+        f"dg_in/dt  = -g_in /({tau_in}*ms) : volt\n"
         f"du/dt = {A_GC}/ms*({b}*v - u) : volt\n"
+        + ("Kc : 1 (constant)\n" if hetero else "")
     )
 
 
@@ -159,7 +164,8 @@ def simulate(cfg: DGConfig, input_idx: np.ndarray, input_t_ms: np.ndarray,
     n_pp = cfg.N_GC * cfg.n_syn_pp if cfg.per_fiber else cfg.N_GC
     pp = SpikeGeneratorGroup(n_pp, input_idx, input_t_ms * ms)
 
-    gc = NeuronGroup(cfg.N_GC, _gc_eqs(cfg.K_GC, cfg.b_gc), threshold='v >= 30*mV',
+    hetero = cfg.K_GC_sd > 0
+    gc = NeuronGroup(cfg.N_GC, _gc_eqs(cfg.K_GC, cfg.b_gc, cfg.tau_in_gc, hetero), threshold='v >= 30*mV',
                      reset=f'v = {C_GC}*mV; u = u + {D_GC}*mV',
                      refractory=2 * ms, method='euler')
     fs = NeuronGroup(cfg.N_FS, _fs_eqs(cfg.K_FS), threshold='v >= 30*mV',
@@ -170,6 +176,8 @@ def simulate(cfg: DGConfig, input_idx: np.ndarray, input_t_ms: np.ndarray,
                       refractory=2 * ms, method='euler')
 
     gc.v = -70 * mV;  gc.u = cfg.b_gc * (-70 * mV)
+    if hetero:
+        gc.Kc = cfg.K_GC + cfg.K_GC_sd * np.random.default_rng(cfg.K_seed).standard_normal(cfg.N_GC)
     fs.v = -70 * mV;  fs.u = B_FS * (-70 * mV)
     hmc.v = -70 * mV; hmc.u = B_HMC * (-70 * mV)
 

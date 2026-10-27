@@ -328,13 +328,83 @@ def analyze_e36(sub: str = 'e36'):
     return out
 
 
+def _wilc(d):
+    d = np.asarray(d, float)
+    try:
+        p = float(stats.wilcoxon(d).pvalue) if len(d) > 1 and np.any(d != 0) else 1.0
+    except ValueError:
+        p = 1.0
+    return {'mean': float(d.mean()), 'n_positive': int((d > 0).sum()), 'n': int(len(d)), 'p_wilcoxon': p}
+
+
+def analyze_e38():
+    """E3.8 — kryteria z README sek. 6f (mechanizm „rozcieńczać / izolować”)."""
+    runs = _load('e38/*.json')
+    out = {}
+    for neuron in ('izh', 'lif'):
+        rs = [r for r in runs if r['neuron'] == neuron]
+        if not rs:
+            continue
+        s = {'n_runs': len(rs), 'A': {}, 'B': {}}
+        for rule in ('rstdp', 'delta', 'rstdp_raw', 'delta_raw'):
+            A = [r['A'][rule] for r in rs]
+            s['A'][rule] = {
+                'delta_plus1': _wilc([x['mod']['BWT'] - x['matched_mod']['BWT'] for x in A]),
+                'delta_minus1': _wilc([x['inv']['BWT'] - x['matched_inv']['BWT'] for x in A]),
+                'delta_minus1_evalrest': _wilc([x['inv']['BWT'] - x['matched_inv_evalrest']['BWT'] for x in A]),
+                'damage_inv_minus_matched_evalrest': _wilc([x['inv']['damage_frac_novel'] - x['matched_inv_evalrest']['damage_frac_novel'] for x in A]),
+                'damage_mod_minus_matched': _wilc([x['mod']['damage_frac_novel'] - x['matched_mod']['damage_frac_novel'] for x in A]),
+                'damage_frac_novel': {k: float(np.mean([x[k]['damage_frac_novel'] for x in A]))
+                                      for k in ('mod', 'inv', 'matched_mod', 'matched_inv', 'matched_inv_evalrest')}}
+        for base in ('rstdp', 'delta'):
+            d = [r['A'][f'{base}_raw']['inv']['BWT'] - r['A'][f'{base}_raw']['matched_inv']['BWT']
+                 - (r['A'][base]['inv']['BWT'] - r['A'][base]['matched_inv']['BWT']) for r in rs]
+            s['A'][f'H_M2_{base}_raw_minus_norm_delta_minus1'] = _wilc(d)
+        for lam in ('0.0', '0.25', '0.5', '0.75', '1.0'):
+            B = [r['B'][lam] for r in rs if lam in r['B']]
+            s['B'][lam] = {'delta_plus1': _wilc([x['mod']['BWT'] - x['matched_mod']['BWT'] for x in B]),
+                           'delta_minus1': _wilc([x['inv']['BWT'] - x['matched_inv']['BWT'] for x in B]),
+                           'ACC_fixed': float(np.mean([x['matched_mod']['ACC'] for x in B]))}
+        lam_means = [s['B'][l]['delta_plus1']['mean'] for l in ('0.0', '0.25', '0.5', '0.75', '1.0')]
+        s['H_M4'] = {'spearman_lambda_delta_plus1': float(stats.spearmanr([0, .25, .5, .75, 1], lam_means).correlation),
+                     'sign_change': bool(s['B']['0.0']['delta_plus1']['mean'] > 0 > s['B']['1.0']['delta_plus1']['mean']),
+                     'pass': bool(s['B']['0.0']['delta_plus1']['mean'] > 0 and s['B']['0.0']['delta_plus1']['p_wilcoxon'] < 0.05
+                                  and s['B']['1.0']['delta_plus1']['mean'] < 0 and s['B']['1.0']['delta_plus1']['p_wilcoxon'] < 0.05)}
+        out[neuron] = s
+    return out
+
+
+def analyze_e37():
+    """E3.7 — kryterium z README sek. 6g (sieć z warstwą ukrytą)."""
+    runs = [json.load(open(f)) for f in sorted(glob.glob(os.path.join(RES, 'e37', 'run_*.json')))]
+    out = {}
+    for variant, expect in (('agrel', -1), ('agrel_pos', +1)):
+        for neuron in ('izh', 'lif'):
+            rs = [r for r in runs if r['variant'] == variant and r['neuron'] == neuron]
+            if not rs:
+                continue
+            get = lambda r, g, k: [x for x in r['results'] if x['g'] == g and x['kind'] == k][0]
+            dp = _wilc([get(r, 1.0, 'mod')['BWT'] - get(r, 1.0, 'matched')['BWT'] for r in rs])
+            dm = _wilc([get(r, -1.0, 'mod')['BWT'] - get(r, -1.0, 'matched')['BWT'] for r in rs])
+            n_ok = dp['n_positive'] if expect > 0 else dp['n'] - dp['n_positive']
+            out[f'{variant}_{neuron}'] = {'delta_plus1': dp, 'delta_minus1': dm,
+                                          'ACC_fixed': float(np.mean([get(r, 0.0, 'fixed')['ACC'] for r in rs])),
+                                          'BWT_fixed': float(np.mean([get(r, 0.0, 'fixed')['BWT'] for r in rs])),
+                                          'expected_sign': expect,
+                                          'pass': bool(np.sign(dp['mean']) == expect and dp['p_wilcoxon'] < 0.05
+                                                       and n_ok >= int(np.ceil(0.8 * dp['n'])))}
+    out['H_L1_pass'] = bool(out) and all(v['pass'] for v in out.values() if isinstance(v, dict))
+    return out
+
+
 def main():
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     os.makedirs(FIG, exist_ok=True)
     summary = {'e31': analyze_e31(plt), 'e32': analyze_e32(plt), 'e33': analyze_e33(plt),
-               'e34': analyze_e34(plt), 'e35': analyze_e35(), 'e36': analyze_e36(), 'e36x': analyze_e36('e36x')}
+               'e34': analyze_e34(plt), 'e35': analyze_e35(), 'e36': analyze_e36(), 'e36x': analyze_e36('e36x'),
+               'e37': analyze_e37(), 'e38': analyze_e38()}
     with open(os.path.join(RES, 'summary.json'), 'w') as f:
         json.dump(summary, f, indent=1)
     print(json.dumps(summary, indent=1))

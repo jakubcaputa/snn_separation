@@ -1,6 +1,6 @@
 # E3 — wyniki z wyjaśnieniem wykresów
 
-*Stan na 2026-10-26. Szczegóły metod i wszystkie liczby: [README.md](README.md) (sek. 11–12e).*
+*Stan na 2026-10-27. Szczegóły metod i wszystkie liczby: [README.md](README.md) (sek. 11–12e).*
 
 ## O co pytamy
 
@@ -241,6 +241,44 @@ więc te wiersze rozstrzygają słabiej; model skrawka nie odtwarza jeszcze sił
 
 ---
 
+## 6. Dlaczego kierunek zależy od reguły? Test mechanizmu (E3.8)
+
+![E3.8](figures/fig10_e38_mechanism.png)
+
+Kolory w całej figurze: **niebieski = Izhikevich, pomarańczowy = LIF**.
+
+**Lewy panel — rola osłabiania wag.** Reguła `rmix` to `rgate` z dodanym osłabianiem: przy
+pomyłce wagi do wybranego wyjścia maleją o λ razy tyle, o ile rosną przy trafieniu (λ = 0 to
+czysty `rgate`). Oś y: o ile „nowość → rzadziej” zapomina mniej niż stały kod o tej samej średniej.
+Przy λ = 0 pomaga (10/10), ale **już λ = 0.25 odwraca znak** (szkodzi w 10/10 i 9/10). Przy
+λ ≥ 0.5 reguła prawie przestaje się uczyć (końcowa dokładność spada do ~0.2), więc różnice
+znikają. Wniosek: o kierunku decyduje już samo pojawienie się osłabiania.
+
+**Środkowy panel — rola normalizacji per obraz.** Przewaga „nowość → gęściej” dla R-STDP i delty
+z normalizacją (słupki 1 i 3) i bez niej (2 i 4). Dla reguły delta bez normalizacji przewaga maleje
+mniej więcej o połowę (istotnie dla obu neuronów); dla R-STDP różnica nieistotna.
+
+**Prawy panel — „szkoda” na starcie nowego zadania.** Jaka część wszystkich zmian wag w pierwszych
+300 obrazach każdego nowego zadania trafia w wagi starych klas, na neuronach, z których są
+odczytywane. Ciemne słupki: „nowość → gęściej”; jasne: stały kod o tej samej średniej, oceniany na
+tym samym poziomie. **Wbrew hipotezie „rozcieńczania” przy „nowość → gęściej” szkody jest więcej**
+(dla delty 0.56 vs 0.41), a mimo to zapominanie jest mniejsze. Czyli przewaga tego kierunku przy
+regułach z osłabianiem bierze się z czegoś innego — kandydat: zapominanie w tym scenariuszu to
+głównie przewaga nowych klas na starych obrazach, a nie zniszczenie starych wag (do sprawdzenia).
+
+Dodatkowo (bez wykresu): przewaga „nowość → gęściej” **przetrwała kontrolę poziomu oceny**
+(stały kod oceniany na tym samym rzadkim poziomie) — dla delty 10/10, dla R-STDP kierunek zgodny.
+
+## 7. Sieć z warstwą ukrytą (E3.7) — nierozstrzygające
+
+Sieć: kod DG → 500 jednostek ukrytych → 10 wyjść, obie warstwy uczone trójczynnikowo (AGREL),
+w wersji z osłabianiem i „bez”. **Obie zapominają prawie wszystko** (końcowa dokładność ≈ 0.17).
+Wersja „bez osłabiania” nim w praktyce nie jest: normalizacja wag każdej jednostki ukrytej, wspólnej
+dla wszystkich klas, sama działa jak osłabianie. Test trzeba powtórzyć z inną homeostazą warstwy
+ukrytej. Figura: [figures/fig11_e37_hidden_layer.png](figures/fig11_e37_hidden_layer.png).
+
+---
+
 ## Podsumowanie
 
 1. **Kierunek efektu „nowość → rzadszy kod” wyznaczają reguła uczenia sieci i podobieństwo
@@ -252,3 +290,6 @@ więc te wiersze rozstrzygają słabiej; model skrawka nie odtwarza jeszcze sił
 3. **Miara dekorelacji nie wskazuje rzadkości użytecznej dla uczenia** — nagradza ciszę.
 4. **O zapominaniu bardziej niż rzadkość decyduje reguła czytnika**, a do dobrego kodu potrzebne
    jest wyrównanie aktywności między wzorcami, którego samo hamowanie toniczne nie zapewnia.
+5. **Wystarczy niewielkie osłabianie wag, by odwrócić kierunek efektu** (E3.8). Dlaczego przy
+   osłabianiu pomaga kierunek „nowość → gęściej”, jeszcze nie wiemy — prosta hipoteza
+   „rozcieńczania szkody” jest sprzeczna z pomiarem.

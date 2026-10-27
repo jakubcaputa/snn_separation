@@ -368,6 +368,92 @@ def fig9():
          'E3.6x · To samo zadanie na modelu skalibrowanym do skrawka (salwy, dane Madara)')
 
 
+# ── Fig. 10 — E3.8, mechanizm ───────────────────────────────────────────────
+def fig10():
+    R = load('e38/*.json')
+    if not R:
+        return
+    lams = ['0.0', '0.25', '0.5', '0.75', '1.0']
+    fig, axes = plt.subplots(1, 3, figsize=(13, 3.9))
+    ax = axes[0]
+    ax.axhline(0, color=INK2, lw=1)
+    for n, col in (('izh', BLUE), ('lif', ORANGE)):
+        rs = [r for r in R if r['neuron'] == n]
+        mu, se = [], []
+        for l in lams:
+            d = [r['B'][l]['mod']['BWT'] - r['B'][l]['matched_mod']['BWT'] for r in rs]
+            mu.append(np.mean(d))
+            se.append(np.std(d) / np.sqrt(len(d)))
+        ax.errorbar([float(x) for x in lams], mu, se, color=col, marker='o', ms=4, capsize=2, label=NEUR[n])
+    ax.set_xlabel('udział osłabiania w regule λ (0 = rgate, 1 = pełne)')
+    ax.set_ylabel('Δ zapominania „nowość → rzadziej”\nvs stałe f (> 0 = pomaga)')
+    ax.set_title('Znak efektu a osłabianie wag', fontsize=10)
+    ax.legend()
+    ax = axes[1]
+    ax.axhline(0, color=INK2, lw=1)
+    rules = [('rstdp', 'R-STDP'), ('rstdp_raw', 'R-STDP\nbez norm.'), ('delta', 'delta'), ('delta_raw', 'delta\nbez norm.')]
+    for ni, (n, col) in enumerate((('izh', BLUE), ('lif', ORANGE))):
+        rs = [r for r in R if r['neuron'] == n]
+        for ri, (rule, _) in enumerate(rules):
+            d = [r['A'][rule]['inv']['BWT'] - r['A'][rule]['matched_inv']['BWT'] for r in rs]
+            ax.bar(ri + (ni - 0.5) * 0.38, np.mean(d), 0.36, yerr=np.std(d) / np.sqrt(len(d)), color=col, capsize=2,
+                   edgecolor=SURF, label=NEUR[n] if ri == 0 else None)
+    ax.set_xticks(range(len(rules)))
+    ax.set_xticklabels([l for _, l in rules], fontsize=8)
+    ax.set_ylabel('Δ zapominania „nowość → gęściej”\nvs stałe f')
+    ax.set_title('Rola normalizacji (rozcieńczania)', fontsize=10)
+    ax.grid(axis='x', visible=False)
+    ax = axes[2]
+    for ni, (n, col) in enumerate((('izh', BLUE), ('lif', ORANGE))):
+        rs = [r for r in R if r['neuron'] == n]
+        for ri, rule in enumerate(('rstdp', 'delta')):
+            for ci, c in enumerate(('inv', 'matched_inv_evalrest')):
+                v = [r['A'][rule][c]['damage_frac_novel'] for r in rs]
+                x = ri * 2.4 + ci + (ni - 0.5) * 0.38
+                ax.bar(x, np.mean(v), 0.36, yerr=np.std(v) / np.sqrt(len(v)), color=col, alpha=1.0 if ci == 0 else 0.45,
+                       capsize=2, edgecolor=SURF)
+    ax.set_xticks([0, 1, 2.4, 3.4])
+    ax.set_xticklabels(['R-STDP\nnowość→gęściej', 'R-STDP\nstałe f', 'delta\nnowość→gęściej', 'delta\nstałe f'], fontsize=8)
+    ax.set_ylabel('część zmian wag trafiająca w stare klasy\n(okna nowości)')
+    ax.set_title('„Szkoda” na starcie nowego zadania', fontsize=10)
+    ax.grid(axis='x', visible=False)
+    fig.suptitle('E3.8 · Mechanizm: dlaczego kierunek modulacji zależy od reguły uczenia',
+                 x=0.01, ha='left', fontsize=12, fontweight='bold')
+    fig.tight_layout(rect=(0, 0, 1, 0.92))
+    save(fig, 'fig10_e38_mechanism.png')
+
+
+# ── Fig. 11 — E3.7, warstwa ukryta ──────────────────────────────────────────
+def fig11():
+    R = [json.load(open(f)) for f in sorted(glob.glob(os.path.join(RES, 'e37', 'run_*.json')))]
+    if not R:
+        return
+    fig, axes = plt.subplots(1, 2, figsize=(10, 3.8), sharey=True)
+    for ai, g in enumerate((1.0, -1.0)):
+        ax = axes[ai]
+        ax.axvline(0, color=INK2, lw=1)
+        rows = [('agrel', 'izh'), ('agrel', 'lif'), ('agrel_pos', 'izh'), ('agrel_pos', 'lif')]
+        for yi, (v, n) in enumerate(rows):
+            rs = [r for r in R if r['variant'] == v and r['neuron'] == n]
+            if not rs:
+                continue
+            d = np.array([[x for x in r['results'] if x['g'] == g and x['kind'] == 'mod'][0]['BWT']
+                          - [x for x in r['results'] if x['g'] == g and x['kind'] == 'matched'][0]['BWT'] for r in rs])
+            col = ORANGE if v == 'agrel' else BLUE
+            ax.scatter(d, np.full(len(d), yi) + np.random.default_rng(yi).uniform(-0.12, 0.12, len(d)), s=12, color=col, alpha=0.5, lw=0)
+            ax.plot([d.mean()], [yi], marker='D', ms=7, color=col, mec=SURF)
+        ax.set_yticks(range(4))
+        ax.set_yticklabels(['z osłabianiem · Izhikevich', 'z osłabianiem · LIF', 'bez osłabiania · Izhikevich', 'bez osłabiania · LIF'])
+        ax.set_title('nowość → rzadziej (g = +1)' if g > 0 else 'nowość → gęściej (g = −1)', fontsize=10)
+        ax.set_xlabel('Δ zapominania vs stałe f (> 0 = pomaga)')
+        ax.grid(axis='y', visible=False)
+    axes[0].invert_yaxis()
+    fig.suptitle('E3.7 · Sieć z warstwą ukrytą uczoną trójczynnikowo (AGREL)',
+                 x=0.01, ha='left', fontsize=12, fontweight='bold')
+    fig.tight_layout(rect=(0, 0, 1, 0.92))
+    save(fig, 'fig11_e37_hidden_layer.png')
+
+
 if __name__ == '__main__':
-    for fn in (fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9):
+    for fn in (fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10, fig11):
         fn()

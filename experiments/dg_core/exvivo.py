@@ -33,12 +33,16 @@ T_SWEEP_MS = 2000.0
 
 
 def exvivo_config(base: DGConfig, W_volley: float, p_rel: float, n_fibers: int = 40,
-                  gabazine_block: float = 0.0, **overrides) -> DGConfig:
-    """Konfiguracja skrawka: salwy zamiast tła, zawodność włókien PP, opcjonalnie gabazyna."""
+                  gabazine_block: float = 0.0, gabazine_tonic_block: float = 0.0, **overrides) -> DGConfig:
+    """Konfiguracja skrawka: salwy zamiast tła, zawodność włókien PP, opcjonalnie gabazyna.
+    gabazine_tonic_block (2026-10-27): hipoteza alternatywna — gabazyna obniża też hamowanie
+    toniczne (K_GC × (1 − blok)); domyślnie 0 = tylko hamowanie fazowe."""
     cfg = replace(base, per_fiber=True, n_syn_pp=n_fibers, T_ms=T_SWEEP_MS,
                   W_PP_GC=W_volley / (n_fibers * p_rel), P_REL_PP_GC=p_rel, **overrides)
     if gabazine_block:
         cfg = replace(cfg, W_FS_GC=cfg.W_FS_GC * (1.0 - gabazine_block))
+    if gabazine_tonic_block:
+        cfg = replace(cfg, K_GC=cfg.K_GC * (1.0 - gabazine_tonic_block))
     return cfg
 
 

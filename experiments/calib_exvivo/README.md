@@ -87,3 +87,40 @@ dopasowanie po nazwie pliku). Odczyt AxoGraph: pakiet `neo` (doinstalowany do ve
 2. R_w do porównań modelu: E1/E1′ w nowym reżimie, z R_w obok dekorelacji (hipoteza:
    przy bardzo niskiej aktywności R_w też spada → miara z R_w może mieć optimum).
 3. Przewidywanie dla eksperymentu z gabazyną (Ola, Kinga) — zapisać przed ich analizą.
+
+## Krok 2 (2026-10-27): efekt gabazyny i przewidywanie
+
+**Siatka v4** (`grid_v4.py`, 36 punktów wokół najlepszego punktu v3) — trzy kandydackie
+wyjaśnienia słabego efektu gabazyny (×1.25 vs ×1.6), jako osie:
+- `tau_in_gc` — stała czasowa IPSC na GC: 8 / 15 / 25 ms (nowe pole `DGConfig.tau_in_gc`);
+- `K_GC_sd` — zróżnicowanie pobudliwości GC: K per neuron ~ N(K, sd²), sd 0 / 2.5 / 5 (nowe pola
+  `DGConfig.K_GC_sd`, `K_seed`; w danych V_rest −81…−70 mV ⇔ K ≈ 0…13.6);
+- `gabazine_tonic` — gabazyna obniża też hamowanie toniczne: 0 / 0.3 (`exvivo_config`);
+- `W_FS_GC` 2 / 4.
+Domyślne wartości nowych pól nie zmieniają modelu (testy regresji 20/20). ×FR liczony per
+komórka (para kontrola/gabazyna tej samej GC), jak w danych.
+Znane ograniczenie z testu: GC modelu nie dają burstów (≥ 2 impulsy na salwę) — model nie
+odtworzy „skłonności do małych burstów” z Madar 2019 Fig. 7b.
+
+**Przewidywanie** (`predict_gabazine.py` → `PREDICTION_gabazine.md`, zapisywane z datą PRZED
+analizą danych Oli i Kingi): najlepszy punkt v4; protokoły P10Hz R_in 0.5 / 0.75 / 0.95;
+3 sieci; 5 powtórzeń (ich protokół) i 10 (Madar); per komórka: częstotliwość, bursty, R_w, R_b,
+R_in − R_b (biny 10/20/50 ms). Założenia do potwierdzenia z zespołem: protokół wejściowy jak
+u Madara, 100 nM gabazyny.
+
+### Wynik v4 i przewidywanie (2026-10-27)
+
+**Najlepszy punkt v4 (strata 0.043):** τ_IPSC 8 ms, zróżnicowanie K_GC (SD) 2.5, W_FS_GC 2,
+**gabazyna obniża też hamowanie toniczne o 30%** →
+kontrola: GC 2.99 Hz, R_w 0.41, R_b 0.30, FS 9.6 Hz; gabazyna: **×1.77 [1.36–2.76]**,
+R_w 0.71, R_b 0.54 — zgodnie z danymi (×1.6 [1.3–11], R_w 0.80, R_b 0.55).
+- **Kluczowe:** bez działania na hamowanie toniczne największy efekt w całej siatce to ×1.41
+  (najlepsze dopasowanie ×1.12). Wszystkie najlepsze punkty mają blok toniczny 0.3. Zróżnicowanie
+  GC daje realistyczny rozrzut efektu między komórkami; dłuższe IPSC niewiele zmieniają.
+- **Interpretacja / pytanie do prof. Błasiak:** albo 100 nM gabazyny w skrawku obniża też prąd
+  toniczny GC, albo (jeśli nie — Stell & Mody 2002: niskie stężenia go oszczędzają) w modelu
+  hamowanie fazowe jest za słabe względem tonicznego, czyli dokładnie jej uwaga B1.
+- **Przewidywanie zapisane:** [`PREDICTION_gabazine.md`](PREDICTION_gabazine.md) (R_in 0.5/0.75/0.95,
+  5 i 10 powtórzeń). Dla R_in 0.75, 5 powtórzeń: częstotliwość ×1.82, R_w 0.42 → 0.75,
+  R_b 0.32 → 0.57, separacja R_in − R_b 0.44 → 0.19 (gorsza). Bursty: brak przewidywania
+  (GC modelu ich nie generują).

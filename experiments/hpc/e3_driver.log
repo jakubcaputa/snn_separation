@@ -184,3 +184,24 @@
 23:10:04 submitted 3392978: REGIME=exvivo ./run_e36_all.sh 16;python analyze.py;python make_summary_figures.py
 23:14:34 finished 3392978:  COMPLETED   00:00:34 
 23:14:34 queue empty
+08:51:01 submitted 3405453: ./run_e38_all.sh 16
+09:10:02 finished 3405453:    RUNNING   00:17:18 
+09:10:02 submitted 3405550: cd .. && python -m calib_exvivo.grid_v4 --chunk 0 --n-chunks 2 --jobs 16 && python -m calib_exvivo.grid_v4 --chunk 1 --n-chunks 2 --jobs 16 && python -m calib_exvivo.grid_v4 --collect
+09:40:03 finished 3405550:  COMPLETED   00:29:41 
+09:40:03 submitted 3406066: cd .. && python -m calib_exvivo.grid_v4 --chunk 1 --n-chunks 2 --jobs 16 && python -m calib_exvivo.grid_v4 --collect && python -m calib_exvivo.predict_gabazine --jobs 16
+09:49:03 finished 3406066:  COMPLETED   00:08:40 
+09:49:03 submitted 3406222: python run_hidden.py --phase tune --neuron izh;python run_hidden.py --phase tune --neuron lif
+10:02:04 finished 3406222:  COMPLETED   00:12:44 
+10:02:04 submitted 3406460: python run_hidden.py --phase pilot --neuron izh;python run_hidden.py --phase pilot --neuron lif
+10:13:04 finished 3406460:  COMPLETED   00:10:35 
+10:13:04 submitted 3406634: ./run_e37_all.sh 16 agrel
+11:13:36 finished 3406634:    TIMEOUT   01:00:16 
+11:13:36 submitted 3408914: ./run_e37_all.sh 16 agrel_pos
+11:41:37 finished 3408914:  COMPLETED   00:20:40 
+11:41:37 submitted 3409371: python analyze.py;python make_summary_figures.py
+11:44:37 finished 3409371:  COMPLETED   00:00:17 
+11:44:38 queue empty
+18:09:18 submitted 3416663:  python run_hidden.py --phase run --variant agrel --neuron lif --seed 3 --order-seed 0 > results/logs/e37_agrel_lif_s3_o0.log 2>\&1 \& python run_hidden.py --phase run --variant agrel --neuron lif --seed 3 --order-seed 1 > results/logs/e37_agrel_lif_s3_o1.log 2>\&1 \& python run_hidden.py --phase run --variant agrel --neuron lif --seed 4 --order-seed 0 > results/logs/e37_agrel_lif_s4_o0.log 2>\&1 \& python run_hidden.py --phase run --variant agrel --neuron lif --seed 4 --order-seed 1 > results/logs/e37_agrel_lif_s4_o1.log 2>\&1 \& wait;python analyze.py;python make_summary_figures.py
+18:09:34 submitted 3416668: ./run_e37_missing.sh 16;python analyze.py;python make_summary_figures.py
+18:53:05 finished 3416668:  COMPLETED   00:43:29 
+18:53:05 queue empty

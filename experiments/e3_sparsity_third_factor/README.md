@@ -1,6 +1,6 @@
 # E3 — rzadkość jako trzeci czynnik uczenia (MNIST, Split-MNIST)
 
-*Utworzono 2026-10-12. Status (2026-10-26): **policzone i przeanalizowane** — E3.1–E3.6 i E3.6x (zadanie separacji na modelu skalibrowanym do skrawka). **Zacznij od sek. 0.***
+*Utworzono 2026-10-12. Status (2026-10-27): **policzone i przeanalizowane** — E3.1–E3.8 i E3.6x. **Zacznij od sek. 0; wykresy z objaśnieniami: [results.md](results.md).***
 
 Rozwinięcie wariantu M1 z [`ml_paper.md`](../../ml_paper.md) do konkretnego planu
 eksperymentów. Ilustracja krok po kroku (cyfra → kod DG → czytnik → regulator K):
@@ -52,6 +52,8 @@ między wzorcami (E3.0, E3.4).
 | **E3.5** | czy obalenie H-E3c jest odporne (6 architektur × 2 neurony × 3 czytniki)? | ❌ **nie** — przy czytniku bez osłabiania (`rgate`) „nowość → rzadziej” **zmniejsza** zapominanie we wszystkich 12 komórkach; przy R-STDP/delta zwiększa we wszystkich 24. Kierunek wyznacza reguła uczenia, nie architektura (sek. 12c) | fig. 7 |
 | **E3.6** | to samo na zadaniu separacji wzorców (`dg_core`, R_in 0.5/0.75/0.9) | ❌ **obalenie nie przenosi się**: przy `rgate` „nowość → rzadziej” pomaga przy każdym R_in; przy R_in = 0.5 pomaga dla wszystkich czytników; przy dużym podobieństwie i R-STDP/delta pomaga kierunek odwrotny (sek. 12d) | fig. 8 |
 | **E3.6x** | to samo na modelu skalibrowanym do skrawka (dane Madara) | ❌ obalenie nie przenosi się (6/9); kierunek zależy od **reguły i podobieństwa wzorców**: przy R_in 0.5 „nowość → rzadziej” pomaga (R-STDP, rgate), przy R_in 0.9 pomaga „nowość → gęściej” (sek. 12e) | fig. 9 |
+| **E3.8** | dlaczego kierunek zależy od reguły? (mechanizm) | ⚠️ już niewielkie osłabianie (λ = 0.25) odwraca znak; przewaga „nowość → gęściej” przetrwała kontrolę oceny, ale **nie** wynika z rozcieńczania szkody (pomiar odwrotny) — mechanizm otwarty (sek. 12f) | fig. 10 |
+| **E3.7** | czy zasada przenosi się na sieć z warstwą ukrytą (AGREL)? | ⚠️ nierozstrzygające: obie wersje zapominają prawie całkowicie; normalizacja w warstwie ukrytej działa jak osłabianie, więc wariant „bez osłabiania” nim nie jest (sek. 12g) | fig. 11 |
 
 ### 1. Optimum rzadkości istnieje, dekorelacja go nie widzi
 
@@ -474,7 +476,51 @@ porównanie modulacja vs stałe f pozostaje uczciwe, ale efektywna rozpiętość
 w ≥ 8/9 komórek i w żadnej nie jest istotnie dodatnie). Dodatkowo porównujemy komórka po
 komórce z E3.6 (stara kalibracja): czy kierunek Δ(+1) się zgadza.
 
-### 6d. E3.7 — sieć uczona R-STDP z warstwą ukrytą (plan, bez kodu)
+### 6f. E3.8 — test mechanizmu „rozcieńczać przy osłabianiu, izolować przy wzmacnianiu” (zapisane 2026-10-27, PRZED uruchomieniem)
+
+**Hipoteza** (z dyskusji 2026-10-26): reguły znormalizowane per obraz zmieniają odpowiedź
+czytnika o tyle samo niezależnie od gęstości kodu, więc gęsty kod rozkłada każdą poprawkę
+na więcej synaps. Przy regułach z osłabianiem duże, szkodliwe poprawki na starcie nowego zadania
+są przy „nowość → gęściej” rozcieńczone, a przy „nowość → rzadziej” skoncentrowane na
+najsilniej pobudzonych neuronach, z których czytane są stare klasy. Przy regule bez osłabiania
+nie ma czego rozcieńczać i lepsza jest izolacja (rzadki kod). Skrypt `run_mechanism.py`,
+Split-MNIST, architektura domyślna, sieci 0–4 × kolejności 0, 1, oba neurony.
+
+Nowe reguły (`learning.py`): `rstdp_raw`, `delta_raw` — bez normalizacji per obraz (stała skala
+dobrana przy f_c, żeby średnia wielkość zmian była porównywalna); `rmix` — `rgate` z udziałem
+osłabiania λ (przy pomyłce wagi do wybranego wyjścia maleją o λ·η·ĉ).
+
+**Kryteria** (każde osobno dla Izhikevicha i LIF, Wilcoxon parowany po 10 przebiegach):
+- **H-M1 (rozcieńczanie):** w oknach nowości (pierwsze 300 obrazów zadań 2–5) część zmian wag
+  trafiająca w wagi starych klas na ich neuronach jest **mniejsza** przy „nowość → gęściej” niż
+  przy stałym f o tej samej średniej ocenianym na tym samym poziomie (`matched_inv_evalrest`);
+  p < 0.05, ≥ 8/10, dla R-STDP i delta.
+- **H-M2 (rola normalizacji):** przewaga „nowość → gęściej” (Δ(−1)) jest **mniejsza** bez
+  normalizacji niż z nią (Δ(−1)_raw − Δ(−1)_norm < 0, p < 0.05), dla R-STDP i delta.
+- **H-M3 (kontrola oceny):** „nowość → gęściej” zapomina mniej niż stałe f o tej samej średniej
+  oceniane na tym samym (rzadkim) poziomie — Δ(−1)_evalrest > 0, p < 0.05, ≥ 8/10, dla R-STDP
+  i delta. Jeśli nie — wcześniejsza przewaga była artefaktem poziomu oceny.
+- **H-M4 (udział osłabiania):** Δ(+1) zmienia znak z λ: Δ(+1) > 0 przy λ = 0 i Δ(+1) < 0 przy
+  λ = 1, oba p < 0.05.
+
+**Mechanizm uznajemy za poparty**, jeśli H-M3 i H-M4 przechodzą dla obu neuronów, a H-M1 lub
+H-M2 dla co najmniej jednego czytnika z osłabianiem.
+
+### 6g. E3.7 — sieć z warstwą ukrytą uczoną trójczynnikowo (zapisane 2026-10-27, PRZED uruchomieniem)
+
+Skrypt `run_hidden.py`: kod DG → warstwa ukryta (500 jednostek ReLU) → 10 wyjść; obie warstwy
+uczone regułą typu AGREL (Roelfsema & van Ooyen 2005; nagroda × sprzężenie zwrotne od
+wybranego wyjścia × aktywność). Warianty: `agrel` (błąd predykcji nagrody może być ujemny →
+osłabianie) i `agrel_pos` (tylko nagroda zmienia wagi → bez osłabiania); skalowanie synaptyczne
+w obu. η strojone na sieci 99 (MNIST statycznie, walidacja), regulator z pilotażu na sieci 99;
+f_gęsty/f_rzadki = 10%/3%. Jednostki warstwy ukrytej są „częstotliwościowe” (nie impulsowe).
+
+**Kryterium (H-L1):** przewidywanie zasady z E3.5/E3.8 — Δ(+1) („nowość → rzadziej” vs stałe f
+o tej samej średniej) **ujemne** dla `agrel` i **dodatnie** dla `agrel_pos`; w każdej z 4 komórek
+(wariant × neuron) Wilcoxon p < 0.05 i właściwy znak w ≥ 8/10 przebiegach. Zasada przenosi się
+na sieć z warstwą ukrytą, jeśli przechodzą wszystkie 4 komórki.
+
+### 6d. E3.7 — sieć uczona R-STDP z warstwą ukrytą (plan pierwotny; zrealizowany jako 6g)
 
 Uwaga z 2026-10-22: wynik może zależeć od tego, *jaka sieć* uczy się regułą
 trójczynnikową — dotąd uczył się tylko czytnik liniowy na stałym kodzie. E3.7: warstwa
@@ -915,6 +961,56 @@ dodatnich. 6 przebiegów na komórkę (sieci 0–2 × 2 kolejności), Wilcoxon (
 - Przy rgate efekty są małe w liczbach bezwzględnych (≤ 0.03), jak na MNIST.
 - Zastrzeżenia: przy R_in 0.75–0.9 dokładności są niskie (0.15–0.30); najniższe poziomy f
   w praktyce 4–6% (sek. 6e); kalibracja ex vivo nie odtwarza efektu gabazyny (×1.25 vs ×1.6).
+
+### 12f. E3.8 — test mechanizmu (2026-10-27)
+
+**Werdykt wg sek. 6f: mechanizm „rozcieńczania” NIE jest poparty** (H-M1 odwrotnie, H-M4 nie
+przeszło); rola osłabiania wag jest jednak widoczna. 10 przebiegów na neuron:
+
+| kryterium | Izhikevich | LIF | wynik |
+|---|---|---|---|
+| **H-M1** szkoda w oknach nowości: „gęściej” < stałe f (ta sama ocena) | R-STDP +0.016 (n.i.), delta **+0.153 (10/10)** | R-STDP +0.016 (n.i.), delta **+0.152 (10/10)** | ❌ **odwrotnie**: przy „nowość → gęściej” *więcej* zmian trafia w wagi starych klas, a mimo to zapominanie jest mniejsze |
+| **H-M2** bez normalizacji przewaga „gęściej” maleje | R-STDP −0.105 (n.i.), delta **−0.055 (0/10, p = 0.002)** | R-STDP −0.064 (n.i.), delta **−0.107 (0/10, p = 0.002)** | ✅ dla delty, ❌ dla R-STDP |
+| **H-M3** „gęściej” lepsze od stałego f ocenianego na tym samym poziomie | R-STDP +0.050 (9/10, p = 0.084), delta **+0.054 (10/10)** | R-STDP +0.132 (7/10, p = 0.027), delta **+0.089 (10/10)** | ✅ dla delty, ⚠️ R-STDP (kierunek zgodny, kryterium niespełnione) |
+| **H-M4** znak Δ(+1) zmienia się z udziałem osłabiania λ | λ = 0: **+0.047 (10/10)**; λ = 0.25: **−0.032 (0/10)**; λ ≥ 0.5: ≈ 0 | λ = 0: **+0.023 (10/10)**; λ = 0.25: **−0.006 (1/10)**; λ ≥ 0.75: +0.011 | ❌ wg kryterium (przy λ = 1 nie ujemne), ale znak odwraca się już przy λ = 0.25 |
+
+Co z tego wynika:
+- **Osłabianie odwraca kierunek — i to już niewielkie.** Wystarczy λ = 0.25 (przy pomyłce wagi
+  maleją o ćwierć tego, o ile rosną przy trafieniu), by „nowość → rzadziej” z pomocnego stało się
+  szkodliwe (10/10 → 0/10 i 1/10). Przy λ ≥ 0.5 reguła przestaje się uczyć (ACC przy stałym f:
+  0.21 → 0.19 dla Izhikevicha), więc różnice znikają — dlatego kryterium przy λ = 1 nie przeszło.
+- **Przewaga „nowość → gęściej” przy osłabianiu nie jest artefaktem poziomu oceny** (H-M3:
+  przetrwała kontrolę dla delty, kierunek zgodny dla R-STDP), ale **nie wynika z rozcieńczania
+  szkody** (H-M1 odwrotnie). Nowa hipoteza do sprawdzenia: przy regułach z osłabianiem
+  zapominanie w scenariuszu class-incremental to głównie *przewaga nowych klas* (ich wyjścia
+  wygrywają na obrazach starych klas), a nie zniszczenie starych wag; gęsty kod przy nauce nowych
+  klas rozkłada ich wagi na wiele neuronów, więc przy ocenie na rzadkim kodzie nowe klasy mają
+  słabsze wyjścia i mniej „przejmują” stare obrazy.
+- Normalizacja per obraz ma znaczenie dla delty (bez niej przewaga „gęściej” maleje o połowę),
+  nie dla R-STDP.
+
+### 12g. E3.7 — sieć z warstwą ukrytą uczoną trójczynnikowo (2026-10-27)
+
+**Werdykt wg sek. 6g: H-L1 nie przeszło — test nierozstrzygający.** 10 przebiegów na komórkę:
+
+| wariant × neuron | ACC (stałe f) | BWT (stałe f) | Δ(+1) | Δ(−1) |
+|---|---|---|---|---|
+| agrel (z osłabianiem) × Izhikevich | 0.185 | −0.947 | +0.004 (5/10, n.i.) | +0.007 (8/10) |
+| agrel × LIF | 0.175 | −0.957 | +0.006 (5/10, n.i.) | +0.018 (10/10) |
+| agrel_pos (bez osłabiania) × Izhikevich | 0.162 | −0.919 | −0.016 (1/10, p = 0.004) | +0.032 (10/10) |
+| agrel_pos × LIF | 0.167 | −0.922 | −0.020 (0/10, p = 0.002) | +0.044 (10/10) |
+
+- **Obie wersje zapominają prawie całkowicie** (ACC ≈ 0.17, czyli „pamięta tylko ostatnie
+  zadanie”), więc pytanie o kierunek modulacji jest tu słabo postawione.
+- **Wariant „bez osłabiania” nie jest w praktyce bez osłabiania.** Skalowanie synaptyczne
+  normalizuje wagi każdej jednostki ukrytej, a te jednostki są wspólne dla wszystkich klas:
+  wzmocnienie wejść dla nowej klasy obniża (po normalizacji) wejścia używane przez stare klasy —
+  to osłabianie heterosynaptyczne. W czytniku `rgate` tego nie było, bo każda kolumna wag
+  należy do jednej klasy. Zgodnie z tym w obu wariantach zachowanie przypomina reguły
+  z osłabianiem (Δ(−1) > 0, Δ(+1) ≤ 0).
+- **Następny krok dla tej osi:** warstwa ukryta bez normalizacji wspólnej dla klas (np. ograniczenie
+  wag zamiast normalizacji, albo pule jednostek przypisane wyjściom), żeby rzeczywiście mieć
+  wariant bez osłabiania.
 
 ---
 

@@ -100,6 +100,13 @@ class DGConfig:
     # dla którego wyliczyła próg.
     b_gc: float = B_GC
 
+    # Kalibracja ex vivo (2026-10-27): stała czasowa IPSC na GC (domyślnie TAU_IN_GC = 8 ms,
+    # jak dotąd) i zróżnicowanie pobudliwości GC — K per neuron ~ N(K_GC, K_GC_sd²) z ziarnem
+    # K_seed. K_GC_sd = 0 (domyślnie) → równania i wyniki identyczne jak wcześniej.
+    tau_in_gc: float = TAU_IN_GC
+    K_GC_sd: float = 0.0
+    K_seed: int = 0
+
     # ── Zawodność synaptyczna („spike-wise noise" Madara) ─────────────────────
     # Prawdopodobieństwo, że pojedynczy spajk presynaptyczny faktycznie przekaże
     # ładunek. 1.0 = synapsa deterministyczna → obwód numerycznie IDENTYCZNY
