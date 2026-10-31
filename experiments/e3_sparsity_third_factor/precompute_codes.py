@@ -68,7 +68,12 @@ def main():
     ap.add_argument('--device', default=None)
     ap.add_argument('--n-dg', type=int, default=2000, help='E3.5: rozmiar warstwy DG')
     ap.add_argument('--fan-in', type=int, default=30, help='E3.5: pikseli na neuron')
+    ap.add_argument('--levels', type=float, nargs='+', default=None,
+                    help='2026-10-29: inne poziomy f niż F_LEVELS (np. 0.7 0.9 dla fig. 1); plik z sufiksem --tag')
+    ap.add_argument('--tag', default='', help='sufiks nazwy pliku kodów, np. hi → {neuron}_s{seed}_hi.npy')
     a = ap.parse_args()
+    levels = a.levels or F_LEVELS
+    tag = f'_{a.tag}' if a.tag else ''
 
     dev = a.device or pick_device()
     Xtr, ytr, Xte, yte = load_mnist()
@@ -87,16 +92,16 @@ def main():
     if not a.phasic:
         layer = DGLayer(cfg0, conn, dev)
         t0 = time.time()
-        K, f_cal = solve_k_table(layer, X_cal, F_LEVELS, *K_RANGE, seed=a.seed, verbose=True)
+        K, f_cal = solve_k_table(layer, X_cal, levels, *K_RANGE, seed=a.seed, verbose=True)
         t_cal = time.time() - t0
-        print('  K(f):', ', '.join(f'{f:.2f}→{k:.2f} ({fc:.3f})' for f, k, fc in zip(F_LEVELS, K, f_cal)), flush=True)
-        name = f'{a.neuron}{arch}_s{a.seed}{suffix}'
+        print('  K(f):', ', '.join(f'{f:.2f}→{k:.2f} ({fc:.3f})' for f, k, fc in zip(levels, K, f_cal)), flush=True)
+        name = f'{a.neuron}{arch}_s{a.seed}{tag}{suffix}'
         out = np.lib.format.open_memmap(os.path.join(OUT, name + '.npy'), mode='w+', dtype=np.uint8,
-                                        shape=(len(X_all), len(F_LEVELS), cfg0.n_dg))
+                                        shape=(len(X_all), len(levels), cfg0.n_dg))
         t_run = compute(layer, X_all, K, a.seed, a.batch, out, name)
         f_train = (out[:len(Xtr)] > 0).mean(axis=(0, 2))
         out.flush()
-        meta = {'neuron': a.neuron, 'seed': a.seed, 'f_levels': F_LEVELS, 'K': K.tolist(),
+        meta = {'neuron': a.neuron, 'seed': a.seed, 'f_levels': list(levels), 'K': K.tolist(),
                 'f_calib': f_cal.tolist(), 'f_train_mean': f_train.tolist(),
                 'n_train': len(Xtr), 'n_test': len(Xte), 'cfg': cfg0.to_dict(),
                 't_calib_s': t_cal, 't_codes_s': t_run}

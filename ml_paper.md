@@ -1,6 +1,12 @@
 # Artykuł ML na bazie mechanizmu DG — pomysły
 
-*Utworzono 2026-10-07. Status: **propozycja**, nie wyniki.*
+*Utworzono 2026-10-07. Status: **historyczny** — wariant M1 został zrealizowany jako E3.*
+
+> **2026-10-31 — gdzie są wyniki:** [`experiments/e3_sparsity_third_factor/README.md`](experiments/e3_sparsity_third_factor/README.md).
+> W skrócie: „nowość → rzadszy kod” nie jest ogólnie korzystne — kierunek wyznacza reguła uczenia
+> (osłabianie wag tak/nie) i podobieństwo wzorców; kontrola o dopasowanej rzadkości (ten plik,
+> sek. 1) okazała się kluczowa. Plan artykułu ML: STATUS sek. 4.1 (wariant M1). Ten plik zostaje
+> jako zapis pierwotnego pomysłu.
 
 > **2026-10-12:** wariant M1 jest rozpisany jako eksperyment E3 w
 > [`experiments/e3_sparsity_third_factor/README.md`](experiments/e3_sparsity_third_factor/README.md).

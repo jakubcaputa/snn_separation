@@ -162,7 +162,7 @@ class Controller:
     """
     signal: 'unc' (niepewność czytnika) albo 'rpe' (|R − R̄|).
     n = clip((N̄ − a)/(b − a), 0, 1); f = f_rest + (f_novel − f_rest)·n, w skali log.
-    a, b ustalamy w pilocie na osobnym ziarnie i zamrażamy (README sek. 6).
+    a, b ustalamy w pilocie na osobnym ziarnie i zamrażamy (prereg.md sek. 6).
     """
 
     def __init__(self, levels, f_rest: float, f_novel: float, signal: str = 'unc',

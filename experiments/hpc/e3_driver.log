@@ -205,3 +205,35 @@
 18:09:34 submitted 3416668: ./run_e37_missing.sh 16;python analyze.py;python make_summary_figures.py
 18:53:05 finished 3416668:  COMPLETED   00:43:29 
 18:53:05 queue empty
+sbatch: error: Batch job submission failed: Invalid account or account/partition combination specified
+19:27:56 submit failed, retry in 60s
+19:28:56 submitted 3448469: ./run_e37b.sh prep
+19:34:56 finished 3448469:  COMPLETED   00:05:39 
+19:34:56 submitted 3448521: ./run_e39_all.sh 16
+19:43:56 finished 3448521:  COMPLETED   00:08:51 
+19:43:57 submitted 3448572: ./run_e37b.sh run pos_bound
+20:07:57 finished 3448572:  COMPLETED   00:23:36 
+20:07:57 submitted 3448674: ./run_e37b.sh run pos_pool
+20:15:27 finished 3448674:  COMPLETED   00:06:57 
+20:15:28 submitted 3448714: ./run_e37b.sh run agrel_bound izh
+20:30:58 finished 3448714:  COMPLETED   00:14:41 
+20:30:58 submitted 3448802: ./run_e37b.sh run agrel_bound lif
+20:44:58 finished 3448802:  COMPLETED   00:13:44 
+20:44:59 submitted 3448861: ./run_e39_all.sh 16;./run_e37b.sh run pos_bound;./run_e37b.sh run pos_pool;./run_e37b.sh run agrel_bound;python analyze.py;python make_summary_figures.py
+20:45:29 finished 3448861:     FAILED   00:00:09 
+20:45:29 queue empty
+07:58:34 submitted 3451534: ./run_e39h_all.sh pos_bound
+08:16:05 finished 3451534:  COMPLETED   00:16:29 
+08:16:05 submitted 3451547: ./run_e39h_all.sh agrel_pos izh
+08:26:05 finished 3451547:  COMPLETED   00:09:49 
+08:26:05 submitted 3451554: ./run_e39h_all.sh agrel_pos lif
+08:37:06 finished 3451554:  COMPLETED   00:10:51 
+08:37:06 submitted 3451557: ./run_e39h_all.sh pos_pool
+08:43:36 finished 3451557:  COMPLETED   00:06:22 
+08:43:36 submitted 3451559: ./run_e31_hi.sh izh
+08:53:36 finished 3451559:  COMPLETED   00:09:50 
+08:53:36 submitted 3451611: ./run_e31_hi.sh lif
+09:02:07 finished 3451611:  COMPLETED   00:08:05 
+09:02:07 submitted 3451628: ./run_e39h_all.sh pos_bound;./run_e39h_all.sh agrel_pos;./run_e39h_all.sh pos_pool;./run_e31_hi.sh izh;./run_e31_hi.sh lif;python analyze.py;python make_summary_figures.py
+09:09:37 finished 3451628:  COMPLETED   00:00:18 
+09:09:37 queue empty

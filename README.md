@@ -9,16 +9,18 @@ Model jest ograniczany danymi patch-clamp Madara, Ewella i Jonesa (BioStudies
 S-BSST219): te same bodźce wejściowe, cztery typy komórek, eksperyment
 farmakologiczny przed/po gabazynie.
 
-**Trzy pliki dokumentacji, każdy odpowiada na inne pytanie** — każdy fakt ma jedno
-miejsce, pozostałe odsyłają:
+**Dokumentacja — każdy fakt ma jedno miejsce, pozostałe odsyłają.** Zacznij od STATUS sek. 0
+(gdzie jesteśmy) i sek. 4 (co dalej).
 
 | plik | pytanie |
 |---|---|
-| `README.md` | jak to zainstalować, uruchomić, gdzie co leży |
-| [STATUS.md](STATUS.md) | gdzie jestem, co blokuje, jakie są zmierzone wyniki |
-| [PLAN_BADAWCZY.md](PLAN_BADAWCZY.md) | hipotezy H1–H5 i plan eksperymentów E1–E7 ⚠️ historyczny, czeka na decyzję |
-| [ml_paper.md](ml_paper.md) | pomysł na OSOBNY artykuł ML — rzadkość jako trzeci czynnik |
-| [article/](article/) | draft artykułu (Overleaf), figury i prezentacja stanu prac |
+| [STATUS.md](STATUS.md) | **gdzie jesteśmy, co dalej i w jakiej kolejności**; wyniki E1–E2 |
+| [experiments/e3_sparsity_third_factor/README.md](experiments/e3_sparsity_third_factor/README.md) | E3 — rzadkość jako trzeci czynnik uczenia (wyniki, mechanizm, dalsze kroki) |
+| [experiments/calib_exvivo/README.md](experiments/calib_exvivo/README.md) | kalibracja do skrawka, R_w, przewidywanie dla gabazyny |
+| `README.md` (ten) | jak zainstalować, uruchomić, gdzie co leży |
+| [PLAN_BADAWCZY.md](PLAN_BADAWCZY.md) | hipotezy H1–H5 i plan E1–E7 — ⚠️ historyczny |
+| [ml_paper.md](ml_paper.md) | pierwotny pomysł na artykuł ML (realizowany jako E3) — ⚠️ historyczny |
+| [article/](article/) | draft artykułu (Overleaf), figury, prezentacja i jej notatki |
 
 ---
 
@@ -93,7 +95,7 @@ $SCRATCH/venvs/snn_sep_venv/bin/pip install -r requirements.txt joblib scipy sci
 ```
 
 Każdy skrypt wspiera `--shard i --n-shards N` → job array SLURM; analiza scala
-shardy po globie. Grant jest już wpisany (`plgdyplomanci7-gpu-a100`).
+shardy po globie. Grant jest już wpisany (`plgdyplomanci8-gpu-a100; grant 7 wygasł 2026-10-27`).
 
 ⚠️ **Athena nie ma partycji CPU-only.** `plgrid-gpu-a100` wymaga `--gpus`, więc
 joby alokują 1 GPU, którego Brian2 nie używa, i **rozliczają się w godzinach GPU**
@@ -118,7 +120,7 @@ przełączenia targetu na `cython`.
 snn_sep_venv/Scripts/python.exe -m pytest tests/ -q
 ```
 
-17 testów: regresja modelu (domyślna konfiguracja musi zostawać bit-w-bit
+20 testów: regresja modelu, zgodność warstwy E3 (torch) z Brian2 (domyślna konfiguracja musi zostawać bit-w-bit
 identyczna) i poprawność kalibracji.
 
 ---
@@ -135,7 +137,8 @@ experiments/               łańcuch eksperymentalny bez GUI — z linii polece�
   dg_core/                 z shardingiem pod HPC
   e1_regime_map/
   e2_motif_attribution/
-  e3_sparsity_third_factor/   (plan; PyTorch, nie Brian2)
+  e3_sparsity_third_factor/   (PyTorch, nie Brian2)
+  calib_exvivo/            kalibracja do skrawka (dane Madara)
   readout_deferred/
   hpc/
 
@@ -188,14 +191,15 @@ było tłumaczyć numeracji. **Każdy folder odpowiada na jedno pytanie.**
 |---|---|---|
 | `e1_regime_map/` | **ile** hamowania jest optymalne — czy istnieje okno funkcjonalne | H1, H2 |
 | `e2_motif_attribution/` | **który** motyw hamowania niesie separację | który motyw tworzy okno |
-| `e3_sparsity_third_factor/` | czy sterowanie rzadkością sygnałem nowości zmniejsza zapominanie (MNIST, Split-MNIST) — **plan, bez kodu** | H-E3a…d |
+| `e3_sparsity_third_factor/` | czy sterowanie rzadkością sygnałem nowości zmniejsza zapominanie (Split-MNIST, zadanie separacji) | H-E3a…e, E3.4–E3.9h |
+| `calib_exvivo/` | kalibracja modelu do skrawka, R_w, przewidywanie dla gabazyny | uwaga B1 prof. Błasiak |
 | `readout_deferred/` | czy DG pomaga odbiorcy downstream | 1A zamknięte, 1B odłożone |
-| `hpc/` | skrypty SLURM na Ares/PLGrid | — |
+| `hpc/` | skrypty SLURM na Athenie (PLGrid); łańcuch E3 `e3_driver.sh` + `e3_queue.txt` | — |
 
 Statusy i wyniki: [STATUS.md](STATUS.md) sek. 3. Eksperymenty jeszcze niezbudowane
 (E3-S, E4–E7) i pełne brzmienie hipotez: [PLAN_BADAWCZY.md](PLAN_BADAWCZY.md).
-E3 ma własny plan w folderze; to osobna baza kodu od `snn_stdp_vs_surrogate_gradient`
-(to repo najwyżej importujemy, nie modyfikujemy).
+E3 i kalibracja mają własne README w folderach. Kod E3 jest osobną bazą kodu od
+`snn_stdp_vs_surrogate_gradient` (to repo najwyżej importujemy, nie modyfikujemy).
 
 ---
 
@@ -210,7 +214,7 @@ python article/build_presentation.py     # article/prezentacja_stan_prac.pptx
 bez bibtexa — bibliografia jest inline). Zakres: **aplikacja dla neurobiologów
 + mechanizm separacji**; draft nie przesądza tezy pracy, bo ta decyzja jest otwarta
 ([STATUS.md](STATUS.md) sek. 4.1). Zawartość `article/`: [STATUS.md](STATUS.md)
-sek. 6; objaśnienie prezentacji slajd po slajdzie: sek. 7.
+sek. 6; objaśnienie prezentacji slajd po slajdzie: [article/prezentacja_notatki.md](article/prezentacja_notatki.md).
 
 Figury i deck są **generowane, nie wklejane** — liczby biorą się z
 `experiments/*/results/*.npz` albo z jawnie oznaczonych wartości zapisanych w STATUS.

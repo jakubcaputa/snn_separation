@@ -5,7 +5,7 @@
 ## Wyjście: experiments/e3_sparsity_third_factor/results/codes/
 
 #SBATCH --job-name=dg-e3codes
-#SBATCH --account=plgdyplomanci7-gpu-a100
+#SBATCH --account=plgdyplomanci8-gpu-a100
 #SBATCH --partition=plgrid-gpu-a100
 #SBATCH --gpus=1
 #SBATCH --time=04:00:00

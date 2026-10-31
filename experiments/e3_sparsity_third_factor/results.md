@@ -1,6 +1,6 @@
 # E3 — wyniki z wyjaśnieniem wykresów
 
-*Stan na 2026-10-27. Szczegóły metod i wszystkie liczby: [README.md](README.md) (sek. 11–12e).*
+*Stan na 2026-10-31. Objaśnienia wykresów — dla czytelnika, który nie zna szczegółów. Odpowiedź w skrócie, werdykty i dalsze kroki: [README.md](README.md); wszystkie liczby: [wyniki_szczegolowe.md](wyniki_szczegolowe.md); metody: README sek. 6.*
 
 ## O co pytamy
 
@@ -85,7 +85,8 @@ tej kontroli.
 
 **Zadanie:** zwykłe rozpoznawanie cyfr MNIST — **bez** sekwencji zadań. Czytnik uczy się na całym
 zbiorze treningowym (60 000 obrazów, jedna epoka, obraz po obrazie), test na 10 000 obrazów.
-Każdy punkt to inny poziom f (oś x, skala logarytmiczna, 1–50%).
+Każdy punkt to inny poziom f (oś x, skala logarytmiczna, 1–90%; poziomy 70% i 90% dodane 2026-10-29
+z osobnych kodów, te same sieci i η — prereg.md sek. 6k).
 
 **Górne panele — dokładność:**
 - **niebieska (DG + R-STDP)** i **pomarańczowa (DG + delta)** — ten sam kod DG, dwie reguły uczenia;
@@ -106,6 +107,12 @@ Każdy punkt to inny poziom f (oś x, skala logarytmiczna, 1–50%).
   ekspansją** o tej samej rzadkości (zgodnie z wcześniejszym wynikiem 1A).
 - Różnica sufit–czytniki (~0.03–0.05 przy optimum) to koszt uczenia się „online”, obraz po obrazie,
   regułą lokalną zamiast optymalizacji.
+- **Powyżej 50% (dodane 2026-10-29):** spadek trwa. Przy 90% R-STDP spada do ~0.55 (i bardzo różni
+  się między sieciami: 0.38–0.68), delta do 0.84, sufit do 0.90–0.91. Losowa projekcja przy R-STDP
+  spada tak samo (0.59 / 0.57), więc to własność czytnika przy gęstym kodzie, nie obwodu DG.
+  Dekorelacja dalej maleje monotonicznie (0.20 przy 90%). Zastrzeżenie dla LIF: przy 90% hamowanie
+  toniczne K ≈ −4, czyli próg ≈ 0 — neurony są na granicy strzelania bez wejścia (Izhikevich: K = 4.5,
+  bez tego problemu).
 
 ---
 
@@ -117,7 +124,7 @@ Każdy punkt to inny poziom f (oś x, skala logarytmiczna, 1–50%).
 
 **Co porównujemy.** Regulator mierzy **nowość** jako niepewność czytnika (gdy dwa najaktywniejsze
 wyjścia są prawie równe — sieć „nie wie”) i wygładza ją w czasie. Na granicy nowego zadania
-nowość skacze (wykres 6 w README). Warunki:
+nowość skacze ([figures/fig6_regulator_trace.png](figures/fig6_regulator_trace.png)). Warunki:
 
 | warunek | co robi |
 |---|---|
@@ -264,18 +271,72 @@ odczytywane. Ciemne słupki: „nowość → gęściej”; jasne: stały kod o t
 tym samym poziomie. **Wbrew hipotezie „rozcieńczania” przy „nowość → gęściej” szkody jest więcej**
 (dla delty 0.56 vs 0.41), a mimo to zapominanie jest mniejsze. Czyli przewaga tego kierunku przy
 regułach z osłabianiem bierze się z czegoś innego — kandydat: zapominanie w tym scenariuszu to
-głównie przewaga nowych klas na starych obrazach, a nie zniszczenie starych wag (do sprawdzenia).
+głównie przewaga nowych klas na starych obrazach, a nie zniszczenie starych wag — potwierdzone
+w sekcji 7 (E3.9).
 
 Dodatkowo (bez wykresu): przewaga „nowość → gęściej” **przetrwała kontrolę poziomu oceny**
 (stały kod oceniany na tym samym rzadkim poziomie) — dla delty 10/10, dla R-STDP kierunek zgodny.
 
-## 7. Sieć z warstwą ukrytą (E3.7) — nierozstrzygające
+## 7. Skąd zapominanie: zniszczenie wag czy przewaga nowych klas? (E3.9)
 
-Sieć: kod DG → 500 jednostek ukrytych → 10 wyjść, obie warstwy uczone trójczynnikowo (AGREL),
-w wersji z osłabianiem i „bez”. **Obie zapominają prawie wszystko** (końcowa dokładność ≈ 0.17).
-Wersja „bez osłabiania” nim w praktyce nie jest: normalizacja wag każdej jednostki ukrytej, wspólnej
-dla wszystkich klas, sama działa jak osłabianie. Test trzeba powtórzyć z inną homeostazą warstwy
-ukrytej. Figura: [figures/fig11_e37_hidden_layer.png](figures/fig11_e37_hidden_layer.png).
+![E3.9](figures/fig12_e39_error_breakdown.png)
+
+**Co jest na wykresie.** Dokładność na obrazach testowych *starych* zadań (cyfry 0–7) po nauce
+wszystkich pięciu zadań, mierzona na trzy sposoby:
+- **pomarańczowy, 10 klas:** zwykła dokładność — sieć wybiera spośród wszystkich 10 cyfr
+  (to ona wchodzi do miary zapominania BWT);
+- **niebieski, 2 klasy właściwego zadania:** pytamy sieć tylko „0 czy 1?” dla obrazu 0 lub 1 itd.
+  Jeśli ten słupek jest wysoki, wiedza o starych klasach nadal jest w wagach;
+- **zielony, po wyrównaniu wyjść:** każde wyjście sprowadzamy do tej samej średniej i rozrzutu
+  (na próbce obrazów wszystkich klas), a potem wybieramy jak zwykle spośród 10 klas.
+
+Kolumny to czytniki, wiersze — typy neuronu, grupy słupków — warunki (stałe f, oba kierunki
+sterowania, stałe f oceniane na tym samym poziomie co „gęściej”). 10 przebiegów, wąsy = SD.
+
+**Jak czytać.** Przy R-STDP i delcie pomarańczowy słupek jest niski (0.04–0.4), a niebieski wysoki
+(0.8–0.95): sieć *wie*, czym różni się 0 od 1, ale na obrazie 0 wygrywa wyjście nowszej klasy
+(96–100% błędów to klasy nowszych zadań, dla delty prawie zawsze 8 lub 9). To jest **przewaga
+nowych klas**, nie zniszczenie wiedzy. Samo wyrównanie wyjść (zielony) odzyskuje sporą część
+dokładności. „Nowość → gęściej” zmniejsza właśnie przejmowanie przez nowe klasy (dla delty przy tej
+samej wiedzy w obrębie zadania), a „nowość → rzadziej” je zwiększa. Przy rgate wszystkie trzy słupki
+są wysokie i prawie równe — ta reguła prawie nie zapomina i nie ma przechylenia w stronę nowych klas.
+
+**Wniosek:** przy regułach z osłabianiem kierunek modulacji rzadkości steruje głównie przechyleniem
+wyjść w stronę nowych klas. Kryterium zapisane przed uruchomieniem spełnione dla delty; dla R-STDP
+kierunek zgodny, ale niespójny między przebiegami.
+
+## 8. Sieć z warstwą ukrytą (E3.7, E3.7b, E3.9h)
+
+![E3.7b](figures/fig13_e37b_hidden_no_hetero.png)
+
+**Sieć:** kod DG → 500 jednostek ukrytych → 10 wyjść; obie warstwy uczone trójczynnikowo (AGREL:
+nagroda × sygnał zwrotny od wybranego wyjścia). Pytanie: czy zasada z punktu 4 przenosi się na
+sieć, w której uczy się też warstwa pośrednia?
+
+**Trzy kroki:**
+1. **E3.7** (fig. 11): wersja z osłabianiem i „bez” zapominają prawie wszystko (ACC ≈ 0.17).
+   „Bez osłabiania” nim w praktyce nie było — normalizacja wag każdej jednostki ukrytej,
+   wspólnej dla wszystkich klas, działa jak osłabianie.
+2. **E3.7b** (wykres wyżej): trzy warianty bez tej normalizacji. Punkty — przebiegi, romb — średnia;
+   oś x: o ile sterowanie zapomina mniej niż stałe f o tej samej średniej; blade wiersze — warianty,
+   które się nie uczą (ACC ≤ 0.25), więc nie rozstrzygają.
+   - **Pule jednostek przypisane klasom (niebieskie):** uczą się dobrze (ACC 0.71–0.73) i zachowują
+     jak rgate — „nowość → rzadziej” pomaga 20/20, „nowość → gęściej” szkodzi.
+   - **Wspólne jednostki bez normalizacji (zielone, pomarańczowe):** nadal zapominają prawie wszystko,
+     nawet bez żadnego osłabiania.
+3. **E3.9h** — diagnoza z sekcji 7 dla tych sieci (przy stałym f):
+
+| sieć | 10 klas | tylko 2 klasy właściwego zadania | błędy → nowsze klasy |
+|---|---|---|---|
+| wspólna warstwa, bez normalizacji (`pos_bound`) | 0.08–0.09 | **0.61–0.62** | 97% |
+| wspólna warstwa z normalizacją (`agrel_pos`, E3.7) | 0.00 | **0.62–0.67** | 100% |
+| pule na klasę (`pos_pool`) | 0.75–0.77 | 0.90–0.94 | 47% |
+| *dla porównania: czytnik liniowy delta (sekcja 7)* | *0.04–0.08* | *0.83–0.85* | *100%* |
+
+**Wniosek:** we wspólnej warstwie ukrytej nawet wybór „0 czy 1?” jest bliski losowego (0.50) —
+wiedza o starych klasach jest naprawdę niszczona, inaczej niż w czytniku liniowym. „Nowość → rzadziej”
+w `pos_bound` pomaga głównie zmniejszając przejmowanie (błędy → ostatnie zadanie 0.59 → 0.20), a wiedzę
+chroni tylko trochę (+0.03). Zasada z punktu 4 obowiązuje tam, gdzie sieć się uczy (pule na klasę).
 
 ---
 
@@ -291,5 +352,9 @@ ukrytej. Figura: [figures/fig11_e37_hidden_layer.png](figures/fig11_e37_hidden_l
 4. **O zapominaniu bardziej niż rzadkość decyduje reguła czytnika**, a do dobrego kodu potrzebne
    jest wyrównanie aktywności między wzorcami, którego samo hamowanie toniczne nie zapewnia.
 5. **Wystarczy niewielkie osłabianie wag, by odwrócić kierunek efektu** (E3.8). Dlaczego przy
-   osłabianiu pomaga kierunek „nowość → gęściej”, jeszcze nie wiemy — prosta hipoteza
-   „rozcieńczania szkody” jest sprzeczna z pomiarem.
+   osłabianiu pomaga kierunek „nowość → gęściej”, wyjaśnia E3.9 (sekcja 7): zapominanie przy takich regułach
+   to głównie przewaga nowych klas (wiedza zostaje, przegrywa), a gęstszy kod przy nowości
+   ogranicza przejmowanie starych obrazów przez nowe klasy.
+6. **Zasada przenosi się na sieć z warstwą ukrytą, jeśli jednostki ukryte nie są wspólne dla klas**
+   (E3.7b, sekcja 8); wspólna warstwa ukryta zapomina prawie wszystko niezależnie od reguły — i tam, inaczej
+   niż w czytniku liniowym, wiedza jest naprawdę niszczona, nie tylko przegrywa (E3.9h).

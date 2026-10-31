@@ -1,6 +1,6 @@
 """
 E3.8 — test mechanizmu „rozcieńczać przy osłabianiu, izolować przy wzmacnianiu”
-(README sek. 6f; kryteria zapisane przed uruchomieniem).
+(prereg.md sek. 6f; kryteria zapisane przed uruchomieniem).
 
 Hipoteza (2026-10-26): przy regułach znormalizowanych per obraz jeden obraz zmienia
 odpowiedź czytnika o tyle samo niezależnie od gęstości kodu; gęsty kod rozkłada tę zmianę

@@ -9,7 +9,7 @@
 ##                             --capacity "capacity_full_shard*.npz"
 
 #SBATCH --job-name=dg-k1
-#SBATCH --account=plgdyplomanci7-gpu-a100
+#SBATCH --account=plgdyplomanci8-gpu-a100
 #SBATCH --partition=plgrid-gpu-a100
 #SBATCH --gpus=1
 #SBATCH --time=06:00:00

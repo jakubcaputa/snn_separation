@@ -13,7 +13,7 @@
 ## 50 tasków kosztowałoby 50 godzin GPU zamiast 8 — za tę samą pracę na CPU.
 
 #SBATCH --job-name=dg-e2
-#SBATCH --account=plgdyplomanci7-gpu-a100
+#SBATCH --account=plgdyplomanci8-gpu-a100
 #SBATCH --partition=plgrid-gpu-a100
 #SBATCH --gpus=1
 #SBATCH --time=04:00:00

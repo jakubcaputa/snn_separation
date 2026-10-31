@@ -4,7 +4,7 @@
 ## Punkty już policzone (results/grid/pt_*.json) są pomijane, więc fragmenty mogą się
 ## nakładać z zadaniami z e3_queue.txt bez szkody.
 #SBATCH --job-name=dg-calib
-#SBATCH --account=plgdyplomanci7-gpu-a100
+#SBATCH --account=plgdyplomanci8-gpu-a100
 #SBATCH --partition=plgrid-gpu-a100
 #SBATCH --gpus=1
 #SBATCH --time=01:00:00

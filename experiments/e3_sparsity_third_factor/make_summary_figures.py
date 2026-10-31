@@ -61,11 +61,15 @@ def fig1():
     fig, axes = plt.subplots(2, 2, figsize=(10, 6.4), sharex=True, gridspec_kw={'height_ratios': [2.2, 1]})
     for ci, n in enumerate(('izh', 'lif')):
         R = load(f'e31/{n}_s*_o0.json')
+        # 2026-10-29 (prereg.md sek. 6k): poziomy f 70% i 90% z osobnych kodów — dołączane, gdy są dla wszystkich sieci
+        hi = {r['seed']: r for r in load(f'e31_hi/{n}_s*_o0_hi.json')}
+        use_hi = bool(hi) and all(r['seed'] in hi for r in R)
 
         def curve(code, key):
             rows = []
             for r in R:
-                rec = sorted([x for x in r['records'] if x['code'] == code], key=lambda x: x['level'])
+                recs = r['records'] + (hi[r['seed']]['records'] if use_hi else [])
+                rec = sorted([x for x in recs if x['code'] == code], key=lambda x: x['f_target'])
                 rows.append([x[key] for x in rec])
             return np.array(rows)
         F = curve('dg', 'f_train').mean(0)
@@ -82,7 +86,8 @@ def fig1():
         k = int(np.argmax(A))
         ax.annotate(f'maksimum R-STDP\nf = {F[k]:.0%}', (F[k], A[k]), xytext=(F[k] * 1.25, 0.62),
                     fontsize=8, color=INK2, arrowprops=dict(arrowstyle='-', color=INK2, lw=0.8))
-        ax.set_ylim(0.55, 0.97)
+        lo = min(0.55, min(curve(c, k).mean(0).min() for c, k, *_ in series) - 0.03)
+        ax.set_ylim(lo, 0.97)
         ax.set_title(NEUR[n])
         ax.set_ylabel('dokładność (test, 1 epoka)' if ci == 0 else '')
         D = curve('dg', 'dec')
@@ -90,8 +95,9 @@ def fig1():
         axes[1, ci].set_ylabel('dekorelacja dec\n= r_in − r_out' if ci == 0 else '')
         axes[1, ci].set_xscale('log')
         axes[1, ci].set_xlabel('odsetek aktywnych neuronów DG, f')
-        axes[1, ci].set_xticks([0.01, 0.03, 0.1, 0.3, 0.5])
-        axes[1, ci].set_xticklabels(['1%', '3%', '10%', '30%', '50%'])
+        ticks = [0.01, 0.03, 0.1, 0.3, 0.5] + ([0.9] if use_hi else [])
+        axes[1, ci].set_xticks(ticks)
+        axes[1, ci].set_xticklabels([f'{t:.0%}' for t in ticks])
     axes[0, 0].legend(loc='lower center', ncol=1)
     fig.suptitle('E3.1 · Optimum rzadkości dla uczenia istnieje, dekorelacja go nie widzi (H-E3a ✓)',
                  x=0.01, y=1.0, ha='left', fontsize=12, fontweight='bold')
@@ -454,6 +460,72 @@ def fig11():
     save(fig, 'fig11_e37_hidden_layer.png')
 
 
+def fig12():
+    R = load('e39/*.json')
+    if not R:
+        return
+    conds = [('matched_mod', 'stałe f'), ('mod', 'nowość →\nrzadziej'), ('inv', 'nowość →\ngęściej'),
+             ('matched_inv_evalrest', 'stałe f\n(ocena jak\n„gęściej”)')]
+    mets = [('acc_class', '10 klas (zwykła)', ORANGE), ('acc_within', 'tylko 2 klasy właściwego zadania', BLUE),
+            ('acc_debiased', 'po wyrównaniu wyjść', AQUA)]
+    rules = [('rstdp', 'R-STDP'), ('delta', 'delta'), ('rgate', 'rgate (bez osłabiania)')]
+    fig, axes = plt.subplots(2, 3, figsize=(12, 6.4), sharey=True)
+    for i, n in enumerate(('izh', 'lif')):
+        for j, (rule, rl) in enumerate(rules):
+            ax = axes[i, j]
+            rs = [r['rules'][rule] for r in R if r['neuron'] == n]
+            for k, (m, ml, col) in enumerate(mets):
+                v = np.array([[x[c][m] for x in rs] for c, _ in conds])
+                ax.bar(np.arange(len(conds)) + (k - 1) * 0.26, v.mean(1), 0.24, color=col, label=ml)
+                ax.errorbar(np.arange(len(conds)) + (k - 1) * 0.26, v.mean(1), v.std(1), fmt='none', ecolor=INK2, lw=0.8)
+            ax.set_xticks(range(len(conds)))
+            ax.set_xticklabels([c[1] for c in conds], fontsize=7.5)
+            ax.set_ylim(0, 1.02)
+            ax.grid(axis='x', visible=False)
+            ax.set_title(f'{rl} · {NEUR[n]}', fontsize=10)
+    fig.supylabel('dokładność na starych zadaniach (cyfry 0–7)', fontsize=9.5, color=INK2)
+    axes[0, 0].legend(loc='upper left', fontsize=7.5)
+    fig.suptitle('E3.9 · Wiedza o starych klasach zostaje w wagach — przegrywa z nowymi klasami',
+                 x=0.01, ha='left', fontsize=12, fontweight='bold')
+    fig.tight_layout(rect=(0, 0, 1, 0.94))
+    save(fig, 'fig12_e39_error_breakdown.png')
+
+
+def fig13():
+    R = [json.load(open(f)) for f in sorted(glob.glob(os.path.join(RES, 'e37', 'run_*.json')))]
+    rows = [(v, n) for v in ('pos_pool', 'pos_bound', 'agrel_bound') for n in ('izh', 'lif')]
+    lab = {'pos_pool': 'pule na klasę, tylko nagroda', 'pos_bound': 'wspólne, ograniczone, tylko nagroda',
+           'agrel_bound': 'wspólne, ograniczone, z osłabianiem'}
+    if not any(r['variant'] == 'pos_pool' for r in R):
+        return
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), sharey=True)
+    get = lambda r, g, k: [x for x in r['results'] if x['g'] == g and x['kind'] == k][0]
+    for ai, g in enumerate((1.0, -1.0)):
+        ax = axes[ai]
+        ax.axvline(0, color=INK2, lw=1)
+        for yi, (v, n) in enumerate(rows):
+            rs = [r for r in R if r['variant'] == v and r['neuron'] == n]
+            d = np.array([get(r, g, 'mod')['BWT'] - get(r, g, 'matched')['BWT'] for r in rs])
+            acc = np.mean([get(r, 0.0, 'fixed')['ACC'] for r in rs])
+            col = {'pos_pool': BLUE, 'pos_bound': AQUA, 'agrel_bound': ORANGE}[v]
+            alpha = 1.0 if acc > 0.25 else 0.35
+            ax.scatter(d, np.full(len(d), yi) + np.random.default_rng(yi).uniform(-0.12, 0.12, len(d)), s=12,
+                       color=col, alpha=0.5 * alpha, lw=0)
+            ax.plot([d.mean()], [yi], marker='D', ms=7, color=col, mec=SURF, alpha=alpha)
+            if ai == 1:
+                ax.text(1.02, yi, f'ACC {acc:.2f}', transform=ax.get_yaxis_transform(), va='center', fontsize=8, color=INK2)
+        ax.set_yticks(range(len(rows)))
+        ax.set_yticklabels([f'{lab[v]} · {NEUR[n]}' for v, n in rows])
+        ax.set_title('nowość → rzadziej (g = +1)' if g > 0 else 'nowość → gęściej (g = −1)', fontsize=10)
+        ax.set_xlabel('Δ zapominania vs stałe f (> 0 = pomaga)')
+        ax.grid(axis='y', visible=False)
+    axes[0].invert_yaxis()
+    fig.suptitle('E3.7b · Warstwa ukryta bez osłabiania heterosynaptycznego (blade = sieć nie uczy się, ACC ≤ 0.25)',
+                 x=0.01, ha='left', fontsize=12, fontweight='bold')
+    fig.tight_layout(rect=(0, 0, 1, 0.92))
+    save(fig, 'fig13_e37b_hidden_no_hetero.png')
+
+
 if __name__ == '__main__':
-    for fn in (fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10, fig11):
+    for fn in (fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10, fig11, fig12, fig13):
         fn()

@@ -1,6 +1,6 @@
 """
 E3.5 — czy obalenie H-E3c jest odporne? Krzywa dawka–odpowiedź po sile modulacji g
-w różnych architekturach (README sek. 6b, kryterium zapisane przed uruchomieniem).
+w różnych architekturach (prereg.md sek. 6b, kryterium zapisane przed uruchomieniem).
 
 Siła modulacji g ∈ [−1, 1], wokół środka f_c = √(f_gęsty · f_rzadki):
     f_spoczynek = f_c · r^{g/2},  f_nowość = f_c · r^{−g/2},  r = f_gęsty / f_rzadki

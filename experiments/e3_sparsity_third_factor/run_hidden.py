@@ -1,6 +1,6 @@
 """
 E3.7 — czy zasada z E3.5/E3.8 przenosi się na sieć z WARSTWĄ UKRYTĄ uczoną trójczynnikowo?
-(README sek. 6g; kryterium zapisane przed uruchomieniem)
+(prereg.md sek. 6g; kryterium zapisane przed uruchomieniem)
 
 Sieć: kod DG (stały, impulsowy, z results/codes/, poziom f wybierany przez regulator) →
 warstwa ukryta (H = 500 jednostek, ReLU) → 10 wyjść. Uczone OBIE warstwy regułą typu AGREL
@@ -13,7 +13,17 @@ Dwa warianty (jedyna różnica):
   agrel      — δ może być ujemne → przy pomyłce wagi są osłabiane (jak R-STDP);
   agrel_pos  — tylko δ > 0 (nagroda) zmienia wagi → bez osłabiania (jak rgate).
 W obu: skalowanie synaptyczne (stała norma wag każdej jednostki ukrytej i każdego wyjścia),
-eksploracja ε = 0.05, β = 5. Input = ĉ = c/‖c‖. Jednostki są „częstotliwościowe” (nie impulsowe)
+eksploracja ε = 0.05, β = 5.
+
+E3.7b (prereg.md sek. 6i, 2026-10-28): skalowanie wag jednostki ukrytej wspólnej dla klas działa jak
+osłabianie heterosynaptyczne, więc `agrel_pos` w praktyce osłabiał. Trzy nowe warianty:
+  pos_bound    — tylko nagroda; W1 BEZ normalizacji, wagi przycięte do [−w_max, w_max]
+                 (w_max = W1_BOUND / √n_in, czyli kilka razy początkowa skala); W2 jak w rgate
+                 (normalizacja kolumny — kolumna należy do jednej klasy);
+  pos_pool     — tylko nagroda; jednostki ukryte podzielone na 10 pul po H/10, wyjście k czyta
+                 tylko swoją pulę (W2 stałe, blokowe), uczy się tylko pula wybranego wyjścia —
+                 normalizacja W1 zostaje, ale nie ma już jednostek wspólnych dla klas;
+  agrel_bound  — z osłabianiem (δ może być ujemne), W1 ograniczone jak w pos_bound (kontrola). Input = ĉ = c/‖c‖. Jednostki są „częstotliwościowe” (nie impulsowe)
 — impulsowa jest warstwa DG.
 
 Fazy:  --phase tune   (sieć 99, MNIST statycznie, walidacja): η z {0.01, 0.03, 0.1, 0.3}
@@ -25,6 +35,7 @@ Wyjście: results/e37/{hparams.json, pilot.json, run_{variant}_{neuron}_s{seed}_
 from __future__ import annotations
 
 import argparse
+import fcntl
 import json
 import math
 import os
@@ -40,6 +51,8 @@ OUT = os.path.join(RES, 'e37')
 H = 500
 F_DENSE, F_SPARSE = 0.10, 0.03
 ETAS = [0.01, 0.03, 0.1, 0.3]
+W1_BOUND = 4.0
+VARIANTS = ('agrel', 'agrel_pos', 'pos_bound', 'pos_pool', 'agrel_bound')
 
 
 class HiddenNet:
@@ -52,12 +65,19 @@ class HiddenNet:
         self.W2 /= np.linalg.norm(self.W2, axis=0, keepdims=True)
         self.variant, self.eta, self.beta, self.eps = variant, eta, beta, eps
         self.Rbar = 0.0
+        self.w_max = W1_BOUND / math.sqrt(n_in)
+        if variant == 'pos_pool':
+            self.pool = np.repeat(np.arange(10), H // 10)
+            self.W2 = (self.pool[:, None] == np.arange(10)[None, :]).astype(np.float32) / math.sqrt(H // 10)
 
     def forward(self, X):
         n = np.linalg.norm(X, axis=-1, keepdims=True)
         Xh = X / np.maximum(n, 1e-9)
         Hh = np.maximum(Xh @ self.W1, 0.0)
         return Xh, Hh, Hh @ self.W2
+
+    def scores(self, X):
+        return self.forward(X)[2]
 
     def predict(self, X):
         return np.argmax(self.forward(X)[2], -1)
@@ -72,8 +92,10 @@ class HiddenNet:
         R = 1.0 if k == y else -1.0
         d = R - self.Rbar
         self.Rbar += (R - self.Rbar) / 100.0
-        if self.variant == 'agrel_pos':
+        if self.variant in ('agrel_pos', 'pos_bound', 'pos_pool'):
             d = max(d, 0.0) if R > 0 else 0.0
+        if d != 0.0 and self.variant in ('pos_bound', 'agrel_bound', 'pos_pool'):
+            return self._step_local(xh, h, k, self.eta * eta_mult * d), R, p
         if d != 0.0:
             lr = self.eta * eta_mult * d
             fb = self.W2[:, k].copy()                       # sprzężenie zwrotne od wybranego wyjścia
@@ -85,6 +107,34 @@ class HiddenNet:
                 W = self.W1[:, idx] + lr * np.outer(xh, g[idx])
                 self.W1[:, idx] = W / np.maximum(np.linalg.norm(W, axis=0, keepdims=True), 1e-9)
         return k, R, p
+
+    def _step_local(self, xh, h, k, lr):
+        """E3.7b: zmiany W1 bez skalowania wspólnego dla klas."""
+        if self.variant == 'pos_pool':
+            idx = np.where((self.pool == k) & (h > 0))[0]
+            if len(idx):
+                W = self.W1[:, idx] + lr * np.outer(xh, self.W2[idx, k])
+                self.W1[:, idx] = W / np.maximum(np.linalg.norm(W, axis=0, keepdims=True), 1e-9)
+            return k
+        fb = self.W2[:, k].copy()
+        col = np.maximum(self.W2[:, k] + lr * h, 0.0)
+        self.W2[:, k] = col / max(float(np.linalg.norm(col)), 1e-9)
+        idx = np.where((fb * (h > 0)) != 0)[0]
+        if len(idx):
+            self.W1[:, idx] = np.clip(self.W1[:, idx] + lr * np.outer(xh, fb[idx]), -self.w_max, self.w_max)
+        return k
+
+
+def update_json(path, key, value, merge=False):
+    """Zapis klucza do wspólnego pliku JSON z blokadą (fazy tune/pilot mogą iść równolegle)."""
+    with open(path + '.lock', 'w') as lk:
+        fcntl.flock(lk, fcntl.LOCK_EX)
+        d = json.load(open(path)) if os.path.exists(path) else {}
+        if merge:
+            d.setdefault(key, {}).update(value)
+        else:
+            d[key] = value
+        json.dump(d, open(path, 'w'), indent=1)
 
 
 class Data:
@@ -132,7 +182,7 @@ def phase_tune(a):
     order = np.random.default_rng(99).permutation(D.n_tr - 10_000)[:30_000]
     C = np.asarray(D.codes[:D.n_tr, l, :], np.float32)
     best = {}
-    for variant in ('agrel', 'agrel_pos'):
+    for variant in a.variants:
         scores = {}
         for eta in ETAS:
             net = HiddenNet(C.shape[1], variant, eta, 99)
@@ -142,25 +192,20 @@ def phase_tune(a):
         best[variant] = {'eta': max(scores, key=scores.get), 'val_acc': scores}
         print(a.neuron, variant, scores, flush=True)
     os.makedirs(OUT, exist_ok=True)
-    path = os.path.join(OUT, 'hparams.json')
-    hp = json.load(open(path)) if os.path.exists(path) else {}
-    hp[a.neuron] = best
-    json.dump(hp, open(path, 'w'), indent=1)
+    update_json(os.path.join(OUT, 'hparams.json'), a.neuron, best, merge=True)
 
 
 def phase_pilot(a):
     hp = json.load(open(os.path.join(OUT, 'hparams.json')))[a.neuron]
     D = Data(a.neuron, 99, 0)
-    path = os.path.join(OUT, 'pilot.json')
-    pil = json.load(open(path)) if os.path.exists(path) else {}
-    for variant in ('agrel', 'agrel_pos'):
+    for variant in a.variants:
         ctrl = Controller(D.f_mean, F_DENSE, F_SPARSE, signal='unc', tau=50.0, a=0.0, b=1.0)
         tr = []
         train_split(D, variant, hp[variant]['eta'], ctrl.level, ctrl, nearest_by_f(D.f_mean, F_DENSE), tr)
         nb = np.array(tr[500:])
-        pil[f'{a.neuron}_{variant}'] = {'a': float(np.percentile(nb, 5)), 'b': float(np.percentile(nb, 95))}
-        print(a.neuron, variant, pil[f'{a.neuron}_{variant}'], flush=True)
-    json.dump(pil, open(path, 'w'), indent=1)
+        ab = {'a': float(np.percentile(nb, 5)), 'b': float(np.percentile(nb, 95))}
+        update_json(os.path.join(OUT, 'pilot.json'), f'{a.neuron}_{variant}', ab)
+        print(a.neuron, variant, ab, flush=True)
 
 
 def phase_run(a):
@@ -188,7 +233,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--phase', choices=['tune', 'pilot', 'run'], required=True)
     ap.add_argument('--neuron', choices=['izh', 'lif'], required=True)
-    ap.add_argument('--variant', choices=['agrel', 'agrel_pos'], default='agrel')
+    ap.add_argument('--variant', choices=VARIANTS, default='agrel')
+    ap.add_argument('--variants', nargs='+', choices=VARIANTS, default=['agrel', 'agrel_pos'],
+                    help='warianty dla faz tune i pilot')
     ap.add_argument('--seed', type=int, default=0)
     ap.add_argument('--order-seed', type=int, default=0)
     a = ap.parse_args()

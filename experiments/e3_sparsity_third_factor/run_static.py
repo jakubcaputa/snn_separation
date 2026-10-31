@@ -139,9 +139,10 @@ def main():
     ap.add_argument('--order-seed', type=int, default=0)
     ap.add_argument('--jobs', type=int, default=8)
     ap.add_argument('--quick', action='store_true', help='kody z presetu quick')
+    ap.add_argument('--codes-tag', default='', help='2026-10-29: kody {neuron}_s{seed}_{tag}.npy (np. hi = f 70/90%%) → results/e31_{tag}/')
     a = ap.parse_args()
 
-    q = '_quick' if a.quick else ''
+    q = (f'_{a.codes_tag}' if a.codes_tag else '') + ('_quick' if a.quick else '')
     Xtr, ytr, Xte, yte = load_mnist()
     hp = load_hparams(a.neuron)
     seed = 1000 * a.seed + a.order_seed
@@ -196,7 +197,7 @@ def main():
         with Pool(a.jobs) as p:
             recs = [r for lst in p.map(_phasic_job, jobs) for r in lst]
 
-    out_dir = os.path.join(RES, a.exp)
+    out_dir = os.path.join(RES, a.exp + (f'_{a.codes_tag}' if a.codes_tag else ''))
     os.makedirs(out_dir, exist_ok=True)
     out = {'exp': a.exp, 'neuron': a.neuron, 'seed': a.seed, 'order_seed': a.order_seed,
            'hparams': hp, 'records': recs, 'elapsed_s': time.time() - t0}

@@ -24,7 +24,7 @@
 ##   python analyze_regime_map.py
 
 #SBATCH --job-name=dg-e1pp
-#SBATCH --account=plgdyplomanci7-gpu-a100
+#SBATCH --account=plgdyplomanci8-gpu-a100
 #SBATCH --partition=plgrid-now
 #SBATCH --gpus=1
 #SBATCH --time=01:00:00

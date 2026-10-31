@@ -1,5 +1,5 @@
 """
-E3.4 — rozdzielenie kodu i reguły czytnika (README sek. 14, dodane 2026-10-13).
+E3.4 — rozdzielenie kodu i reguły czytnika (wyniki_szczegolowe.md sek. 12b, dodane 2026-10-13).
 
 Pytanie: dlaczego FlyModel (k-WTA + reguła „tylko klasa docelowa”) zapomina prawie
 nic, a nasze warunki dużo — przez kod czy przez regułę uczenia?

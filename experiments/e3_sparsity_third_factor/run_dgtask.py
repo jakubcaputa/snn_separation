@@ -1,5 +1,5 @@
 """
-E3.6 — H-E3c na zadaniu separacji wzorców z dg_core (README sek. 6c).
+E3.6 — H-E3c na zadaniu separacji wzorców z dg_core (prereg.md sek. 6c).
 
 Model DG bez zmian: dg_core.circuit.simulate (Brian2, 200 GC + FS + HMC, parametry
 domyślne), K_GC ustawiane jak w E1′ (bisekcja do zadanego odsetka aktywnych GC).

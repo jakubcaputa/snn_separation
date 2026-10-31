@@ -2,6 +2,11 @@
 
 *Aktualizacja: 2026-09-14. Scalenie dawnych `doktorat_plan.md` i `PLAN_PUBLIKACJI.md`.*
 
+> ⚠️ **Historyczny (stan na 2026-10-31).** H1 obalona, E3 zrealizowane jako osobny wątek
+> (numeracja: dawne „E3” Sobol/LHS = „E3-S”). Aktualny stan i kolejność prac: [STATUS.md](STATUS.md)
+> sek. 0 i 4. Hipotezy przepisujemy dopiero po decyzji o artykułach (STATUS sek. 4.1).
+> Pułapki z sek. 3.5 nadal obowiązują.
+
 **Ten plik odpowiada na dwa pytania: JAKIE SĄ HIPOTEZY i JAK JE TESTUJEMY.**
 Zmierzone liczby, stan prac i blokady są w [STATUS.md](STATUS.md) — tutaj są do nich
 odnośniki, nie kopie.

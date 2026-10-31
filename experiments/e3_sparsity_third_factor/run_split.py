@@ -2,7 +2,7 @@
 E3.3 — Split-MNIST class-incremental (0/1 → 2/3 → … → 8/9), wspólny czytnik
 10-klasowy, BRAK informacji o granicach zadań (poza warunkiem oracle_boundary).
 
-Warunki (README sek. 5):
+Warunki (archiwum_plan.md sek. 5):
   fixed_dense, fixed_sparse     stałe f
   mod_novelty                   regulator: nowość → rzadziej (f_dense → f_sparse)
   mod_novelty_inv               regulator odwrócony: nowość → gęściej

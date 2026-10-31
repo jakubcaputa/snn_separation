@@ -1,5 +1,5 @@
 """
-E3 — analiza: łączy wyniki E3.1, E3.2, E3.3, liczy kryteria zapisane w README sek. 6
+E3 — analiza: łączy wyniki E3.1, E3.2, E3.3, liczy kryteria zapisane w prereg.md sek. 6
 i rysuje figury. Wyjście: results/summary.json, results/figures/*.png.
 
 Kryteria (ustalone przed uruchomieniem pełnych przebiegów):
@@ -255,7 +255,7 @@ def analyze_e34(plt):
 
 
 def analyze_e35():
-    """E3.5 — kryteria z README sek. 6b. Efekt Δ(g) = BWT(mod g) − BWT(stałe f g)."""
+    """E3.5 — kryteria z prereg.md sek. 6b. Efekt Δ(g) = BWT(mod g) − BWT(stałe f g)."""
     runs = _load('e35/*.json')
     cells = defaultdict(list)
     for r in runs:
@@ -299,7 +299,7 @@ def analyze_e35():
 
 
 def analyze_e36(sub: str = 'e36'):
-    """E3.6 — kryterium z README sek. 6c (zadanie separacji wzorców, dg_core);
+    """E3.6 — kryterium z prereg.md sek. 6c (zadanie separacji wzorców, dg_core);
     sub='e36x' — wariant na modelu skalibrowanym do skrawka (sek. 6e)."""
     runs = [json.load(open(f)) for f in sorted(glob.glob(os.path.join(RES, sub, 'learn_*.json')))]
     cells = defaultdict(list)
@@ -338,7 +338,7 @@ def _wilc(d):
 
 
 def analyze_e38():
-    """E3.8 — kryteria z README sek. 6f (mechanizm „rozcieńczać / izolować”)."""
+    """E3.8 — kryteria z prereg.md sek. 6f (mechanizm „rozcieńczać / izolować”)."""
     runs = _load('e38/*.json')
     out = {}
     for neuron in ('izh', 'lif'):
@@ -375,7 +375,7 @@ def analyze_e38():
 
 
 def analyze_e37():
-    """E3.7 — kryterium z README sek. 6g (sieć z warstwą ukrytą)."""
+    """E3.7 — kryterium z prereg.md sek. 6g (sieć z warstwą ukrytą)."""
     runs = [json.load(open(f)) for f in sorted(glob.glob(os.path.join(RES, 'e37', 'run_*.json')))]
     out = {}
     for variant, expect in (('agrel', -1), ('agrel_pos', +1)):
@@ -397,6 +397,95 @@ def analyze_e37():
     return out
 
 
+def analyze_e37b():
+    """E3.7b — kryterium H-L1b z prereg.md sek. 6i (warstwa ukryta bez osłabiania heterosynaptycznego)."""
+    runs = [json.load(open(f)) for f in sorted(glob.glob(os.path.join(RES, 'e37', 'run_*.json')))]
+    get = lambda r, g, k: [x for x in r['results'] if x['g'] == g and x['kind'] == k][0]
+    out = {}
+    for variant, expect in (('pos_bound', +1), ('pos_pool', +1), ('agrel_bound', -1)):
+        for neuron in ('izh', 'lif'):
+            rs = [r for r in runs if r['variant'] == variant and r['neuron'] == neuron]
+            if not rs:
+                continue
+            dp = _wilc([get(r, 1.0, 'mod')['BWT'] - get(r, 1.0, 'matched')['BWT'] for r in rs])
+            dm = _wilc([get(r, -1.0, 'mod')['BWT'] - get(r, -1.0, 'matched')['BWT'] for r in rs])
+            acc = float(np.mean([get(r, 0.0, 'fixed')['ACC'] for r in rs]))
+            n_ok = dp['n_positive'] if expect > 0 else dp['n'] - dp['n_positive']
+            out[f'{variant}_{neuron}'] = {
+                'delta_plus1': dp, 'delta_minus1': dm, 'ACC_fixed': acc,
+                'BWT_fixed': float(np.mean([get(r, 0.0, 'fixed')['BWT'] for r in rs])),
+                'expected_sign': expect, 'decisive': acc > 0.25,
+                'pass': bool(np.sign(dp['mean']) == expect and dp['p_wilcoxon'] < 0.05
+                             and n_ok >= int(np.ceil(0.8 * dp['n'])))}
+    dec = {k: v for k, v in out.items() if v['decisive']}
+    pos_ok = any(all(out.get(f'{v}_{n}', {}).get('decisive') and out[f'{v}_{n}']['pass']
+                     for v in ('pos_bound', 'pos_pool')) for n in ('izh', 'lif'))
+    out['n_decisive'] = len(dec)
+    out['H_L1b_pass'] = bool(len(dec) >= 4 and all(v['pass'] for v in dec.values()) and pos_ok)
+    return out
+
+
+def analyze_e39():
+    """E3.9 — kryteria H-R1…H-R4 z prereg.md sek. 6h (przewaga nowych klas vs zniszczenie wag)."""
+    runs = _load('e39/*.json')
+    out = {}
+    for neuron in ('izh', 'lif'):
+        rs = [r for r in runs if r['neuron'] == neuron]
+        if not rs:
+            continue
+        s = {'n_runs': len(rs)}
+        for rule in ('rstdp', 'delta', 'rgate'):
+            R = [r['rules'][rule] for r in rs]
+            m = lambda c, k: np.array([x[c][k] for x in R])
+            desc = {c: {k: float(m(c, k).mean()) for k in ('acc_class', 'acc_within', 'acc_debiased', 'err_newer',
+                                                         'err_last', 'err_same_task', 'err_older')}
+                    for c in ('mod', 'matched_mod', 'inv', 'matched_inv', 'matched_inv_evalrest')}
+            gap = m('matched_mod', 'acc_within') - m('matched_mod', 'acc_class')
+            gw = _wilc(gap)
+            r1 = bool(desc['matched_mod']['acc_within'] >= 0.80 and gw['mean'] >= 0.30
+                      and gw['p_wilcoxon'] < 0.05 and int((gap >= 0.30).sum()) >= 8)
+            en = m('matched_mod', 'err_newer')
+            r2 = bool(en.mean() >= 0.80 and int((en >= 0.80).sum()) >= 8)
+            dl = _wilc(m('matched_inv_evalrest', 'err_last') - m('inv', 'err_last'))
+            dwin = float((m('inv', 'acc_within') - m('matched_inv_evalrest', 'acc_within')).mean())
+            r3 = bool(dl['mean'] > 0 and dl['p_wilcoxon'] < 0.05 and dl['n_positive'] >= 8 and abs(dwin) < 0.03)
+            db = _wilc(m('matched_mod', 'acc_debiased') - m('matched_mod', 'acc_class'))
+            r4 = bool(db['mean'] >= 0.20 and db['p_wilcoxon'] < 0.05)
+            s[rule] = {'conditions': desc, 'H_R1': {'gap': gw, 'pass': r1},
+                       'H_R2': {'err_newer_mean': float(en.mean()), 'n_ge_0.8': int((en >= 0.80).sum()), 'pass': r2},
+                       'H_R3': {'err_last_evalrest_minus_inv': dl, 'acc_within_diff': dwin, 'pass': r3},
+                       'H_R4': {'debias_gain': db, 'pass': r4}}
+        out[neuron] = s
+    out['recency_supported'] = bool(len(out) == 2 and all(
+        out[n][r][h]['pass'] for n in ('izh', 'lif') for r in ('rstdp', 'delta') for h in ('H_R1', 'H_R2', 'H_R3')))
+    return out
+
+
+def analyze_e39h():
+    """E3.9h — prereg.md sek. 6j: przewaga nowych klas czy zniszczenie reprezentacji w warstwie ukrytej."""
+    runs = _load('e37/errors/*.json')
+    out = {}
+    keys = ('acc_class', 'acc_within', 'acc_debiased', 'err_newer', 'err_last', 'err_same_task', 'err_older')
+    for variant in ('pos_bound', 'agrel_pos', 'pos_pool'):
+        for neuron in ('izh', 'lif'):
+            rs = [r['conditions'] for r in runs if r['variant'] == variant and r['neuron'] == neuron]
+            if not rs:
+                continue
+            m = lambda c, k: np.array([x[c][k] for x in rs])
+            desc = {c: {k: float(m(c, k).mean()) for k in keys} for c in rs[0]}
+            gap = m('fixed', 'acc_within') - m('fixed', 'acc_class')
+            gw = _wilc(gap)
+            aw = desc['fixed']['acc_within']
+            recency = bool(aw >= 0.80 and gw['mean'] >= 0.30 and gw['p_wilcoxon'] < 0.05
+                           and int((gap >= 0.30).sum()) >= 8 and desc['fixed']['err_newer'] >= 0.80)
+            verdict = 'recency' if recency else ('destruction' if aw < 0.65 else 'mixed')
+            out[f'{variant}_{neuron}'] = {
+                'n_runs': len(rs), 'conditions': desc, 'gap_within_minus_class': gw, 'verdict': verdict,
+                'mod_vs_matched_acc_within': _wilc(m('mod', 'acc_within') - m('matched_mod', 'acc_within')),
+                'mod_vs_matched_err_last': _wilc(m('mod', 'err_last') - m('matched_mod', 'err_last'))}
+    return out
+
+
 def main():
     import matplotlib
     matplotlib.use('Agg')
@@ -404,7 +493,7 @@ def main():
     os.makedirs(FIG, exist_ok=True)
     summary = {'e31': analyze_e31(plt), 'e32': analyze_e32(plt), 'e33': analyze_e33(plt),
                'e34': analyze_e34(plt), 'e35': analyze_e35(), 'e36': analyze_e36(), 'e36x': analyze_e36('e36x'),
-               'e37': analyze_e37(), 'e38': analyze_e38()}
+               'e37': analyze_e37(), 'e37b': analyze_e37b(), 'e38': analyze_e38(), 'e39': analyze_e39(), 'e39h': analyze_e39h()}
     with open(os.path.join(RES, 'summary.json'), 'w') as f:
         json.dump(summary, f, indent=1)
     print(json.dumps(summary, indent=1))

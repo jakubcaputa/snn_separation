@@ -3,7 +3,7 @@ article/build_presentation.py — prezentacja „gdzie jesteśmy" (.pptx, 16:9).
 
 Każdy slajd ma figurę albo wizualny element danych; tekst tylko tyle, ile trzeba,
 żeby figura była zrozumiała. Pełne objaśnienie każdego slajdu (co widać, jak
-policzone, co znaczy): STATUS.md sek. 7.
+policzone, co znaczy): article/prezentacja_notatki.md.
 
 Figury pochodzą z article/figures/slides/ (generuje je make_article_figures.py)
 oraz — na slajdach zapasowych — z experiments/*/results/. Najpierw figury, potem

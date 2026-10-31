@@ -1,126 +1,88 @@
-# Status — gdzie jesteśmy, wyniki, decyzje
+# Status — gdzie jesteśmy, co dalej
 
-*Aktualizacja: 2026-10-14 (analiza E3).*
+*Aktualizacja: 2026-10-31 (porządki w notatkach po E3.9h).*
 
-Jedyne źródło prawdy dla **stanu prac** i **zmierzonych liczb**. Każda liczba ma tu
-jedno miejsce; inne dokumenty odsyłają tutaj. Hipotezy i plan:
-[PLAN_BADAWCZY.md](PLAN_BADAWCZY.md). Instalacja i uruchamianie: [README.md](README.md).
+Ten plik odpowiada na trzy pytania: **gdzie jesteśmy** (sek. 0–1), **co robimy dalej i w jakiej
+kolejności** (sek. 4), **co zmierzyliśmy w E1–E2** (sek. 3 — numeracja 3.x jest stała, odwołuje
+się do niej kod). Wyniki E3 i kalibracji mają własne foldery; tu są tylko werdykty i odsyłacze.
 
-> **Mapa.** `0` w dwóch minutach · `1` stan prac · `2` pytania do prof. Błasiak ·
-> **`3` wyniki** · **`4` decyzje** · `5` ustalenia o modelu · `6` zawartość `article/` ·
-> **`7` prezentacja slajd po slajdzie**
+> **Kolejność czytania:** sek. 0 → sek. 4 → (szczegóły) README wątku, który ruszasz.
 >
-> **Kolejność czytania:** sek. 0 → tabela w sek. 3.2 → decyzja w sek. 4.1.
-> Pod prezentację: sek. 7.
+> | wątek | dokument wejściowy |
+> |---|---|
+> | separacja w DG (E1–E2, 1A) | sek. 3 tego pliku |
+> | kalibracja ex vivo, gabazyna | [experiments/calib_exvivo/README.md](experiments/calib_exvivo/README.md) |
+> | E3 — rzadkość jako trzeci czynnik | [experiments/e3_sparsity_third_factor/README.md](experiments/e3_sparsity_third_factor/README.md) |
+> | artykuły, prezentacja | sek. 6, [article/prezentacja_notatki.md](article/prezentacja_notatki.md) |
+> | hipotezy pierwotne (historyczne) | [PLAN_BADAWCZY.md](PLAN_BADAWCZY.md), [ml_paper.md](ml_paper.md) |
 
 ---
 
-## 0. W dwóch minutach
+## 0. Gdzie jesteśmy — w jednej tabeli
 
-**Co badaliśmy.** Zakręt zębaty (DG) ma „separować wzorce": z podobnych wejść robić
-mniej podobne wyjścia. Mierzy się to spadkiem korelacji, `dec = r_in − r_out`.
-Teza projektu: *separacja ma optimum przy pośrednim poziomie aktywności, a steruje
-nim siła hamowania* (H1 w planie).
+| wątek | stan | wynik w jednym zdaniu |
+|---|---|---|
+| **A. Separacja w DG** (E1, E1′, E1″, E1‴, E2, 1A) | **zamknięty** | Teza „separacja ma optimum, a hamowanie nią steruje” obalona: dekorelacja rośnie sama, gdy sieć cichnie, a przy wyrównanej aktywności hamowanie fazowe jej nie zmienia. Wynik nośny jest metodologiczny: oba naturalne null-e zawodzą w przeciwne strony (sek. 3.5). Jedyny efekt obwodu — zapłon sieci przy aktywnych mossy cells — jest rzadki i nie przeszedł testu potwierdzającego (sek. 3.4). |
+| **B. Kalibracja ex vivo** (dane Madara, gabazyna) | **policzone; czeka na wysłanie i na dane Oli i Kingi** | Model skrawka odtwarza kontrolę (GC 3 Hz, R_w, R_b, FS) i efekt gabazyny (×1.77 vs ×1.6), ale tylko gdy gabazyna obniża też hamowanie toniczne — co popiera uwagę B1. Przewidywanie zapisane 2026-10-27 (commit `75ccd60`). |
+| **C. E3 — rzadkość jako trzeci czynnik** (Split-MNIST, zadanie separacji) | **wszystkie zaplanowane policzone (E3.0–E3.9h)** | „Nowość → rzadszy kod” pomaga przy regule tylko wzmacniającej i szkodzi przy regułach z osłabianiem (odporne na 6 architektur); przy osłabianiu działa przez przechylenie wyjść w stronę nowych klas, a na zadaniu separacji kierunek zależy też od podobieństwa wzorców. |
+| **D. Artykuły** | **żaden nie jest w pisaniu** | Draft o narzędziu istnieje (nieskompilowany); wariant metodologiczny (a) ma komplet dowodów; artykuł ML (M1) ma wyniki E3, brakuje porównania ze standardową korektą przechylenia; wariant „padaczka” (d) czeka na siłę MC→GC (B4). |
 
-**Co wyszło.** Teza jest **obalona** i nie da się jej uratować większą siatką ani
-inną miarą. `dec` rośnie samo, gdy sieć cichnie — korelacja dwóch prawie pustych
-wektorów dąży do zera. Każde wzmocnienie hamowania wycisza sieć, więc „poprawia
-separację" z przyczyny niezwiązanej z obwodem. Przy wyrównanej aktywności hamowanie
-fazowe nie zmienia separacji wcale.
-
-**Najciekawszy wynik jest metodologiczny.** Żeby odróżnić separację od wyciszenia,
-porównuje się obwód z *nullem* — sztucznym kodem o tej samej rzadkości, ale bez
-obwodu (sek. 3.1). Oba naturalne null-e **zawodzą, w przeciwne strony**: jeden
-niszczy całą informację, drugi prawie nic nie zmienia. Obejmują obwód z dwóch stron
-zamiast wyznaczać poziom odniesienia (sek. 3.5).
-
-**Jedyny efekt obwodu, jaki widzimy, dotyczy regulacji, nie separacji — i jest
-słaby.** Przy aktywnych mossy cells sieć bywa **bistabilna**: dla części wejść
-zapala się prawie cała populacja komórek ziarnistych (stan przypominający napad),
-a hamowanie fazowe (`W_FS_GC` ≥ 3) temu zapobiega. Test potwierdzający na nowych
-seedach (E1‴) **nie przeszedł** kryterium zapisanego z góry: przy wagach `mc_active`
-zapłony są rzadkie (2/20). Wcześniejsza interpretacja „toniczne ustala ile,
-fazowe — jak szybko" (~280 Hz na aktywną komórkę) była artefaktem miary i jest
-**wycofana** (sek. 3.4).
-
-**Co upadło po drodze.** Atrybucja motywów E2 wyglądała na wynik pozytywny
-(„mossy cells jako motyw warunkowy"). Jest zdominowana przez aktywność, a jej
-„kontrola nullem" była pusta z konstrukcji (sek. 3.6).
-
-**Co dalej.** Decyzja o tezie pracy — warianty z rekomendacją w sek. 4.1. Test
-potwierdzający dla E1″ jest zrobiony (E1‴, sek. 3.4) i osłabia wariant (d).
+**Infrastruktura:** nic się nie liczy. SLURM: konto `plgdyplomanci8-gpu-a100` (grant 7 wygasł
+2026-10-27). Git: ostatni commit `75ccd60` (2026-10-27) — wszystko od E3.8 do porządków z
+2026-10-31 jest niezacommitowane.
 
 ---
 
-## 1. Stan prac
+## 1. Stan prac — szczegółowo
 
 | obszar | stan |
 |---|---|
+| Rdzeń `experiments/dg_core/` | działa; testy 20/20; nowe pola z kalibracji (`tau_in_gc`, `K_GC_sd`, `K_seed`) domyślnie nie zmieniają modelu |
 | Narzędzie `interactive_dg.py` | działa; bilans hamowania, panel P(AP) |
-| Rdzeń `experiments/dg_core/` | działa; testy regresji 17/17, domyślna konfiguracja bit w bit jak przed zmianami |
-| Eksperymenty E1, E1′, E1″, E1‴, E2, 1A | **policzone i przeanalizowane** — wyniki w sek. 3.2 |
-| Kontroler adaptacyjny (E4/E5) | **niezbudowany**; to wariant (c) w sek. 4.1, nie domyślny kierunek |
-| Kalibracja punktu pracy | maszyneria gotowa, **specyfikacja czeka na odpowiedzi z sek. 2** |
-| Draft artykułu o narzędziu | `article/article_draft.tex` — gotowy do przeczytania, **nieskompilowany** (sek. 6); 2026-10-12: dopisana literatura (Chavlis 2017, Danielson 2017, Engin 2015, Bird 2024 i in.), akapit „Related tools”, porównanie MC z modelem Chavlisa; kopia sprzed zmian `article_draft.backup-2026-10-12.tex` |
-| Prezentacja stanu prac | `article/prezentacja_stan_prac.pptx`, 14 + 3 zapasowe slajdy (sek. 7) |
-| Pomysł na artykuł ML | [`ml_paper.md`](ml_paper.md) — propozycja, zero wyników (sek. 4.2) |
-| **E3 — rzadkość jako trzeci czynnik** | **policzone i przeanalizowane (2026-10-14)** — podsumowanie z figurami i dalszymi krokami: [`experiments/e3_sparsity_third_factor/README.md`](experiments/e3_sparsity_third_factor/README.md) sek. 0. H-E3a ✅ (optimum f dla uczenia, dekorelacja go nie widzi); H-E3b ❌ (hamowanie fazowe przy stałym f szkodzi); H-E3c ❌ w przeciwnym kierunku (nowość → rzadziej zapomina więcej); H-E3e ⚠️ niepotwierdzona; E3.4: o zapominaniu decyduje reguła czytnika, a globalny próg nie wyrównuje aktywności między wzorcami | **2026-10-24 (E3.5, E3.6):** obalenie H-E3c NIE jest ogólne — przy czytniku bez osłabiania (rgate) „nowość → rzadziej” zmniejsza zapominanie we wszystkich 6 architekturach i na zadaniu separacji wzorców; kierunek wyznacza reguła uczenia | **2026-10-25 (E3.6x, model ex vivo):** kierunek zależy też od podobieństwa wzorców — przy R_in 0.5 „nowość → rzadziej” pomaga, przy 0.9 pomaga „nowość → gęściej” (zgodnie z Pérez-Montoyo 2026) | **2026-10-27 w toku:** E3.8 (test mechanizmu rozcieńczanie/izolacja, README E3 sek. 6f), E3.7 (sieć z warstwą ukrytą AGREL, sek. 6g) — kryteria zapisane przed uruchomieniem | **2026-10-27 wyniki:** E3.8 — już λ = 0.25 osłabiania odwraca znak; hipoteza „rozcieńczania” sprzeczna z pomiarem; E3.7 nierozstrzygające (warstwa ukryta zapomina prawie całkowicie, normalizacja = osłabianie) |
-| **Kalibracja ex vivo + R_w** (po odpowiedzi prof. Błasiak) | [`experiments/calib_exvivo/README.md`](experiments/calib_exvivo/README.md) — dane Madara pobrane (S-BSST219 + repo analiz), `dg_core/io_madar.py` (R_in/R_w/R_b jak u Madara), `dg_core/exvivo.py` (sieć napędzana salwami z protokołu), cele z danych policzone; siatka kalibracyjna (144 punkty) w kolejce | **2026-10-24:** kontrola trafiona (GC 3.0 Hz, R_w 0.37, R_b 0.28, FS 9.6 Hz, FS przed GC); efekt gabazyny za słaby (×1.25 vs ×1.6) — otwarte | **2026-10-27 w toku:** siatka v4 (τ IPSC, zróżnicowanie GC, gabazyna na tonicznym) i przewidywanie dla eksperymentu z gabazyną (`calib_exvivo/PREDICTION_gabazine.md`) | **2026-10-27:** v4 odtwarza gabazynę (×1.77 vs ×1.6, R_w 0.71, R_b 0.54) — ale tylko gdy gabazyna obniża też hamowanie toniczne; przewidywanie zapisane w `calib_exvivo/PREDICTION_gabazine.md` |
+| E1–E2, 1A | zamknięte (sek. 3) |
+| Kalibracja ex vivo | v1–v4 zrobione, przewidywanie zapisane; wysłanie przewidywania i pytań — **do zrobienia** (sek. 2) |
+| E3 | E3.0–E3.9h, E3.6x, fig. 1 do f = 90% — policzone i opisane; dalsze kroki w README E3 sek. 7 |
+| Draft o narzędziu | `article/article_draft.tex` (2026-10-12: literatura, „Related tools”, MC vs Chavlis) — **nigdy nie skompilowany** (sek. 6) |
+| Prezentacja | `article/prezentacja_stan_prac.pptx` — stan z 2026-10-07 (bez kalibracji ex vivo i E3) |
+| Kontroler adaptacyjny E4/E5 (PLAN) | niezbudowany; zastąpiony w praktyce przez E3 (regulator nowość → `K`) |
 
 ---
 
-## 2. Pytania do prof. Błasiak — kalibracja i warunek dla wariantu (d)
+## 2. Prof. Błasiak — co odpowiedziała, o co jeszcze pytamy
 
-> **2026-10-22: odpowiedź na B1–B3** — [`korespondencja/2026-10-22_odpowiedz_blasiak.md`](korespondencja/2026-10-22_odpowiedz_blasiak.md).
-> B1: hamowanie toniczne ma w modelu za dużą wagę (−30% FS→GC ma dawać ~2× częstotliwość GC).
-> B2: FS 10–28 Hz (28 Hz z FS→FS w zakresie, 46 Hz nie). B3: **kalibrować do ex vivo**;
-> 50% AP u Madara dotyczy zsumowanego EPSC salwy, nie pojedynczej synapsy — wejściem ma być
-> protokół stymulacji (salwy), nie tło 400 Hz. Nowy postulat: obok dekorelacji mierzyć
-> **R_w** (korelacja odpowiedzi na powtórzenia tego samego wzorca). B4 i τ_m — bez odpowiedzi.
+**Odpowiedź z 2026-10-22** ([korespondencja/2026-10-22_odpowiedz_blasiak.md](korespondencja/2026-10-22_odpowiedz_blasiak.md))
+i co z nią zrobiliśmy:
 
-B1–B3 nie blokują decyzji z sek. 4.1 ani pisania, tylko domknięcie punktu pracy:
-bez tych liczb każda próba kalibracji trafia w jedno kryterium kosztem drugiego.
-Mail z 2026-09-11 bez odpowiedzi; draft ponowienia:
-[`korespondencja/2026-10-07_mail_blasiak.md`](korespondencja/2026-10-07_mail_blasiak.md).
+| pytanie | odpowiedź | co zrobiliśmy |
+|---|---|---|
+| **B1** udział hamowania tonicznego (w modelu 74% hamowania GC) | za duży: −30% FS→GC ma dawać ~2× częstotliwość GC | kalibracja v1–v4: efekt gabazyny odtwarzamy tylko z blokiem tonicznym — model potwierdza uwagę, pytanie C1 niżej |
+| **B2** częstotliwość FS (~46 Hz) | 10–28 Hz; FS→FS w porządku | w reżimie salw FS 9.6 Hz (dane 8.4 Hz), FS→FS 1 |
+| **B3** reżim kalibracji | **ex vivo**: wejście = salwy z protokołu; 50% AP u Madara dotyczy zsumowanego EPSC salwy | `dg_core/io_madar.py`, `dg_core/exvivo.py`, kalibracja v1–v4 |
+| nowe: R_w | mierzyć rzetelność odpowiedzi obok dekorelacji | R_w / R_b liczone jak u Madara, w kalibracji i przewidywaniu |
 
-**B1. Jaki jest realny udział hamowania tonicznego w GC?** W modelu (wkłady do
-`dv/dt`, te same jednostki):
+**Otwarte — do wysłania razem z przewidywaniem** (przed analizą danych Oli i Kingi):
 
-| komórka | pobudzenie | hamowanie fazowe | hamowanie toniczne (K) | udział tonicznego |
-|---|---|---|---|---|
-| **GC** | PP 2.43 | FS→GC **3.59** | **10.0** | **74%** |
-| **FS** | PP 7.32 + GC 1.85 | 0.0 (kanał nie istniał) | 5.0 | 100% |
-| **HMC** | GC 0.20 | 0.0 (`W_FS_HMC=0`) | 10.0 | 100% |
+- **C1.** Czy 100 nM gabazyny w skrawku obniża też prąd toniczny GC? Jeśli nie (Stell & Mody
+  2002), w modelu hamowanie fazowe jest za słabe względem tonicznego.
+- **C2.** Protokół Oli i Kingi: liczba powtórzeń (5?), R_in, stężenie gabazyny, czy te same
+  pociągi P10Hz co u Madara — od tego zależy, którą tabelę przewidywania porównać.
+- **B4.** Siła pętli mossy cells → GC (amplituda EPSP MC→GC, liczba MC na GC, częstotliwość MC
+  in vivo). Warunek dla wariantu (d): przy obecnych wagach zapłon sieci w 2/20 przebiegów,
+  przy wadze ×1.5 do 40%, bez MC nigdy (sek. 3.4).
+- **τ_m.** Z danych Madara τ_m ≈ 3 ms dla GC (korespondencja: 10–50 ms) — różnica definicji?
+  Potrzebne do Methods, symulacji nie zmienia.
+- Drobne: czy wzrost burstów po gabazynie (Madar 2019, Fig. 7b) jest dla nich istotny — model
+  burstów nie generuje.
 
-74% jest **odziedziczone, nie wybrane**. Odpowiedź wymusza `K`, a przez jego potrójną
-rolę (PLAN sek. 3.5, pułapka 4) także próg i potencjał spoczynkowy.
-
-**B2. Czy ~46 Hz to fizjologiczna częstotliwość bazowa FS?** Prawdopodobnie zawyżona
-z przyczyny strukturalnej: FS nie miały żadnego hamowania synaptycznego. Dodany kanał
-FS→FS obniża ją do ~28 Hz (sek. 3.9), ale jego siła wymaga zakotwiczenia w biologii.
-
-**B3. Do którego reżimu wejścia kalibrujemy — in vitro czy in vivo?** Pytanie
-najważniejsze. Waga dobrana protokołem pulsowym Madara (tło 40 Hz, ~50% AP) wynosi
-6.98 mV zamiast 4; użyta w sieci przy napędzie 400 Hz daje GC **11.5 Hz zamiast
-2–6 Hz**. Pełna kalibracja (`python -m dg_core.calibrate`) daje 21.5 Hz, ale to
-łącznie z `K` = 0 wymuszonym przez cel V_rest = −70 mV — a dane Madara mają medianę
-−76 mV (sek. 3.8). Rozbicie: notatki pod mailem. Jedna waga nie obsłuży obu
-reżimów — trzeba wybrać warunek kontrolny.
-
-**B4. Jak silna jest pętla mossy cells → komórki ziarniste?** Od tego zależy, czy
-zapłon sieci z E1‴ jest realistyczny: przy obecnych wagach `mc_active` zdarza się
-w 2 na 30 przebiegów, przy wadze o połowę większej — do 40%, bez MC — nigdy
-(sek. 3.4). To warunek dla wariantu (d) w sek. 4.1. Szukamy dowolnej liczby z
-literatury lub danych: amplituda EPSP MC→GC, liczba MC na GC, częstotliwość MC in vivo.
-
-**Drobne: τ_m.** Z danych Madara τ_m ≈ 3 ms dla GC, a nie 10–50 ms z korespondencji.
-Izhikevich nie ma jawnego τ_m, więc symulacji to nie zmienia, ale do Methods trzeba
-wiedzieć, czy to różnica definicji (opór wejściowy vs błonowy).
+Kontekst B1 (wkłady do `dv/dt` w dawnej kalibracji, te same jednostki): GC — pobudzenie PP 2.43,
+hamowanie fazowe 3.59, toniczne `K` 10.0 (74%); FS — toniczne 100% (brak hamowania
+synaptycznego); HMC — toniczne 100%. Wartości odziedziczone, nie wybrane.
 
 ---
 
 ## 3. Wyniki
 
+Wątek A (zamknięty). Wyniki E3 i kalibracji ex vivo: ich README (tabela na górze pliku).
 Sek. 3.3–3.7 to cztery eksperymenty **w kolejności powstawania** — każdy odpowiada
 na pytanie otwarte przez poprzedni. Sek. 3.1 definiuje miary, sek. 3.8–3.9 to
 materiał pomocniczy. Figury: proste (na slajdy) w `article/figures/`, analityczne
@@ -489,84 +451,63 @@ Wzajemne hamowanie interneuronów (`W_FS_FS`, domyślnie 0.0 — obwód bez zmia
 
 ---
 
-## 4. Decyzje
+## 4. Co dalej — proponowana kolejność
 
-### 4.1 ⛔ Jedna decyzja blokująca: czym jest teza pracy
+### 4.0 Krok 1 — pilne, bez decyzji (1 dzień)
 
-Pierwotna teza („separacja ma optimum przy pośredniej aktywności, a hamowanie nią
-steruje") jest obalona (sek. 3.3, 3.4), także w szerszym sweepie E1″. Następcę
-trzeba wybrać z tego, co dane faktycznie podpierają.
+1. **Commit i push** obecnego stanu (E3.8–E3.9h, porządki w notatkach, zmiana konta SLURM).
+2. **Mail do prof. Błasiak:** przewidywanie [PREDICTION_gabazine.md](experiments/calib_exvivo/PREDICTION_gabazine.md)
+   z linkiem do commita `75ccd60` na GitHubie (dowód, że zapisane przed analizą) + pytania
+   C1, C2, B4, τ_m z sek. 2. **Pilne, bo przewidywanie ma wartość tylko przed analizą ich danych.**
 
-| | teza | dowód, który mamy | koszt | główne ryzyko |
-|---|---|---|---|---|
-| **(a)** | metodologiczna: dekorelacja bez kontroli aktywności jest zwodnicza, a oczywiste kontrole same są pułapkami | **komplet** (sek. 3.3, 3.5, 3.6) | samo pisanie | praca metodyczna — niższy prestiż, ale wynik nowy |
-| **(b)** | mossy cells jako motyw warunkowy separacji | Shapley — **zdominowany przez aktywność** (sek. 3.6) | — | **praktycznie odpada** |
-| **(c)** | regulacja aktywności (kontroler E4/E5) | tylko pośredni: E2 (aktywność dominuje), zapłon z E1‴ | nowy moduł, miesiące | wynik kontrolera nieznany |
-| **(d)** ⭐ | **padaczka: utrata mossy cells / hamowania** (K3) | maszyneria MC gotowa; zapłon sieci przy aktywnych MC (E1‴, eksploracyjnie, rzadki przy obecnych wagach) | **jeden–dwa sweepy** | częstość zapłonu zależy od nieznanej siły pętli MC — trzeba ją zakotwiczyć w danych |
+### 4.1 Krok 2 — decyzja o artykułach (blokuje pisanie)
 
-**Wariant (d) przepisuje sam plan** — PLAN sek. 7.1, bramka G2: „H1 potwierdzona
-ORAZ H2 potwierdzona. Jeśli nie — pivot na robustness/padaczkę z K3 jako wynikiem
-głównym." H1 jest obalona, więc bramka jest otwarta. **Test E1‴ osłabił
-uzasadnienie z E1″:** zjawisko jest (zapłon prawie całej sieci przy aktywnych MC,
-któremu zapobiega hamowanie fazowe — dokładnie spór „dormant basket cell" vs
-„irritable mossy cell"), ale przy obecnych wagach jest rzadkie i nie przeszło testu
-zapisanego z góry. (d) stoi więc na planie (bramka G2), nie na naszym wyniku; bez
-zakotwiczenia siły MC→GC w danych nie powiemy, czy zapłon jest realistyczny.
-(b) odpada: „warunkowa rola MC" okazała się regulacją aktywności.
+Kandydaci i to, co ich podpiera:
 
-**Rekomendacja (zaktualizowana po E1‴): (a) jako pierwszy artykuł — ma komplet
-dowodów; (d) dopiero po zakotwiczeniu siły pętli MC w danych** (pytanie do prof.
-Błasiak, sek. 2). Jeśli dane wskażą siłę bliską λ ≥ 1.5, (d) ma gotowy punkt
-startu (tabela E1‴); jeśli słabszą — zapłonu w modelu praktycznie nie ma. Mierzyć
-zawsze przy wyrównanej aktywności — to lekcja z E2; i liczyć wynik per wzorzec —
-to lekcja z E1″.
+| | artykuł | dowody | czego brakuje |
+|---|---|---|---|
+| **(a)** | metodologiczny: dekorelacja bez kontroli aktywności zwodzi, a oczywiste kontrole (null-e) same są pułapkami | **komplet**: E1, E1′, null-e, E2 (sek. 3.3–3.6) + funkcjonalne odpowiedniki z E3 (E3.1: optimum dla uczenia, którego dekorelacja nie widzi; E3.3: kontrola o tej samej średniej odwraca wniosek) | tylko pisanie |
+| **(T)** | narzędzie + model skalibrowany do skrawka | draft, kalibracja v4, przewidywanie gabazyny | kompilacja draftu; dane Oli i Kingi — **potwierdzone przewidywanie byłoby najmocniejszym wynikiem tej części** |
+| **(M1)** | ML: rzadkość sterowana nowością jako trzeci czynnik | E3.1–E3.9h | porównanie z korektą przechylenia (WA/BiC), potwierdzenia na nowych sieciach (README E3 sek. 7, kroki 1–2) |
+| **(d)** | padaczka: utrata mossy cells / hamowania | maszyneria MC, zapłon w E1‴ (rzadki, eksploracyjny) | siła MC→GC z danych (B4) |
+| (b) | mossy cells jako motyw warunkowy separacji | — | odpada: to regulacja aktywności (sek. 3.6) |
 
-### 4.2 Osobna ścieżka: artykuł ML
+**Propozycja:** dwa artykuły zamiast czterech.
+1. **Neuro: (a) + (T) razem** — model DG związany danymi skrawka i narzędzie, z wynikiem
+   metodologicznym jako głównym przesłaniem i przewidywaniem gabazyny jako walidacją
+   prospektywną. Pisanie można zacząć od razu od części (a); sekcja walidacji czeka na dane.
+2. **ML: (M1)** — po krokach 1–2 z README E3 sek. 7; od wyniku porównania z korektą przechylenia
+   zależy, czy teza brzmi „sterowanie rzadkością jako biologiczna korekta przechylenia”, czy
+   jest wynikiem metodologicznym o kontroli dopasowanej rzadkości.
+3. **(d)** tylko jeśli B4 wskaże silną pętlę MC (λ ≥ 1.5 w E1‴).
 
-[`ml_paper.md`](ml_paper.md): **rzadkość jako trzeci czynnik** uczenia oraz null-e
-o dopasowanej rzadkości jako protokół ewaluacji. Nie koliduje z sek. 4.1 — inna
-publikacja. Zero wyników ML na dziś.
+Do decyzji z promotorem: czy (a) i (T) w jednym artykule, czy osobno (draft (T) pozwala na obie drogi).
 
-**2026-10-12: wariant M1 rozpisany jako eksperyment E3**
-([`experiments/e3_sparsity_third_factor/README.md`](experiments/e3_sparsity_third_factor/README.md)).
-Ustalenia:
-- **Kod E3 powstaje w `snn_separation`** (osobna baza kodu). Repo
-  `snn_stdp_vs_surrogate_gradient` jest co najwyżej źródłem importu albo danych
-  i nie jest modyfikowane — to zmienia wcześniejszy zapis „inne repo wykonawcze”.
-- Architektura jak ciało grzybkowate: **stała** losowa warstwa DG z tonicznym `K`,
-  czytnik uczony R-STDP z nagrodą (czynnik B), regulator nowość → `f` → `K`
-  (czynnik A). Plastyczna warstwa DG dopiero w następnym etapie.
-- Hipotezy H-E3a…d; nośna H-E3c: `f` sterowane nowością zapomina mniej niż stałe `f`
-  równe jego średniej (`fixed_matched` — null o dopasowanej rzadkości).
-- **H-E3a łączy się z wariantem (a):** jeśli dokładność ma maksimum przy pośrednim
-  `f`, a `dec` rośnie do ciszy, to jest to funkcjonalny argument artykułu
-  metodologicznego.
-- Q1–Q9 rozstrzygnięte (plan E3 sek. 9). Przegląd literatury zrobiony (sek. 10): dokładnego odpowiednika nie ma; najbliżej FlyModel (stałe k-WTA) i Nm-SNN (progi per-neuron, backprop). Dodane warunki `kwta_fly` i `mod_novelty_inv` (kierunek modulacji — Pérez-Montoyo 2026).
+### 4.2 Krok 3 — obliczenia dla M1 (1–2 tygodnie, równolegle z pisaniem)
 
-### 4.3 Po decyzji z 4.1
+Szczegóły i uzasadnienie: README E3 sek. 7. W kolejności:
+1. porównanie z korektą przechylenia wyjść (na gotowych kodach, tanie);
+2. potwierdzenie E3.9 i E3.5 (architektura domyślna) na sieciach 5–9, z kryteriami zapisanymi z góry;
+3. hamowanie zależne od aktywności zamiast globalnego `K`;
+4. warstwa ukryta, która uczy się bez katastrofy (bramkowanie odgórne) — krok w stronę celu
+   docelowego (DG jako mechanizm trójczynnikowy / odgórny w SNN).
 
-1. Przepisać hipotezy w PLAN (świadomie nieprzepisane; oznaczone jako historyczne).
-2. Kolejność artykułów — (a) da się pisać od zaraz, (d) wymaga sweepu; można równolegle.
-3. Czy draft o narzędziu zostaje osobnym artykułem, czy wstępem do (d) — draft
-   pozwala na obie drogi.
+### 4.3 Krok 4 — pisanie
 
-### 4.4 Niezależne od decyzji — można robić od zaraz
+1. Skompilować draft na Overleafie (nigdy nie kompilowany; na Athenie nie ma LaTeX-a).
+2. Artykuł neuro wg decyzji z 4.1; zaktualizować prezentację o kalibrację i E3.
 
-0. ~~Test potwierdzający dla E1″~~ — **zrobione (E1‴), nie przeszedł**; wyniki
-   i kryterium w sek. 3.4. Następny krok w tym wątku zależy od siły pętli MC
-   z danych, nie od kolejnego sweepu.
-1. **Skompilować draft na Overleafie** — nigdy nie był kompilowany (na Athenie nie ma
-   LaTeX-a), sprawdzony tylko statycznie.
-2. **`io_madar.py`** — bodźce z `dataset/…/Protocols/` jako wejście PP do
-   `dg_core.circuit.simulate()`. Dzień pracy; zmienia „model z syntetycznymi
-   wzorcami" w „model napędzany bodźcami z eksperymentu". Wartościowe w każdym
-   wariancie.
-3. **Krzywe f–I z CCIV.** Protokół odzyskiwalny z adnotacji Axographu (start −100 pA,
-   krok 20 pA, 30 epizodów, onset 100 ms, szerokość 500 ms). HMC: 26 plików,
-   GC+CA3: 66; FS nie mają żadnego CCIV.
-4. **Kalibracja FS→FS** do docelowej częstotliwości FS — czeka na B2.
-5. **Suwak `W_FS_HMC` w `interactive_dg.py`** — przy wariancie (d) staje się
-   demonstracją tezy.
+### 4.4 Czeka na innych
+
+- Dane Oli i Kingi → porównanie z przewidywaniem (calib_exvivo README, „Dalej”).
+- B4 → decyzja o (d).
+
+### 4.5 Zaległe, niski priorytet
+
+- R_w w porównaniach modelu (E1/E1′ w reżimie ex vivo) — może dać miarę separacji z optimum.
+- Krzywe f–I z CCIV (HMC: 26 plików, GC+CA3: 66; FS brak) — protokół odzyskiwalny z adnotacji.
+- Suwak `W_FS_HMC` w `interactive_dg.py` — przydatny tylko przy wariancie (d).
+- Hipotezy w PLAN_BADAWCZY — przepisać dopiero po decyzji z 4.1 (świadomie nieruszane).
 
 ---
 
@@ -607,7 +548,7 @@ ważności, potrójna rola `K_GC`): PLAN sek. 3.5.
 | `article_draft.tex` | draft artykułu o **narzędziu i mechanizmie** (ang., Overleaf; bez bibtexa) |
 | `figures/fig1..fig6-*.png` | 6 figur artykułu |
 | `figures/slides/*.png` | figury artykułu bez nagłówków „Figure N." + 4 figury jednopanelowe pod slajdy |
-| `prezentacja_stan_prac.pptx` | prezentacja stanu prac (sek. 7) |
+| `prezentacja_stan_prac.pptx` | prezentacja stanu prac z 2026-10-07; notatki slajd po slajdzie: `prezentacja_notatki.md` |
 | `make_article_figures.py`, `build_presentation.py` | generatory — wszystko jest odtwarzalne |
 
 **Przebudowa wszystkiego:**
@@ -629,119 +570,3 @@ walidatorem struktury OOXML i podglądem renderowanym w PIL z konserwatywną czc
 kontrolą.**
 
 ---
-
-## 7. Prezentacja — slajd po slajdzie
-
-`article/prezentacja_stan_prac.pptx`: 14 slajdów głównych (~22 min) + 3 zapasowe na
-pytania. Każdy slajd ma notatki prelegenta. Figury po angielsku (spójnie
-z artykułem), tekst po polsku. Pointa: slajd 8 (metodologia); slajd 10 pokazuje
-jedyny efekt obwodu i to, że nie przeszedł testu potwierdzającego.
-
-**1. Tytuł.** Tytuł i schemat obwodu. Do powiedzenia: model sieci spajkującej DG,
-związany danymi patch-clamp; będzie o tym, co ustaliliśmy, co okazało się pułapką
-pomiarową i jaka decyzja jest do podjęcia.
-
-**2. W skrócie.** Trzy karty: *obalona* — H1 (sek. 3.3–3.4); *2 z 2* — oba naturalne
-null-e zawodzą (sek. 3.5); *0 / 210* — bez mossy cells sieć nie zapala się nigdy; z nimi zapłon jest możliwy,
-ale rzadki, a test potwierdzający nie przeszedł (sek. 3.4, E1‴). Na dole
-odsyłacz do decyzji (slajd 13).
-
-**3. Czym jest separacja wzorców** (`fig1-concept`). Lewo: dwa wzorce wejściowe
-(czarne paski = komórki z silnym napędem; pokazane 80 z 200). Środek: częstotliwość
-każdej komórki. Prawo: korelacja wejść 0.73 i wyjść 0.58, różnica +0.15. Jedna
-symulacja domyślnej konfiguracji. Do powiedzenia: to definicja operacyjna całej
-pracy — i ta liczba rośnie sama, gdy sieć cichnie.
-
-**4. Model** (`fig2-circuit`). PP napędza GC i równolegle FS (FF); GC napędzają FS
-(FB); FS hamują GC; HMC w pętli pobudzającej. Ramka: dwie osie hamowania. Do
-powiedzenia: rozdzielenie tonicznego (`K_GC`) i fazowego (`W_FS_GC`) to sedno modelu.
-
-**5. Punkt pracy jest zgodny z danymi** (`fig3-operating-point`). `K_GC` = hamowanie
-toniczne, stały prąd odejmowany od każdej GC. (a) Niebieska linia: ile stałego napędu
-potrzeba, żeby GC strzelała (`G_crit = 4 + K`); czerwona: średni napęd aktywnej GC,
-8 mV (= 400 Hz × 4 mV × 5 ms, fluktuacje ±4 mV). Przy `K_GC = 10` próg 14 mV leży nad
-średnią, więc odpalają tylko fluktuacje — stąd rzadki kod. (b) Ten sam `K` ustala
-potencjał spoczynkowy; zielony pas = IQR z 42 GC Madara, szary pas = `K` zgodne z
-danymi (0–13.6). Do powiedzenia: parametr, który robi z DG rzadki koder, daje też
-spoczynek zgodny z pomiarem. Jeśli padnie pytanie: waga 4 mV jest dobrana, nie
-zmierzona (panel a opisuje reżim, dowodem jest panel b), a dane ograniczają `K` do
-zakresu, nie do jednej wartości. Szczegóły sek. 3.8.
-
-**6. E1 — separacja rośnie, gdy sieć cichnie** (`slide-e1`). Szare punkty: 450
-punktów siatki (separacja wobec frakcji aktywnych, oś log w %). Przerywane linie:
-cztery progi odrzucania cichych punktów; gwiazdki: maksimum separacji przy każdym
-progu. Do powiedzenia: każda gwiazdka siedzi przy swoim progu — gdyby istniało
-biologiczne optimum, stałyby w jednym miejscu. Sek. 3.3.
-
-**7. E1′ — hamowanie fazowe nic nie zmienia** (`slide-e1p`). Separacja wobec
-hamowania fazowego, osobna linia dla każdego z 6 zadanych poziomów aktywności
-(bisekcja po hamowaniu tonicznym, 733 punkty). Do powiedzenia: linie leżą na różnych
-wysokościach (to robi aktywność), ale żadna nie rośnie z hamowaniem; nachylenie
-−0.003, p = 0.60. Sek. 3.4.
-
-**8. ⭐ Z czym w ogóle porównujemy obwód** (`fig5-nulls`). (a) korelacja wyjścia:
-wejście 0.75, *random projection* 0.58, DG 0.39, *permuted DG output* 0.00 (oba
-null-e objaśnione w sek. 3.1). (b) przewaga DG nad projekcją losową: obwód bez
-motywów hamowania +0.094, z nimi +0.152. Do powiedzenia — pointa metodologiczna:
-permutacja osiąga zero, bo niszczy informację (sufit); projekcja losowa z definicji
-zachowuje korelację (trywialna podłoga); obejmują obwód z dwóch stron. A przewaga
-nad projekcją to w ~60% sam próg spajkowania. Sek. 3.5.
-
-**9. E2 — wkład motywów to głównie aktywność** (`slide-e2`). Trzy elementy obwodu:
-FF (hamowanie wyprzedzające), FB (hamowanie zwrotne), MC (mossy cells, pętla
-pobudzająca); każdy można wyłączyć, więc jest 8 wersji obwodu.
-(a) Każda pomarańczowa kropka = jedna wersja (średnio po 36 zestawach wejść ×
-5 seedów, `mc_active`, napęd ×1.0); szare punkty = pojedyncze pomiary. Oś x — ile
-komórek ziarnistych strzela, oś y — separacja `r_in − r_out`. Wszystkie wersje leżą
-na jednej malejącej linii (r = −0.97). (b) Wartość Shapleya = o ile średnio zmienia
-się separacja, gdy element dołączamy, uśrednione po wszystkich kolejnościach
-dołączania. Do powiedzenia: FF i FB „pomagają", bo wyciszają sieć; MC „szkodzi", bo
-ją rozpędza (same MC: 94% aktywnych). Wkład mierzy więc wpływ na aktywność, nie
-separację samą w sobie. Uczciwie: wcześniej pokazywałem tu „odporność na null" —
-ta kontrola była pusta z konstrukcji. Interakcje i korekta projekcją losową: sek. 3.6.
-
-**10. E1″ / E1‴ — zapłon sieci: jest, ale rzadki** (`fig6-runaway`). (a) Aktywność
-wyrównana; oś x — hamowanie fazowe, oś y — odsetek przebiegów, w których jeden ze
-wzorców zapalił prawie całą sieć; linie = siła pętli MC (λ = 0 bez MC, λ = 1 jak w
-E1″). Bez MC zapłonów nie ma nigdy, przy λ = 1 są 2 na 30, przy λ = 1.5 do 40%; od
-`W` = 3 — nigdy. (b) Bez wyrównywania aktywności, λ = 1: oś y — odsetek aktywnych
-komórek; przy hamowaniu tonicznym zgodnym z danymi (`K` = 6, 10) bez hamowania
-fazowego aktywne jest 100% komórek. Do powiedzenia: w E1″ wyglądało to na „szybsze
-komórki" (~280 Hz) — to był artefakt miary mieszającej wzorce; test na nowych seedach
-nie przeszedł kryterium zapisanego z góry. Zostaje zjawisko jakościowe, którego
-częstość zależy od siły mossy cells — dlatego pytamy o nią prof. Błasiak. Sek. 3.4.
-
-**11. 1A — odbiorca nie korzysta** (`slide-1a`). Dokładność klasyfikatora liniowego
-dla czterech wejść. Miara niezależna od korelacji — i też nic: DG 0.885 wobec 0.940,
-losowa projekcja remisuje z DG, bez hamowania lepiej. Sek. 3.7.
-
-**12. Co upadło, co stoi, co jest nowe.** *Upadło:* optimum separacji, sterowanie
-separacją przez hamowanie fazowe, mossy cells jako motyw separacji, pomoc dla
-odbiorcy, „toniczne = ile, fazowe = jak szybko" (artefakt miary). *Stoi:* punkt
-pracy zgodny z danymi; DG bije losową projekcję głównie dzięki progowi; z aktywnymi
-MC możliwy zapłon sieci, któremu zapobiega hamowanie fazowe (eksploracyjnie).
-*Metodologia:* oba null-e zawodzą; próg odrzucania przesuwa maksimum; retencja idzie
-za rzadkością wejścia.
-
-**13. Decyzja: czym jest teza pracy.** Cztery warianty; (d) wyróżniony. Do
-powiedzenia: (d) przewidział sam plan (bramka G2), ale nasz własny wynik go nie
-podpiera, dopóki nie znamy siły mossy cells; (b) odpada. Rekomendacja: najpierw (a),
-(d) po zakotwiczeniu MC w danych. Sek. 4.1.
-
-**14. Następne kroki.** Decyzja; siła mossy cells z danych (warunek dla (d)); pytania
-do prof. Błasiak; bodźce Madara jako wejście; artykuły.
-
-**15–17. Zapas.** Pełna mapa reżimów E1; pełna siatka E1″ (separacja wobec hamowania
-fazowego w 8 panelach — płasko wszędzie poza 20% przy aktywnych MC); profile wkładów
-motywów E2.
-
-**Pytania, które padną:**
-
-1. *„Czemu nie odrzucić cichych punktów?"* — Maksimum przenosi się dokładnie na
-   próg, przy każdym progu (slajd 6).
-2. *„Czemu permutacja nie jest dobrą kontrolą?"* — Jej wynik zbiega do `r_in`, więc
-   nadwyżka nad nią to `−r_out` (slajd 8); a w E2 jej odjęcie nie może niczego
-   zmienić (slajd 9).
-3. *„Czy zapłon nie jest artefaktem ręcznie dobranych wag MC?"* — Jego częstość
-   tak: zależy od siły pętli MC (slajd 10a). Samo zjawisko i to, że hamowanie fazowe
-   mu zapobiega, powtarza się przy każdej sile, przy której występuje.
